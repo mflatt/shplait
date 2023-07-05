@@ -3,12 +3,14 @@
 import:
   "literal.rhm"
   "def.rhm"
+  "fun.rhm"
   "block.rhm"
   "arithmetic.rhm"
 
 export:
   all_from(.literal)
   all_from(.def)
+  all_from(.fun)
   all_from(.block)
   all_from(.arithmetic)
   #%parens

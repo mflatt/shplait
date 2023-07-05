@@ -1,0 +1,13 @@
+#lang rhombus/static/and_meta
+import:
+  "frame.rhm" as f
+  "type_statinfo.rhm" as t_s
+
+export:
+  unify
+
+expr.macro 'unify $type $op: $(expr :: expr_meta.Parsed)':
+  f.add_unify_do(op,
+                 t_s.lookup_type(expr),
+                 (t_s.syntax_to_type(type)))
+  expr

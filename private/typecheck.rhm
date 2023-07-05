@@ -24,5 +24,5 @@ meta:
                      | fr.tail_unify(fr.result_tvar))
     for_each_frame(fun (fr :: f.Frame):
                      for:
-                       each unify_thunk: frame.unifies
+                       each unify_thunk: fr.unifies
                        unify_thunk())

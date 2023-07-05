@@ -5,6 +5,7 @@ import:
   "frame.rhm" as f
   "type_statinfo.rhm" as t_s
   "block.rhm".block
+  "unify.rhm".unify
 
 export:
   rename:
@@ -28,9 +29,3 @@ defn.macro
     build_def(self, id,
               // this is Shplait's `block`:
               'block: $block')
-
-expr.macro 'unify $type $op: $(expr :: expr_meta.Parsed)':
-  f.add_unify_do(op,
-                 t_s.lookup_type(expr),
-                 (t_s.syntax_to_type(type)))
-  expr

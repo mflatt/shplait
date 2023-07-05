@@ -51,6 +51,7 @@ export:
 
 class Type(mutable src):
   nonfinal
+  opaque
   abstract clone()
 
 defn.macro 'class_c $name($fields): $body; ...':
@@ -63,6 +64,7 @@ defn.macro 'class_c $name($fields): $body; ...':
 class TVar(mutable rep, mutable non_poly :: maybe(List)):
   extends Type
   nonfinal
+  opaque
   override clone():
     if rep
     | Type.clone(rep)
@@ -283,7 +285,7 @@ fun type_to_string(tmap :: MutableMap):
                            ++ (block:
                                  let n = tmap.length()
                                  if n < 26
-                                 | Char.from_int(n + 97)
+                                 | to_string(Char.from_int(n + 97))
                                  | "a" +& n))
                 tmap[type] := a
                 a
@@ -296,7 +298,7 @@ fun type_to_string(tmap :: MutableMap):
       | _ :: Chr: "Char"
       | type :: Arrow:
           let [arg, ...] = type.args
-          "(" ++ String.append(& [loop(arg), ...]) ++ "->" ++ loop(type.result) ++ ")"
+          "(" ++ String.append(& [loop(arg) ++ " ", ...]) ++ "-> " ++ loop(type.result) ++ ")"
       | type :: ListOf:
           "ListOf(" ++ loop(type.element) ++ ")"
       | type :: BoxOf:

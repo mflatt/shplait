@@ -1,0 +1,42 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+  "block.rhm".block  
+  "frame.rhm" as f
+  "unify.rhm".unify
+
+export:
+  rename:
+    function as fun
+    call as #%call
+
+defn.macro 'function $(id :: Identifier) ($(arg_id :: Identifier), ...):
+              $body':
+  ~op_stx self
+  let [arg_type, ...] = [t.gen_tvar(arg_id), ...]
+  let res_tv = t.gen_tvar(self)
+  let arr_type = t.Arrow(self, [arg_type, ...], res_tv)
+  '«
+     def $id:
+       dynamic(fun ($arg_id, ...):
+                 statinfo.macro '$arg_id': '(($(t_s.type_key),
+                                              $(t_s.type_to_syntax(arg_type))))'
+                 ...
+                 unify $(t_s.type_to_syntax(res_tv)) $self:
+                   // this is Shplait's `block`:
+                   block:
+                     $body)
+     statinfo.macro '$id': '(($(t_s.type_key),
+                              $(t_s.type_to_syntax(arr_type))))'
+    »'
+
+expr.macro '$fn call ($(arg :: expr_meta.Parsed), ...)':
+  let res_tv = t.gen_tvar(fn)
+  f.add_unify_do(fn,
+                 t_s.lookup_type(fn),
+                 t.Arrow(fn,
+                         [t_s.lookup_type(arg), ...],
+                         res_tv))
+  f.wrap_tail_type('$fn ($arg, ...)', res_tv)
