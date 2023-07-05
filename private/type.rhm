@@ -1,0 +1,933 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt")
+  meta -1:
+    rhombus/static/meta open
+
+export:
+  Bool Num Sym Shrub Vd Str Chr
+  Arrow ListOf BoxOf TupleOf ArrayOf
+  Datatype OpaqueDatatype MapOf ParameterOf
+  gen_tvar
+  to_contract to_expression
+  create_defn as_non_poly get_defn_tvars
+  Poly poly_instance at_source instantiate_constructor_at
+  unify_do unify_defn_do
+  let_based_poly_do
+  lookup
+
+/*
+ The `non_poly` field of TVar controls the layer where a type variable can
+ be generalized by let polyporphism. This is necessary because we
+ delay let-based polymorphism to the end of checking a whole module,
+ which allows inferring types of recursive functions (at the expense
+ of potentially looping in the type checker, so we have a fuel limit
+ in `let-based-poly!`). The `non-poly` field is a list of gensyms that
+ correspods to the `poly-context` field of a `defn`, or it is #f to
+ mean "extension of any poly context". A type variable can be
+ generalized only for a definition whose context is shorter than
+ `non-poly`. Unification finds the common tail of unified type
+ variables.
+
+ For example, in
+
+   (define (f x)
+     (let ([y x])
+       y)))
+
+ the type for `y` should not instantiate a fresh type variable for
+ `x`, which would break the connection between the type and argument.
+ On the other hand, in
+
+  (let ([f (lambda (x) x)])
+    (let ([g f])
+      (values (g 1) (g #t))))
+
+ the type for `f` should not be monomorphized for `g`, because it can
+ stay polymorphic. The `non-poly` tracking effectively allows the
+ polymorphism of `f` to propagate to uses of `g` without losing the connection
+ between `x` and `y` in the earlier example.
+*/
+
+class Type(mutable src):
+  nonfinal
+  abstract clone()
+
+defn.macro 'class_c $name($fields): $body; ...':
+  'class $name($fields):
+     $body
+     ...
+     override clone() :~ $name:
+       this with ()'
+
+class TVar(mutable rep, mutable non_poly :: maybe(List)):
+  extends Type
+  nonfinal
+  override clone():
+    if rep
+    | Type.clone(rep)
+    | this
+
+// must unify with arrow, which helps improve error messages
+class ArrowTVar(): extends TVar
+
+class_c Bool(): extends Type
+class_c Num(): extends Type
+class_c Sym(): extends Type
+class_c Shrub(): extends Type
+class_c Vd(): extends Type
+class_c Str(): extends Type
+class_c Chr(): extends Type
+
+class Arrow(args :: List.of(Type), result :: Type):
+  extends Type
+  override clone():
+    this with (args = args.map(Type.clone), result = result.clone())
+class ListOf(element :: Type):
+  extends Type
+  override clone(): this with (element = element.clone())
+class BoxOf(element :: Type):
+  extends Type
+  override clone(): this with (element = element.clone())
+class ArrayOf(element :: Type):
+  extends Type
+  override clone(): this with (element = element.clone())
+class MapOf(key :: Type, val :: Type):
+  extends Type
+  override clone(): this with (key = key.clone(), val = val.clone())
+class TupleOf(args :: List.of(Type)):
+  extends Type
+  override clone():
+    this with (args = args.map(Type.clone))
+class ParameterOf(element :: Type):
+  extends Type
+  override clone(): this with (element = element.clone())
+
+class Datatype(id, args :: List.of(Type)):
+  extends Type
+  nonfinal
+  override clone():
+    this with (args = args.map(Type.clone))
+
+class OpaqueDatatype(pred):
+  extends Datatype
+  override clone():
+    this with (args = args.map(Type.clone))
+
+class Poly(tvar :: TVar, type :: Type):
+  extends Type
+  override clone():
+    error("shouldn't clone poly")
+
+/*
+ A `defn` is a type for a variable bound by `define`. It's meant to
+ support generalization to a polymorphic type, but that
+ generalization requires some care in a recursive-binding setting.
+ The `poly_context` field is a list of gensyms that reflect the
+ definition's nesting --- one gensym for every enclosing binding
+ context. That way, generalization can recognize deeper and
+ shallower bindings.
+*/
+class Defn(base,
+           rhs,
+           poly_context,
+           mutable insts :: List,
+           mutable proto_rhs,
+           base_tvars,
+           tvars):
+  extends Type
+  override clone():
+    error("shouldn't clone defn")
+
+/*
+ A definition that doesn't support generalization to a polymorphic
+ type:
+*/
+class NonPolyDefn(base, tvars):
+  extends Type
+  override clone():
+    error("shouldn't clone non-poly defn")
+
+fun get_defn_tvars(t :: Type) :: List:
+  match t
+  | Defn(_, _, _, _, _, _, _, tvars): tvars
+  | NonPolyDefn(_, _, tvars): tvars
+  | ~else: []
+
+fun to_contract(type :: Type, enforce_poly :: Boolean):
+  recur loop (type = type,
+              ~tvar_names: tvar_names :~ Map = {}, // FIXME: should be `===`-based
+              ~is_contra: is_contra = #false,
+              ~is_inside_mutable: is_inside_mutable = #false):
+    match type
+    | type :: Defn:
+        if type.rhs
+        | loop(type.rhs)
+        | loop(List.first(type.proto_rhs))
+    | type :: NonPolyDefn:
+        loop(type.base)
+    | _ :: Bool: 'Boolean'
+    | _ :: Num: 'Number'
+    | _ :: Sym: 'Symbol'
+    | _ :: Shrub: 'Syntax'
+    | _ :: Vd: 'Void'
+    | _ :: Str: 'String'
+    | _ :: Chr: 'Char'
+    | type :: Arrow:
+        let [arg, ...] = type.args
+        'Function.of([$(loop(arg, ~is_contra: !is_contra)), ...],
+                     $(loop(type.result)))'
+    | type :: ListOf:
+        'List.of($(loop(type.element)))'
+    | type :: BoxOf:
+        'Box.of($(loop(type.element)))'
+    | type :: ArrayOf:
+        'Array.of($(loop(type.element)))'
+    | type :: MapOf:
+        'Map.of($(loop(type.key)), $(loop(type.val)))'
+    | type :: TupleOf:
+        let [arg, ...] = type.args
+        'Tuple.of(matching([_ :: $(loop(arg)), ...]))'
+    | type :: ParameterOf:
+        'Parameter.of($(loop(type.element)))'
+    | type :: Poly:
+        if enforce_poly
+        | let name = Symbol.gen("a")
+          let tvar_names = tvar_names ++ { type.tvar: name } // FIXME: need something like `new-∀/c`
+          loop(type.type, ~tvar_names: tvar_names)
+        | loop(type.type)
+    | type :: OpaqueDatatype:
+        type.pred
+    | type :: Datatype:
+        type.id
+    | type :: TVar:
+        // this can be done with new-∀ (in the poly? case), but only new-∃ exists at the moment
+        if type.rep
+        | loop(type.rep)
+        | tvar_names.get(type, 'Any')
+    | ~else: error(#'to_contract,
+                   "got confused, trying to generate a contract",
+                   type)
+
+fun to_expression(type :: Type,  tvar_names :~ Map = {}): // FIXME: `tvar_names` should be `===`-based
+  recur loop (type = type):
+    match type
+    | type :: Defn:
+        if type.rhs
+        | loop(type.rhs)
+        | loop(List.first(type.proto_rhs))
+    | type :: NonPolyDefn:
+        loop(type.base)
+    | _ :: Bool: 'Bool(#false)'
+    | _ :: Num: 'Num(#false)'
+    | _ :: Sym: 'Sym(#false)'
+    | _ :: Shrub: 'Shrub(#false)'
+    | _ :: Vd: 'Vd(#false)'
+    | _ :: Str: 'Str(#false)'
+    | _ :: Chr: 'Chr(#false)'
+    | type :: Arrow:
+        let [arg, ...] = type.args
+        'Arrow(#false, [$(loop(arg)), ...], $(loop(type.result)))'
+    | type :: ListOf:
+        'ListOf(#false, $(loop(type.element)))'
+    | type :: BoxOf:
+        'BoxOf(#false, $(loop(type.element)))'
+    | type :: ArrayOf:
+        'ArrayOf(#false, $(loop(type.element)))'
+    | type :: MapOf:
+        'MapOf(#false, $(loop(type.key)), $(loop(type.val)))'
+    | type :: TupleOf:
+        let [arg, ...] = type.args
+        'TupleOf(#false, [$(loop(arg)), ...])'
+    | type :: ParameterOf:
+        'ParameterOf(#false, $(loop(type.element)))'
+    | type :: Poly:
+        let name = Symbol.gen("a")
+        'block:
+           let $name = gen_tvar(#false)
+           Poly(#false, $name, $(to_expression(type.tvar, tvar_names ++ {type.tvar, name})))'
+    | type :: OpaqueDatatype:
+        'OpaqueDatatype(#false, '$(type.id)', [], '$(type.pred)')'
+    | type :: Datatype:
+        let [arg, ...] = type.args
+        'Datatype(#false, '$(type.id)', [$(loop(arg)), ...])'
+    | type :: TVar:
+        tvar_names.get(type, #false)
+          || (if type.rep
+              | loop(type.rep)
+              | // a non-polymophic but ununified type variable;
+                // it has to turn into something that never matches
+                'Datatype(#false, 'unknown', [])')
+    | ~else: error(#'to_expression,
+                   "got confused, trying to generate an expression",
+                   type)
+
+fun gen_tvar(src, is_arrow = #false):
+  if is_arrow
+  | ArrowTVar(src, #false, #false)
+  | TVar(src, #false, #false)
+
+fun type_to_string(tmap :: MutableMap):
+  fun (type :: Type):
+    recur loop (type = type) :~ String:
+      match type
+      | type :: TVar:
+          cond
+          | type.rep: loop(type.rep)
+          | type is_a ArrowTVar: "... -> ..."
+          | ~else:
+              let a = tmap.get(type, #false)
+              if a
+              | a
+              | let a = (((if type.src == #'poly | "" | "_") :~ String)
+                           ++ (block:
+                                 let n = tmap.length()
+                                 if n < 26
+                                 | Char.from_int(n + 97)
+                                 | "a" +& n))
+                tmap[type] := a
+                a
+      | _ :: Bool: "Bool"
+      | _ :: Num: "Num"
+      | _ :: Sym: "Sym"
+      | _ :: Shrub: "Shrub"
+      | _ :: Vd: "Void"
+      | _ :: Str: "String"
+      | _ :: Chr: "Char"
+      | type :: Arrow:
+          let [arg, ...] = type.args
+          "(" ++ String.append(& [loop(arg), ...]) ++ "->" ++ loop(type.result) ++ ")"
+      | type :: ListOf:
+          "ListOf(" ++ loop(type.element) ++ ")"
+      | type :: BoxOf:
+          "BoxOf(" ++ loop(type.element) ++ ")"
+      | type :: ArrayOf:
+          "ArrayOf(" ++ loop(type.element) ++ ")"
+      | type :: MapOf:
+          "MapOf(" ++ loop(type.key) ++ ", " ++ loop(type.val) ++ ")"
+      | type :: TupleOf:
+          let [arg, ...] = type.args
+          [#'TupleOf, [loop(arg), ...]]
+      | type :: ParameterOf:
+          [#'ParameterOf, loop(type.element)]
+      | type :: Poly:
+          let name = Symbol.gen("a")
+          'block:
+             let $name = gen_tvar(#false)
+             Poly(#false, $name, $(to_expression(type.tvar, tmap ++ {type.tvar, name})))'
+      | type :: OpaqueDatatype:
+          'OpaqueDatatype(#false, '$(type.id)', [], '$(type.pred)')'
+      | type :: Datatype:
+          let [arg, ...] = type.args
+          'Datatype(#false, '$(type.id)', [$(loop(arg)), ...])'
+      | type :: TVar:
+          tmap.get(type, #false)
+            || (if type.rep
+                | loop(type.rep)
+                | // a non-polymophic but ununified type variable;
+                  // it has to turn into something that never matches
+                  'Datatype(#false, 'unknown', [])')
+      | ~else: error(#'to_string,
+                     "got confused, trying to generate a string",
+                     type)
+
+fun non_poly_do(t :: Type, poly_context :: List):
+  recur loop (t :: Type = t):
+    match t
+    | t :: TVar:
+        if t.rep
+        | loop(t.rep)
+        | let pc = t.non_poly
+          match pc
+          | #false: t.non_poly := poly_context
+          | pc :: List:
+              // find common tail
+              let lnew = poly_context.length()
+              let lold = pc.length()
+              recur loop (lnew = lnew, lold = lold,
+                          poly_context = poly_context, pc = pc,
+                          synth = #false):
+                cond
+                | lnew .= lold:
+                    if poly_context == pc
+                    | t.non_poly := (if synth
+                                     | [Symbol.gen(), & poly_context]
+                                     | poly_context)
+                    | loop(lnew - 1, lold - 1,
+                           List.rest(poly_context), List.rest(pc),
+                           #true)
+                | lnew > lold:
+                    loop(lnew-1, lold,
+                         List.rest(poly_context), pc,
+                         #false)
+                | ~else:
+                    loop(lnew, lold-1,
+                         poly_context, List.rest(pc),
+                         #false)
+    | t :: Arrow:
+        loop(t.result)
+        for:
+          each a: t.args
+          loop(a)
+    | t :: ListOf: loop(t.element)
+    | t :: BoxOf: loop(t.element)
+    | t :: ArrayOf: loop(t.element)
+    | t :: MapOf:
+        loop(t.key)
+        loop(t.val)
+    | t :: ParameterOf: loop(t.element)
+    | t :: TupleOf:
+        for:
+          each a: t.args
+          loop(a)
+    | t :: Datatype:
+        for:
+          each a: t.args
+          loop(a)
+    | t :: Poly:
+        loop(t.type)
+
+fun as_non_poly(t :: Type, poly_context, tvars):
+  non_poly_do(t, poly_context)
+  NonPolyDefn(t.src, t, tvars)
+
+fun instance(old_tvar, new_tvar):
+  fun loop(t):
+    match t
+    | _ when t === old_tvar: new_tvar
+    | t :: Arrow:
+        t with (args = t.args.map(loop),
+                result = loop(t.result))
+    | t :: ListOf:
+        t with (element = loop(t.element))
+    | t :: BoxOf:
+        t with (element = loop(t.element))
+    | t :: ArrayOf:
+        t with (element = loop(t.element))
+    | t :: MapOf:
+        t with (key = loop(t.key), val = loop(t.val))
+    | t :: TupleOf:
+        t with (args = t.args.map(loop))
+    | t :: ParameterOf:
+        t with (element = loop(t.element))
+    | t :: Poly:
+        t with (type = loop(t.type))
+    | t :: Datatype:
+        if t.args == []
+        | t
+        | t with (args = t.args.map(loop))
+    | ~else t
+  loop
+
+fun poly_instance(t :: Type):
+  match t
+  | t :: Defn:
+      if t.rhs
+      | // Type is determined:
+        poly_instance(t.rhs)
+      | // We only have a skeleton...
+        let inst = poly_instance(t.base)
+        // Remember this instance to check the type later:
+        t.insts := [Pair(#false, inst), & t.insts]
+        inst
+  | t :: NonPolyDefn:
+      poly_instance(t.base)
+  | t :: TVar:
+      let t = simplify_do(t)
+      if t is_a Poly
+      | poly_instance(t)
+      | t
+  | t :: Poly:
+      poly_instance(instance(t.tvar, gen_tvar(#false))(t.type))
+  | ~else t
+
+
+fun instantiate_constructor_at(t :: Type, dt :: Datatype):
+  recur loop (t = t, orig_poly :~ List = []):
+    match t
+    | t :: Poly:
+        loop(t.type, [t.type, & orig_poly])
+    | ~else:
+        unless orig_poly.length() == dt.args.length()
+        | error("constructor abstraction mismatch")
+        recur loop (t = t, orig = orig_poly.reverse(), new = dt.args):
+          match orig
+          | []: t
+          | [o, & orig]:
+              loop(instance(o, List.first(new))(t), orig, List.rest(new))
+
+fun create_defn(t :: Type, poly_context, base_tvars, tvars):
+  let p = poly_ize(t, poly_context, base_tvars)
+  Defn(t.src,
+       p,
+       if (p is_a Poly) | #false | p,
+       poly_context,
+       [],
+       #false,
+       base_tvars,
+       tvars)
+
+fun poly_ize(t :: Type, poly_context, base_tvars):
+  recur loop (tvars = extract_tvars(t, poly_context, base_tvars),
+              t :~ Type = t):
+    match tvars
+    | []: t
+    | [tvar, & tvars]:
+        loop(tvars, Poly(t.src, tvar, t))
+
+fun at_source(t, expr):
+  recur loop (t = Type.clone(t)):
+    add_srcs_do(t, expr)
+    match t
+    | t :: Arrow:
+        t.args.for_each(loop)
+        loop(t.result)
+    | t :: ListOf:
+        loop(t.element)
+    | t :: BoxOf:
+        loop(t.element)
+    | t :: ArrayOf:
+        loop(t.element)
+    | t :: MapOf:
+        loop(t.key)
+        loop(t.val)
+    | t :: TupleOf:
+        t.args.for_each(loop)
+    | t :: ParameterOf:
+        loop(t.element)
+    | t :: Datatype:
+        t.args.for_each(loop)
+    t
+
+fun extract_srcs_do(r, ht :: MutableMap):
+  match r
+  | #false: #void
+  | r :: Syntax when #true: // syntax_meta.flip_introduce(r).is_original():
+      let key = [r.unwrap_all(), r.srcloc()]
+      ht[key] := ht.get(key, #false) || r
+  | r :: Type:
+      extract_srcs_do(r.src, ht)
+  | r :: List:
+      r.for_each(fun (i): extract_srcs_do(i, ht))
+
+fun raise_typecheck_error(main_expr :: Syntax, a, b,
+                          reason = #false,
+                          ~is_function_call: is_function_call = #false):
+  let exprs :: List:
+    let ht = MutableMap()
+    extract_srcs_do(main_expr, ht)
+    extract_srcs_do(a, ht)
+    extract_srcs_do(b, ht)
+    ht.values()
+  let all_exprs :: List:
+    if main_expr
+    | [main_expr, & exprs.remove(main_expr)]
+    | exprs
+  let context = MutableMap()
+  throw Exn.Fail.Syntax((if base.#{error-print-source-location}() && main_expr
+                         | let loc = main_expr.srcloc()
+                           let s :~ String = if loc | Srcloc.to_report_string(loc) | ""
+                           if s == "" | "" | s ++ ": "
+                         | "")
+                          +& "typecheck failed"
+                          +& (match reason || mismatch_explanation(a, b, is_function_call)
+                              | s :: String: ": " ++ s ++ "\n  type mismatch"
+                              | ~else "")
+                          +& ": "
+                          +& type_to_string(context)(a)
+                          +& " vs. "
+                          +& type_to_string(context)(b)
+                          +& (match base.#{error-print-source-location}() && all_exprs
+                              | [] || #false: ""
+                              | [expr :~ Syntax, ...]:
+                                  String.append("\n  sources:",
+                                                & ["\n    " +& expr.to_source_string(),
+                                                   ...])),
+                        Continuation.current_marks(),
+                        all_exprs)
+
+fun mismatch_explanation(a, b, is_function_call):
+  cond
+  | is_poly_arrow(a) != is_poly_arrow(b):
+      if is_function_call
+      | "call of a non-function\n"
+          ++ "  possible reason: extra parentheses create a function call"
+      | "function vs. non-function\n"
+          ++ "  possible reason: extra parentheses create a function call\n"
+          ++ "  another possible reason: missing parentheses for a function call"
+  | is_function_call:
+      match [a, b]:
+      | [a :: Arrow, b :: Arrow] when a.args.length() != b.args.length():
+          "function call with wrong number of arguments\n"
+            ++ "  argument counts: " +& a.args.length() +& " vs. " +& b.args.length()
+      | ~else #false
+  | ~else #false
+
+fun lookup(id :: Identifier, env, ~default: default = #'fail):
+  recur loop (env = env, is_symbolic = #false):
+    match env
+    | []:
+        cond
+        | is_symbolic: #false
+        | default == #'fail:
+            syntax_meta.error("free variable while typechecking", id)
+        | ~else default
+    | [[key :: Identifier, val], & env]:
+        cond
+        | syntax_meta.equal_binding(id, key):            
+            if id.unwrap() == key.unwrap()
+            | val
+            | loop(env, #true) || (!is_symbolic && val)
+        | ~else loop(env, is_symbolic)
+          
+fun add_srcs_do(r :: Type, a :: Type):
+  match r.src
+  | #false: r.src := a
+  | srcs :: List:
+      unless srcs.has_element(a)
+      | r.src := [a, & srcs]
+  | ~else:
+      unless a == r.src
+      | r.src := [a, r.src]
+
+fun simplify_do(a :: Type):
+  match a
+  | a :: TVar:
+      let r:
+        recur loop (a = a):
+          match a
+          | a :: TVar when a.rep:
+              loop(a.rep)
+          | ~else: a
+      let r:
+        if (r is_a TVar)
+        | r
+        | // clone it so we can set the location
+          Type.clone(r)
+      recur loop (a = a):
+        match a
+        | a :: TVar when !(r === a):
+            let r2 = a.rep
+            a.rep := r
+            add_srcs_do(r, a)
+            loop(r2)
+        | ~else #void
+      r
+  | a :: NonPolyDefn:
+      simplify_do(a.base)
+  | ~else a
+
+fun simplify_all_do(t):
+  match t
+  | t :: TVar:
+      let t2 = simplify_do(t)
+      if t2 is_a TVar
+      | t2
+      | simplify_all_do(t2)
+  | t :: Arrow:
+      t with (args = simplify_all_do.map(t.args),
+              result = simplify_all_do(t.result))
+  | t :: ListOf:
+      t with (element = simplify_all_do(t.element))
+  | t :: BoxOf:
+      t with (element = simplify_all_do(t.element))
+  | t :: ArrayOf:
+      t with (element = simplify_all_do(t.element))
+  | t :: MapOf:
+      t with (key = simplify_all_do(t.key),
+              val = simplify_all_do(t.val))
+  | t :: TupleOf:
+      t with (args = simplify_all_do.map(t.args))
+  | t :: Poly:
+      t with (type = simplify_all_do(t.type))
+  | t :: ParameterOf:
+      t with (element = simplify_all_do(t.element))
+  | t :: Datatype:
+      t with (args = simplify_all_do.map(t.args))
+  | t :: NonPolyDefn:
+      simplify_all_do.map(t.base)
+  | ~else t
+
+fun resolve_defn_types(env :: List) :~ List:
+  for List:
+    each [id, t]: env
+    match t
+    | t :: Defn:
+        t.rhs || (block:
+                    let b = simplify_all_do(t.proto_rhs)
+                    let poly = poly_ize(b, t.poly_context, t.base_tvars)
+                    t.insts.for_each(fun (Pair(a, d)):
+                                       unify_do(a, d, poly_instance(poly)))
+                    poly)
+    | ~else #false
+
+fun let_based_poly_do(env :~ List.of(Pair), fuel):
+  let defn_types :: List:
+    // Find fixpoint of defn-type polymorphism:
+    recur loop (defn_types :~ List = resolve_defn_types(env),
+                fuel = fuel):
+      let new_defn_types = resolve_defn_types(env)
+      cond
+      | (for all:
+           each:
+             orig_a: defn_types
+             orig_b: new_defn_types
+             p: env
+           recur loop (a = orig_a, b = orig_b):
+             let m = (match [a, b]:
+                      | [a :: Poly, b :: Poly]:
+                          loop(a.type, b.type)
+                            && type_size(a.tvar) == type_size(b.tvar)
+                      | [_, b :: Poly]: #false
+                      | ~else type_size(a) == type_size(b))
+             cond
+             | m: #true
+             | fuel > 0: #false
+             | ~else:
+                 raise_typecheck_error(Pair.rest(p), orig_a, orig_b,
+                                       "possible cycle in type constraints; increase #:fuel to try more")):
+          new_defn_types
+      | ~else loop(new_defn_types, fuel-1)
+  for List:
+    each:
+      Pair(id, t): env
+      defn_type: defn_types
+    if t is_a Defn
+    | Pair(id, defn_type)
+    | Pair(id, t)
+
+fun type_size(b):
+  match b
+  | b :: TVar:
+      if b.rep | type_size(b.rep) | 1
+  | b :: Arrow:
+      1 + (for values(sum = 0):
+             each a: b.args
+             sum + type_size(a))
+        + type_size(b.result)
+  | b :: ListOf:
+      1 + type_size(b.element)
+  | b :: BoxOf:
+      1 + type_size(b.element)
+  | b :: ArrayOf:
+      1 + type_size(b.element)
+  | b :: MapOf:
+      1 + type_size(b.key) + type_size(b.val)
+  | b :: TupleOf:
+      1 + (for values(sum = 0):
+             each a: b.args
+             sum + type_size(a))
+  | b :: ParameterOf:
+      1 + type_size(b.element)
+  | b :: Datatype:
+      1 + (for values(sum = 0):
+             each a: b.args
+             sum + type_size(a))
+  | b :: Poly:
+      1 + type_size(b.tvar) + type_size(b.type)
+  | ~else 1
+
+fun occurs(a :: Type, b :: Type):
+  match a
+  | _ when (a === b):
+      #true
+  | b :: TVar when b.rep:
+      occurs(a, b.rep)
+  | b :: Arrow:
+      occurs(a, b.result)
+        || (for any:
+              each arg: b.args
+              occurs(a, arg))
+  | b :: ListOf:
+      occurs(a, b.element)
+  | b :: BoxOf:
+      occurs(a, b.element)
+  | b :: ArrayOf:
+      occurs(a, b.element)
+  | b :: MapOf:
+      occurs(a, b.key) || occurs(a, b.val)
+  | b :: TupleOf:
+      for any:
+        each arg: b.args
+        occurs(a, arg)
+  | b :: ParameterOf:
+      occurs(a, b.element)
+  | b :: Datatype:
+      for any:
+        each arg: b.args
+        occurs(a, arg)
+  | ~else #false
+
+fun extract_tvars(t, poly_context :: List, base_tvars :: List):
+  let tvars:
+    recur loop(t = t) :~ Set:
+      match t
+      | t :: TVar:
+          cond
+          | t.non_poly:
+              let non_poly :: List = t.non_poly
+              let c1 = poly_context.length()
+              let c2 = non_poly.length()
+              if (c1 < c2) && (poly_context == non_poly.drop_left(c2-c1))
+              | {t}
+              | Set{}
+          | (for any:
+               each p: base_tvars
+               t === Pair.rest(p)):
+              Set{}
+          | ~else:
+              {t}
+      | t :: Arrow:
+          loop(t.result).append(& t.args.map(loop))
+      | t :: ListOf:
+          loop(t.element)
+      | t :: BoxOf:
+          loop(t.element)
+      | t :: MapOf:
+          loop(t.key) ++ loop(t.val)
+      | t :: ParameterOf:
+          loop(t.element)
+      | t :: Datatype:
+          List.append(& t.args.map(loop))
+      | t :: Poly:
+          loop(t.type) ++ { t.tvar: #false }
+      | ~else: []        
+  tvars.to_list()
+
+fun unify_defn_do(expr, a, b):
+  match a
+  | a :: Defn:
+      let pi = poly_instance(a.base)
+      non_poly_do(b, [Symbol.gen(), a.poly_context])
+      unify_do(expr, pi, b)
+      unless a.rhs
+      | a.proto_rhs := b
+  | ~else unify_do(expr, a, b)
+
+fun unify_do(expr, a, b, ~is_function_call: is_function_call = #false):
+  fun sub_unify_do(a, b, expr, aa, ba):
+    add_srcs_do(aa, a)
+    add_srcs_do(ba, b)
+    unify_do(expr, aa, ba)
+  let a = simplify_do(a)
+  let b = simplify_do(b)
+  match a
+  | _ when (b is_a TVar) && !(a is_a TVar):
+      unify_do(expr, b, a)
+  | _ when a === b:
+      #void
+  | a :: TVar:
+      when occurs(a, b)
+      | raise_typecheck_error(expr, a, b, "cycle in type constraints")
+      match b
+      | b :: TVar:
+          match b
+          | b :: ArrowTVar:
+              when a.non_poly
+              | non_poly_do(b, a.non_poly)
+              a.rep := b
+              add_srcs_do(b, a)
+          | ~else:
+              when b.non_poly
+              | non_poly_do(a, b.non_poly)
+              b.rep := a
+              add_srcs_do(a, b)
+      | ~else:
+          when (a is_a ArrowTVar) && !(b is_a Arrow)
+          | raise_typecheck_error(expr, a, b, "tracing requires a procedure")
+          let b = Type.clone(b)
+          when a.non_poly
+          | non_poly_do(b, a.non_poly)
+          a.rep := b
+          add_srcs_do(b, a)
+  | _ when (is_function_call
+               && is_poly_arrow(b)
+               && !is_poly_arrow(a)):
+      unify_do(expr, b, a, ~is_function_call: #true)
+  | _ :: Bool:
+      unless b is_a Bool
+      | raise_typecheck_error(expr, a, b)
+  | _ :: Num:
+      unless b is_a Num
+      | raise_typecheck_error(expr, a, b)
+  | _ :: Sym:
+      unless b is_a Sym
+      | raise_typecheck_error(expr, a, b)
+  | _ :: Shrub:
+      unless b is_a Shrub
+      | raise_typecheck_error(expr, a, b)
+  | _ :: Vd:
+      unless b is_a Vd
+      | raise_typecheck_error(expr, a, b)
+  | _ :: Str:
+      unless b is_a Str
+      | raise_typecheck_error(expr, a, b)
+  | _ :: Chr:
+      unless b is_a Chr
+      | raise_typecheck_error(expr, a, b)
+  | a :: Arrow:
+      match b
+      | b :: Arrow when a.args.length() == b.args.length():
+          for:
+            each:
+              aa: a.args
+              ba: b.args
+            sub_unify_do(a, b, expr, aa, ba)
+          sub_unify_do(a, b, expr, a.result, b.result)
+      | ~else raise_typecheck_error(expr, a, b, ~is_function_call: is_function_call)
+  | a :: ListOf:
+      match b
+      | b :: ListOf:
+          sub_unify_do(a, b, expr, a.element, b.element)
+      | ~else raise_typecheck_error(expr, a, b)
+  | a :: BoxOf:
+      match b
+      | b :: BoxOf:
+          sub_unify_do(a, b, expr, a.element, b.element)
+      | ~else raise_typecheck_error(expr, a, b)
+  | a :: ArrayOf:
+      match b
+      | b :: ArrayOf:
+          sub_unify_do(a, b, expr, a.element, b.element)
+      | ~else raise_typecheck_error(expr, a, b)
+  | a :: MapOf:
+      match b
+      | b :: MapOf:
+          sub_unify_do(a, b, expr, a.key, b.key)
+          sub_unify_do(a, b, expr, a.val, b.val)
+      | ~else raise_typecheck_error(expr, a, b)
+  | a :: TupleOf:
+      match b
+      | b :: TupleOf when a.args.length() == b.args.length():
+          for:
+            each:
+              aa: a.args
+              ba: b.args
+            sub_unify_do(a, b, expr, aa, ba)
+      | ~else raise_typecheck_error(expr, a, b)
+  | a :: ParameterOf:
+      match b
+      | b :: ParameterOf:
+          sub_unify_do(a, b, expr, a.element, b.element)
+      | ~else raise_typecheck_error(expr, a, b)
+  | a :: Datatype:
+      match b
+      | b :: Datatype when syntax_meta.equal_binding(a.id, b.id):
+          for:
+            each:
+              aa: a.args
+              ba: b.args
+            sub_unify_do(a, b, expr, aa, ba)
+      | ~else raise_typecheck_error(expr, a, b)
+  | a :: Poly:
+      // This should only happen when we try to redefine a polymorphic function
+      raise_typecheck_error(expr, a, b)
+  | ~else:
+      raise_typecheck_error(expr, a, b, "unrecognized type " +& a)
+
+fun is_poly_arrow(a):
+  match a
+  | _ :: Arrow: #true
+  | type :: Poly:
+      is_poly_arrow(type.type)
+  | ~else: #false

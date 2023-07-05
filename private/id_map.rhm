@@ -1,0 +1,34 @@
+#lang rhombus/static/and_meta
+import:
+  meta -1:
+    rhombus/meta.syntax_meta
+
+export:
+  IdMap
+
+class IdMap(table :~ Map):
+  internal _IdMap
+  private implements:
+    Indexable
+    Appendable
+
+  fun build([[key :~ Identifier, val], ...]):
+    for values (table = {}):
+      each:
+        key: [key, ...]
+        val: [val, ...]
+      table ++ { key.unwrap(): [Pair(key, val), & table.get(key.unwrap(), [])]}
+  
+  expression 'IdMap{ $key ...: $val, ...}':
+    '_IdMap(build([[$key ..., $val], ...])) :~ IdMap'
+
+  private override get(index :: Identifier):
+    let candidates :~ List = table.get(index.unwrap(), [])
+    for any:
+      each Pair(key, val): candidates
+      syntax_meta.equal_binding(key, index) && val
+
+  private override append(other :: IdMap) :~ IdMap:
+    _IdMap(for values(table = table):
+             each (sym, candidates :~ List): other.table
+             table ++ { sym: candidates ++ table.get(sym, []) })

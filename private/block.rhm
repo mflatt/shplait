@@ -1,0 +1,22 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "frame.rhm" as f
+  "type_statinfo.rhm" as t_s
+
+export:
+  rename:
+    shblock as block
+
+expr.macro 'shblock: $body':
+  ~op_stx self
+  let tv = t.gen_tvar(self)
+  let expr:
+    'block:
+       f.relet_frame: f.Frame(~result_tvar:
+                                t_s.syntax_to_type('$(t_s.type_to_syntax(tv))'),
+                              ~parent:
+                                f.get_current_frame())
+       $body'
+  f.wrap_tail_type(expr, tv)

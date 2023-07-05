@@ -1,0 +1,33 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "frame.rhm" as f
+  "type_statinfo.rhm" as t_s
+
+decl.macro 'def_binary $op $type_constr':
+  '«export: rename: binary as $op
+    expr.macro '$('$')left binary $('$')right':
+      ~op_stx self
+      f.add_unify_do(left, t_s.lookup_type(left), t.Num(self))
+      f.add_unify_do(right, t_s.lookup_type(right), t.Num(self))
+      f.wrap_tail_type('$('$')left $op $('$')right',
+                       t. $type_constr ('$('$')left $('$')self $('$')right'))»'
+
+def_binary + Num
+def_binary - Num
+def_binary * Num
+def_binary / Num
+
+def_binary < Bool
+def_binary > Bool
+def_binary <= Bool
+def_binary >= Bool
+def_binary == Bool
+def_binary != Bool
+
+export: rename: _not as !
+expr.macro '_not $right':
+  ~op_stx self
+  f.add_unify_do(right, t_s.lookup_type(right), t.Bool(self))
+  t_s.wrap_type('! $right', t.Bool('$self $right'))

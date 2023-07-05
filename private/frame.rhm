@@ -1,0 +1,58 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "id_map.rhm" open
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+
+export:
+  meta:
+    Frame
+    get_current_frame
+    add_unify_do
+    wrap_tail_type
+  relet_frame
+
+meta:
+  class Frame(mutable unifies :: List = [],
+              mutable datatypes :: IdMap = IdMap{},
+              mutable opaques :: IdMap = IdMap{},
+              mutable aliases :: IdMap = IdMap{},
+              mutable env :: IdMap = IdMap{},
+              mutable variants :: IdMap = IdMap{},
+              ~result_tvar: mutable result_tvar = #false,
+              mutable tail_unify = #false,
+              ~parent: mutable parent :: maybe(Frame) = #false,
+              mutable children :: List = []):
+    constructor(~result_tvar: result_tvar = #false,
+                ~parent: parent = #false):
+      let fr = super(~result_tvar: result_tvar,
+                     ~parent: parent)
+      when parent
+      | let parent :: Frame = parent
+        parent.children := [fr, &parent.children]
+      fr
+
+syntax_parameter.bridge frame: Frame()
+
+defn.macro 'relet_frame: $expr':
+  'syntax_parameter.relet frame: $expr'
+
+meta:
+  fun get_current_frame() :~ Frame:
+    syntax_parameter_meta.lookup('frame')
+
+  fun get_current_type():
+    let v = syntax_parameter_meta.lookup('tvar')
+    v || t.gen_tvar(#false)
+
+  fun add_unify_do(expr, a, b):
+    let fr = get_current_frame()
+    fr.unifies := [fun (): t.unify_do(expr, a, b),
+                   & fr.unifies]
+
+  fun wrap_tail_type(expr, ty):
+    let fr = get_current_frame()
+    fr.tail_unify := (fun (tvar):
+                        t.unify_do(expr, ty, tvar))
+    t_s.wrap_type(expr, ty)

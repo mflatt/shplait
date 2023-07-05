@@ -1,0 +1,31 @@
+#lang rhombus/static/and_meta
+
+export:
+  meta:
+    type_key
+    type_to_syntax
+    syntax_to_type
+    lookup_type
+    wrap_type
+
+meta:
+  def table = MutableMap()
+
+  def type_key = 'type_key'
+
+  fun type_to_syntax(t):
+    let sym = Symbol.gen()
+    table[sym] := t
+    Syntax.make(sym)    
+  
+  fun syntax_to_type(stx :: Syntax):
+    table[stx.unwrap()]
+
+  fun lookup_type(expr :: Syntax):
+    let id = statinfo_meta.lookup(expr, type_key)
+    if id
+    | syntax_to_type(id)
+    | syntax_meta.error("type information not found", expr)
+
+  fun wrap_type(expr :: Syntax, ty):
+    statinfo_meta.wrap(expr, '(($type_key, $(type_to_syntax(ty))))')

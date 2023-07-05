@@ -1,0 +1,6 @@
+#lang rhombus/static/and_meta
+
+export Box
+
+class Box(mutable val)
+

@@ -1,0 +1,36 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "frame.rhm" as f
+  "type_statinfo.rhm" as t_s
+  "block.rhm".block
+
+export:
+  rename:
+    define as def
+
+meta:
+  fun build_def(self, id, rhs):
+    let tv = t.gen_tvar('$id')  
+    '«statinfo.macro '$id':
+        '(($t_s.type_key, $(t_s.type_to_syntax(tv))))'
+      def $id:
+        dynamic(unify $(t_s.type_to_syntax(tv)) $self:
+                  $rhs)»'
+
+defn.macro
+| 'define $(id :: Identifier) $(eql && '=') $rhs':
+    ~op_stx self
+    build_def(self, id, rhs)
+| 'define $(id :: Identifier): $block':
+    ~op_stx self
+    build_def(self, id,
+              // this is Shplait's `block`:
+              'block: $block')
+
+expr.macro 'unify $type $op: $(expr :: expr_meta.Parsed)':
+  f.add_unify_do(op,
+                 t_s.lookup_type(expr),
+                 (t_s.syntax_to_type(type)))
+  expr

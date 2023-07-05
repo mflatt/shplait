@@ -1,0 +1,19 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+  "frame.rhm" as f
+
+export:
+  rename literal as #%literal
+
+expr.macro 'literal $(lit :: Term)':
+  let ty:
+    match lit.unwrap()
+    | (_ :: Boolean): t.Bool(lit)
+    | (_ :: String): t.Str(lit)
+    | (_ :: Number): t.Num(lit)
+    | ~else:
+        syntax_meta.error("literal type not known", lit)  
+  f.wrap_tail_type(Syntax.relocate_span('#%literal $lit', [lit]), ty)
