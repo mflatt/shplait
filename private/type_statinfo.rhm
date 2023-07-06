@@ -9,26 +9,34 @@ export:
     type_to_syntax
     syntax_to_type
     lookup_type
+    lookup_poly_type
     wrap_type
+    register_type
 
 meta:
   def table = MutableMap()
 
   def type_key = 'type_key'
 
-  fun type_to_syntax(t):
+  fun type_to_syntax(ty):
     let sym = Symbol.gen()
-    table[sym] := t
+    table[sym] := ty
     Syntax.make(sym)    
   
   fun syntax_to_type(stx :: Syntax):
     table[stx.unwrap()]
 
-  fun lookup_type(expr :: Syntax):
+  fun lookup_poly_type(expr :: Syntax):
     let id = statinfo_meta.lookup(expr, type_key)
     if id
-    | t.poly_instance(syntax_to_type(id))
+    | syntax_to_type(id)
     | syntax_meta.error("type information not found", expr)
+
+  fun lookup_type(expr :: Syntax):
+    t.poly_instance(lookup_poly_type(expr))
 
   fun wrap_type(expr :: Syntax, ty):
     statinfo_meta.wrap(expr, '(($type_key, $(type_to_syntax(ty))))')
+
+  fun register_type(sym, ty):
+    table[sym] := ty

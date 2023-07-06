@@ -212,7 +212,7 @@ fun to_contract(type :: Type, enforce_poly :: Boolean):
     | ~else: error(#'to_contract,
                    "got confused, trying to generate a contract for " +& type)
 
-fun to_expression(type :: Type,  tvar_names :~ Map = {}): // FIXME: `tvar_names` should be `===`-based
+fun to_expression(type :: Type,  tvar_names :: Map = {}): // FIXME: `tvar_names` should be `===`-based
   recur loop (type = type):
     match type
     | type :: Defn:
@@ -245,10 +245,10 @@ fun to_expression(type :: Type,  tvar_names :~ Map = {}): // FIXME: `tvar_names`
     | type :: ParameterOf:
         'ParameterOf(#false, $(loop(type.element)))'
     | type :: Poly:
-        let name = Symbol.gen("a")
+        let name = Syntax.make_temp_id("a")
         'block:
            let $name = gen_tvar(#false)
-           Poly(#false, $name, $(to_expression(type.tvar, tvar_names ++ {type.tvar, name})))'
+           Poly(#false, $name, $(to_expression(type.type, tvar_names ++ {type.tvar: name})))'
     | type :: OpaqueDatatype:
         'OpaqueDatatype(#false, '$(type.id)', [], '$(type.pred)')'
     | type :: Datatype:
@@ -261,6 +261,8 @@ fun to_expression(type :: Type,  tvar_names :~ Map = {}): // FIXME: `tvar_names`
               | // a non-polymophic but ununified type variable;
                 // it has to turn into something that never matches
                 'Datatype(#false, 'unknown', [])')
+    | type :: NonPolyDefn:
+        loop(type.base)
     | ~else: error(#'to_expression,
                    "got confused, trying to generate an expression for " +& type)
 
@@ -326,6 +328,12 @@ fun type_to_string(tmap :: MutableMap):
                 | // a non-polymophic but ununified type variable;
                   // it has to turn into something that never matches
                   'Datatype(#false, 'unknown', [])')
+      | type :: Defn:
+          cond
+          | type.rhs: loop(type.rhs)
+          | ~else loop(type.base)
+      | type :: NonPolyDefn:
+          loop(type.base)
       | ~else: error(#'to_string,
                      "got confused, trying to generate a string for " +& type)
 
@@ -689,11 +697,11 @@ fun let_based_poly_do(env :~ List.of(Pair), fuel):
       | ~else loop(new_defn_types, fuel-1)
   for List:
     each:
-      Pair(id, t): env
+      [id, t]: env
       defn_type: defn_types
     if t is_a Defn
-    | Pair(id, defn_type)
-    | Pair(id, t)
+    | [id, defn_type]
+    | [id, t]
 
 fun type_size(b):
   match b

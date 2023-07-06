@@ -2,11 +2,14 @@
 (require (for-syntax racket/base
                      syntax/parse/pre)
          (prefix-in rhombus: rhombus)
+         (for-syntax
+          (prefix-in rhombus: rhombus/parse))
          rhombus/private/bounce
          "private/frame.rhm")
 
 (provide (rename-out
-          [shplait-module-begin #%module-begin]))
+          [shplait-module-begin #%module-begin]
+          [shplait-top-interaction #%top-interaction]))
 (bounce "private/main.rhm")
 
 (module reader syntax/module-reader
@@ -38,4 +41,27 @@
                      'module-begin
                      null))
      (finish_current_frame)
+     (syntax-parse b
+       [(#%mb e ...)
+        #`(#%mb e ...
+                (begin-for-syntax
+                  (rhombus:rhombus-expression #,(syntax-parse (build_register_defn_types)
+                                                  [(parsed kw (re g)) #'g]))))])]))
+
+(define-syntax (shplait-top-interaction stx)
+  (syntax-parse stx
+    #:datum-literals (top)
+    [(_ . (top form ...))
+     (define b
+       (local-expand #'(rhombus:#%top-interaction
+                        . (top form ...))
+                     'top-level
+                     null))
+     (finish_current_frame)
+     (let loop ([b b])
+       (syntax-parse b
+         #:literals (#%expression begin)
+         [(#%expression e) (displayln (string-append "- " (interaction_type_string #'e)))]
+         [(begin b ...) (for-each loop (syntax->list #'(b ...)))]
+         [_ (void)]))
      b]))

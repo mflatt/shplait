@@ -13,6 +13,8 @@ export:
     parse_type
     finish_current_frame
     record_frame_defn_type
+    build_register_defn_types
+    interaction_type_string
   relet_frame
 
 meta:
@@ -20,6 +22,7 @@ meta:
               mutable opaques :: IdMap = IdMap{},
               mutable aliases :: IdMap = IdMap{},
               mutable defn_types = [],
+              mutable final_defn_types = [],
               mutable variants :: IdMap = IdMap{},
               ~parent: mutable parent :: maybe(Frame) = #false,
               mutable children :: List = [],
@@ -66,8 +69,22 @@ meta:
 
   fun finish_current_frame():
     let fr = get_current_frame()
-    t.let_based_poly_do(fr.defn_types, 100)
+    fr.final_defn_types := t.let_based_poly_do(fr.defn_types, 100)
 
   fun record_frame_defn_type(id, ty):
     let fr = get_current_frame()
     fr.defn_types := [[id, ty], & fr.defn_types]
+
+  fun build_register_defn_types():
+    let fr = get_current_frame()
+    let [[id, ty], ...] = fr.final_defn_types
+    let [sym, ...] = [statinfo_meta.lookup(id, t_s.type_key), ...]
+    expr_meta.pack_expr('block:
+                           t_s.register_type(#'$sym,
+                                             $(t.to_expression(ty)))
+                           ...
+                           #void')
+
+  fun interaction_type_string(stx):
+    let ty = t_s.lookup_poly_type(stx)
+    t.type_to_string(MutableMap())(ty)

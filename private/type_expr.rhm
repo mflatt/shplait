@@ -30,8 +30,9 @@ export:
   only_space type_expr:
     Num
     Str
-    Bool
+    Bool    
     #'
+    ListOf
 
 module parse:
   export:
@@ -66,6 +67,10 @@ type_expr.macro '#' $(id :: Identifier)':
             tvars_box.val := tvars ++ IdMap{id: tv}
             tv)
   type_expr_meta.pack(tv)
+
+type_expr.macro 'ListOf ($(elem :: type_expr_meta.Parsed))':
+  ~op_stx self
+  type_expr_meta.pack(t.ListOf(self, type_expr_meta.unpack(elem)))
 
 meta:
   fun parse(stx, src, tvars_box, lookup_tvar):
