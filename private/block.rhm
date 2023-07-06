@@ -2,21 +2,27 @@
 import:
   meta:
     "type.rhm" as t
-  "frame.rhm" as f
+    "id_map.rhm" open
   "type_statinfo.rhm" as t_s
+  "unify.rhm".unify
+  "frame.rhm" as f
 
 export:
   rename:
     shblock as block
 
-expr.macro 'shblock: $body':
+expr.macro 'shblock:
+              $defn
+              ...
+              $expr':
   ~op_stx self
-  let tv = t.gen_tvar(self)
-  let expr:
-    'block:
-       f.relet_frame: f.Frame(~result_tvar:
-                                t_s.syntax_to_type('$(t_s.type_to_syntax(tv))'),
-                              ~parent:
-                                f.get_current_frame())
-       $body'
-  f.wrap_tail_type(expr, tv)
+  let tv = t.gen_tvar(self)    
+  let e:
+    'unify ~expr $(t_s.type_to_syntax(tv)):
+       ~self: $self
+       ~init_tvars: []
+       ~defns:
+         $defn
+         ...           
+       ~body: $expr'
+  t_s.wrap_type(e, tv)

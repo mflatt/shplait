@@ -4,34 +4,46 @@ import:
     "id_map.rhm" open
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "type_expr.rhm"!parse as tyex
 
 export:
   meta:
     Frame
     get_current_frame
-    add_unify_do
-    wrap_tail_type
+    parse_type
+    finish_current_frame
+    record_frame_defn_type
   relet_frame
 
 meta:
-  class Frame(mutable unifies :: List = [],
-              mutable datatypes :: IdMap = IdMap{},
+  class Frame(mutable datatypes :: IdMap = IdMap{},
               mutable opaques :: IdMap = IdMap{},
               mutable aliases :: IdMap = IdMap{},
-              mutable env :: IdMap = IdMap{},
+              mutable defn_types = [],
               mutable variants :: IdMap = IdMap{},
-              ~result_tvar: mutable result_tvar = #false,
-              mutable tail_unify = #false,
               ~parent: mutable parent :: maybe(Frame) = #false,
-              mutable children :: List = []):
-    constructor(~result_tvar: result_tvar = #false,
-                ~parent: parent = #false):
-      let fr = super(~result_tvar: result_tvar,
-                     ~parent: parent)
+              mutable children :: List = [],
+              ~poly_context: mutable poly_context :: List,
+              ~tvars: tvars :~ IdMap = IdMap{}):
+    constructor(~parent: parent = #false,
+                ~tvars: tvars = IdMap{}):
+      let fr = super(~parent: parent,
+                     ~poly_context: [Symbol.gen("poly"),
+                                     & (if parent
+                                        | Frame.poly_context(parent)
+                                        | [])],
+                     ~tvars: tvars)
       when parent
       | let parent :: Frame = parent
         parent.children := [fr, &parent.children]
       fr
+
+    method all_tvars() :: Set:
+      let base:
+        if parent
+        | Frame.all_tvars(parent)
+        | Set{}
+      (base :~ Set) ++ tvars.val_set()
 
 syntax_parameter.bridge frame: Frame()
 
@@ -46,13 +58,16 @@ meta:
     let v = syntax_parameter_meta.lookup('tvar')
     v || t.gen_tvar(#false)
 
-  fun add_unify_do(expr, a, b):
-    let fr = get_current_frame()
-    fr.unifies := [fun (): t.unify_do(expr, a, b),
-                   & fr.unifies]
+  fun parse_type(stx, src, tvars_box):
+    tyex.parse(stx, src, tvars_box,
+               fun (id):
+                 recur loop (fr :: Frame = get_current_frame()):
+                   fr.tvars[id] || (fr.parent && loop(fr.parent)))
 
-  fun wrap_tail_type(expr, ty):
+  fun finish_current_frame():
     let fr = get_current_frame()
-    fr.tail_unify := (fun (tvar):
-                        t.unify_do(expr, ty, tvar))
-    t_s.wrap_type(expr, ty)
+    t.let_based_poly_do(fr.defn_types, 100)
+
+  fun record_frame_defn_type(id, ty):
+    let fr = get_current_frame()
+    fr.defn_types := [[id, ty], & fr.defn_types]

@@ -3,7 +3,6 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
-  "frame.rhm" as f
 
 export:
   rename literal as #%literal
@@ -16,4 +15,4 @@ expr.macro 'literal $(lit :: Term)':
     | (_ :: Number): t.Num(lit)
     | ~else:
         syntax_meta.error("literal type not known", lit)  
-  f.wrap_tail_type(Syntax.relocate_span('#%literal $lit', [lit]), ty)
+  t_s.wrap_type(Syntax.relocate_span('#%literal $lit', [lit]), ty)

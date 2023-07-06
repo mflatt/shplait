@@ -1,6 +1,7 @@
 #lang rhombus/static/and_meta
 
 import:
+  "type_expr.rhm"
   "literal.rhm"
   "def.rhm"
   "fun.rhm"
@@ -8,6 +9,7 @@ import:
   "arithmetic.rhm"
 
 export:
+  all_from(.type_expr)
   all_from(.literal)
   all_from(.def)
   all_from(.fun)

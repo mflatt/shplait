@@ -1,4 +1,7 @@
 #lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
 
 export:
   meta:
@@ -24,7 +27,7 @@ meta:
   fun lookup_type(expr :: Syntax):
     let id = statinfo_meta.lookup(expr, type_key)
     if id
-    | syntax_to_type(id)
+    | t.poly_instance(syntax_to_type(id))
     | syntax_meta.error("type information not found", expr)
 
   fun wrap_type(expr :: Syntax, ty):

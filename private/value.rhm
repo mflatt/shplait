@@ -1,0 +1,16 @@
+#lang rhombus/static/and_meta
+
+export:
+  value
+  meta:
+    value_meta
+    current_value_tvar_box
+
+space.transform value:
+  space_path shplait/value
+  macro_definer macro
+  meta_namespace value_meta:
+    parse_syntax_class Parsed
+
+meta:
+  def current_value_tvar_box = Parameter.make(#false)

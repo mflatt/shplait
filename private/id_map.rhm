@@ -32,3 +32,15 @@ class IdMap(table :~ Map):
     _IdMap(for values(table = table):
              each (sym, candidates :~ List): other.table
              table ++ { sym: candidates ++ table.get(sym, []) })
+
+  method flatten() :: Map:
+    for Map:
+      each (k, ps :~ List): table
+      each Pair(key, val): ps
+      values(key, val)
+
+  method val_set() :: Set:
+    for Set:
+      each (k, ps :~ List): table
+      each Pair(_, val): ps
+      val

@@ -2,10 +2,14 @@
 import:
   meta:
     "type.rhm" as t
+    "id_map.rhm" open
+    "box.rhm" open
   "frame.rhm" as f
   "type_statinfo.rhm" as t_s
-  "block.rhm".block
   "unify.rhm".unify
+  "value.rhm".value_meta
+  "value.rhm".current_value_tvar_box
+  "block.rhm".block
 
 export:
   rename:
@@ -13,15 +17,36 @@ export:
 
 meta:
   fun build_def(self, id, rhs):
-    let tv = t.gen_tvar('$id')  
-    '«statinfo.macro '$id':
-        '(($t_s.type_key, $(t_s.type_to_syntax(tv))))'
+    let tmp = Syntax.make_temp_id(id)
+    let tvar_box = Box(IdMap{})  
+    let (mode, ty):
+      parameterize { current_value_tvar_box: tvar_box }:
+        match rhs
+        | '$(v :: value_meta.Parsed)': values('~defn',
+                                              t.create_defn(t_s.syntax_to_type(v.parsed),
+                                                            f.get_current_frame().poly_context,
+                                                            f.get_current_frame().all_tvars(),
+                                                            IdMap.val_set(tvar_box.val)))
+        | ~else values('', t.as_non_poly(t.gen_tvar('$id'),
+                                         f.get_current_frame().poly_context,
+                                         f.get_current_frame().all_tvars()))
+    f.record_frame_defn_type(id, ty)
+    let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.val)    
+    '«statinfo.macro '$id': '(($t_s.type_key,
+                               $(t_s.type_to_syntax(ty))))'
       def $id:
-        dynamic(unify $(t_s.type_to_syntax(tv)) $self:
-                  $rhs)»'
+        dynamic(unify ~defn $(t_s.type_to_syntax(ty)):
+                  ~self: $self
+                  ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
+                  ~defns:«»
+                  ~body:
+                    $rhs)»'
 
 defn.macro
 | 'define $(id :: Identifier) $(eql && '=') $rhs':
+    ~op_stx self
+    build_def(self, id, rhs)
+| 'define $(id :: Identifier): $(rhs :: Group)':
     ~op_stx self
     build_def(self, id, rhs)
 | 'define $(id :: Identifier): $block':

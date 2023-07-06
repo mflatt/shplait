@@ -5,6 +5,7 @@ import:
     rhombus/static/meta open
 
 export:
+  Type
   Bool Num Sym Shrub Vd Str Chr
   Arrow ListOf BoxOf TupleOf ArrayOf
   Datatype OpaqueDatatype MapOf ParameterOf
@@ -15,6 +16,7 @@ export:
   unify_do unify_defn_do
   let_based_poly_do
   lookup
+  type_to_string
 
 /*
  The `non_poly` field of TVar controls the layer where a type variable can
@@ -135,8 +137,8 @@ class Defn(base,
            poly_context,
            mutable insts :: List,
            mutable proto_rhs,
-           base_tvars,
-           tvars):
+           base_tvars :: Set,
+           tvars :: Set):
   extends Type
   override clone():
     error("shouldn't clone defn")
@@ -150,7 +152,7 @@ class NonPolyDefn(base, tvars):
   override clone():
     error("shouldn't clone non-poly defn")
 
-fun get_defn_tvars(t :: Type) :: List:
+fun get_defn_tvars(t :: Type) :: Set:
   match t
   | Defn(_, _, _, _, _, _, _, tvars): tvars
   | NonPolyDefn(_, _, tvars): tvars
@@ -208,8 +210,7 @@ fun to_contract(type :: Type, enforce_poly :: Boolean):
         | loop(type.rep)
         | tvar_names.get(type, 'Any')
     | ~else: error(#'to_contract,
-                   "got confused, trying to generate a contract",
-                   type)
+                   "got confused, trying to generate a contract for " +& type)
 
 fun to_expression(type :: Type,  tvar_names :~ Map = {}): // FIXME: `tvar_names` should be `===`-based
   recur loop (type = type):
@@ -261,8 +262,7 @@ fun to_expression(type :: Type,  tvar_names :~ Map = {}): // FIXME: `tvar_names`
                 // it has to turn into something that never matches
                 'Datatype(#false, 'unknown', [])')
     | ~else: error(#'to_expression,
-                   "got confused, trying to generate an expression",
-                   type)
+                   "got confused, trying to generate an expression for " +& type)
 
 fun gen_tvar(src, is_arrow = #false):
   if is_arrow
@@ -313,10 +313,7 @@ fun type_to_string(tmap :: MutableMap):
       | type :: ParameterOf:
           [#'ParameterOf, loop(type.element)]
       | type :: Poly:
-          let name = Symbol.gen("a")
-          'block:
-             let $name = gen_tvar(#false)
-             Poly(#false, $name, $(to_expression(type.tvar, tmap ++ {type.tvar, name})))'
+          type_to_string(tmap)(instance(type.tvar, gen_tvar(#'poly))(type.type))
       | type :: OpaqueDatatype:
           'OpaqueDatatype(#false, '$(type.id)', [], '$(type.pred)')'
       | type :: Datatype:
@@ -330,8 +327,7 @@ fun type_to_string(tmap :: MutableMap):
                   // it has to turn into something that never matches
                   'Datatype(#false, 'unknown', [])')
       | ~else: error(#'to_string,
-                     "got confused, trying to generate a string",
-                     type)
+                     "got confused, trying to generate a string for " +& type)
 
 fun non_poly_do(t :: Type, poly_context :: List):
   recur loop (t :: Type = t):
@@ -388,6 +384,7 @@ fun non_poly_do(t :: Type, poly_context :: List):
           loop(a)
     | t :: Poly:
         loop(t.type)
+    | ~else: t
 
 fun as_non_poly(t :: Type, poly_context, tvars):
   non_poly_do(t, poly_context)
@@ -512,7 +509,7 @@ fun extract_srcs_do(r, ht :: MutableMap):
   | r :: List:
       r.for_each(fun (i): extract_srcs_do(i, ht))
 
-fun raise_typecheck_error(main_expr :: Syntax, a, b,
+fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
                           reason = #false,
                           ~is_function_call: is_function_call = #false):
   let exprs :: List:
@@ -527,7 +524,7 @@ fun raise_typecheck_error(main_expr :: Syntax, a, b,
     | exprs
   let context = MutableMap()
   throw Exn.Fail.Syntax((if base.#{error-print-source-location}() && main_expr
-                         | let loc = main_expr.srcloc()
+                         | let loc = Syntax.srcloc(main_expr)
                            let s :~ String = if loc | Srcloc.to_report_string(loc) | ""
                            if s == "" | "" | s ++ ": "
                          | "")
@@ -760,7 +757,7 @@ fun occurs(a :: Type, b :: Type):
         occurs(a, arg)
   | ~else #false
 
-fun extract_tvars(t, poly_context :: List, base_tvars :: List):
+fun extract_tvars(t, poly_context :: List, base_tvars :: Set):
   let tvars:
     recur loop(t = t) :~ Set:
       match t
@@ -773,9 +770,7 @@ fun extract_tvars(t, poly_context :: List, base_tvars :: List):
               if (c1 < c2) && (poly_context == non_poly.drop_left(c2-c1))
               | {t}
               | Set{}
-          | (for any:
-               each p: base_tvars
-               t === Pair.rest(p)):
+          | base_tvars[t]:
               Set{}
           | ~else:
               {t}
@@ -793,14 +788,14 @@ fun extract_tvars(t, poly_context :: List, base_tvars :: List):
           List.append(& t.args.map(loop))
       | t :: Poly:
           loop(t.type) ++ { t.tvar: #false }
-      | ~else: []        
+      | ~else: Set{}     
   tvars.to_list()
 
 fun unify_defn_do(expr, a, b):
   match a
   | a :: Defn:
       let pi = poly_instance(a.base)
-      non_poly_do(b, [Symbol.gen(), a.poly_context])
+      non_poly_do(b, [Symbol.gen(), & a.poly_context])
       unify_do(expr, pi, b)
       unless a.rhs
       | a.proto_rhs := b

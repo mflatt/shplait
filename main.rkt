@@ -3,7 +3,7 @@
                      syntax/parse/pre)
          (prefix-in rhombus: rhombus)
          rhombus/private/bounce
-         "private/typecheck.rhm")
+         "private/frame.rhm")
 
 (provide (rename-out
           [shplait-module-begin #%module-begin]))
@@ -32,11 +32,10 @@
     #:datum-literals (top)
     [(_ (top form ...))
      (define b
-       (local-expand #`(rhombus:#%module-begin
+       (local-expand #'(rhombus:#%module-begin
                         (top
                          form ...))
                      'module-begin
                      null))
-     (typecheck_do)
+     (finish_current_frame)
      b]))
-
