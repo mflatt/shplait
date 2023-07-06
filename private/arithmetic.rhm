@@ -23,7 +23,6 @@ def_binary < Bool
 def_binary > Bool
 def_binary <= Bool
 def_binary >= Bool
-def_binary == Bool
 def_binary != Bool
 
 export: rename: _not as !
@@ -31,3 +30,11 @@ expr.macro '_not $right':
   ~op_stx self
   t.unify_do(right, t_s.lookup_type(right), t.Bool(self))
   t_s.wrap_type('! $right', t.Bool('$self $right'))
+
+export: rename: equals as ==
+expr.macro '$left equals $right':
+  ~op_stx self
+  let tv = t.gen_tvar(self)
+  t.unify_do(left, t_s.lookup_type(left), tv)
+  t.unify_do(right, t_s.lookup_type(right), tv)
+  t_s.wrap_type('$left == $right', t.Bool(self))

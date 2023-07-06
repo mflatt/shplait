@@ -6,6 +6,7 @@ import:
   "def.rhm"
   "fun.rhm"
   "block.rhm"
+  "if.rhm"
   "arithmetic.rhm"
   "list.rhm"
 
@@ -15,6 +16,7 @@ export:
   all_from(.def)
   all_from(.fun)
   all_from(.block)
+  all_from(.if)
   all_from(.arithmetic)
   all_from(.list)
   #%parens

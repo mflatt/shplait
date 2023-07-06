@@ -1,0 +1,43 @@
+#lang shplait
+
+fun id(x): x
+
+id(1)
+id("x")
+
+def n:
+  def x = 10
+  x
+
+fun f(x :: #'a, y :: #'b):
+  fun h(z :: #'c):
+    z
+  h("a")
+
+f(1, "b")
+f("ok", "b")
+
+[]
+def g = []
+
+fun sum(l :: ListOf(Num)):
+  first(l) + first(rest(l))
+
+if 1 == 2 | "yes" | "no"
+
+
+cond
+| ~else: "else"
+         
+cond
+| 1 == 2: "no"
+| ~else: "else"
+                    
+cond
+| #true: "yes"
+| ~else: "else"
+
+#//
+cond
+| 1 == 2: "no"
+
