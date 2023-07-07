@@ -9,8 +9,9 @@ export:
   Bool Num Sym Shrub Vd Str Chr
   Arrow ListOf BoxOf TupleOf ArrayOf
   Datatype OpaqueDatatype MapOf ParameterOf
+  ParenOf
   gen_tvar
-  to_contract to_expression
+  to_expression
   create_defn poly_ize as_non_poly get_defn_tvars
   Poly poly_instance at_source instantiate_constructor_at
   unify_do unify_defn_do
@@ -123,6 +124,12 @@ class Poly(tvar :: TVar, type :: Type):
   override clone():
     error("shouldn't clone poly")
 
+// For parsing, only
+class ParenOf(args :: List.of(Type)):
+  extends Type
+  override clone():
+    this with (args = args.map(Type.clone))
+
 /*
  A `defn` is a type for a variable bound by `define`. It's meant to
  support generalization to a polymorphic type, but that
@@ -158,59 +165,6 @@ fun get_defn_tvars(t :: Type) :: Set:
   | NonPolyDefn(_, _, tvars): tvars
   | ~else: []
 
-fun to_contract(type :: Type, enforce_poly :: Boolean):
-  recur loop (type = type,
-              ~tvar_names: tvar_names :~ Map = {}, // FIXME: should be `===`-based
-              ~is_contra: is_contra = #false,
-              ~is_inside_mutable: is_inside_mutable = #false):
-    match type
-    | type :: Defn:
-        if type.rhs
-        | loop(type.rhs)
-        | loop(List.first(type.proto_rhs))
-    | type :: NonPolyDefn:
-        loop(type.base)
-    | _ :: Bool: 'Boolean'
-    | _ :: Num: 'Number'
-    | _ :: Sym: 'Symbol'
-    | _ :: Shrub: 'Syntax'
-    | _ :: Vd: 'Void'
-    | _ :: Str: 'String'
-    | _ :: Chr: 'Char'
-    | type :: Arrow:
-        let [arg, ...] = type.args
-        'Function.of([$(loop(arg, ~is_contra: !is_contra)), ...],
-                     $(loop(type.result)))'
-    | type :: ListOf:
-        'List.of($(loop(type.element)))'
-    | type :: BoxOf:
-        'Box.of($(loop(type.element)))'
-    | type :: ArrayOf:
-        'Array.of($(loop(type.element)))'
-    | type :: MapOf:
-        'Map.of($(loop(type.key)), $(loop(type.val)))'
-    | type :: TupleOf:
-        let [arg, ...] = type.args
-        'Tuple.of(matching([_ :: $(loop(arg)), ...]))'
-    | type :: ParameterOf:
-        'Parameter.of($(loop(type.element)))'
-    | type :: Poly:
-        if enforce_poly
-        | let name = Symbol.gen("a")
-          let tvar_names = tvar_names ++ { type.tvar: name } // FIXME: need something like `new-∀/c`
-          loop(type.type, ~tvar_names: tvar_names)
-        | loop(type.type)
-    | type :: OpaqueDatatype:
-        type.pred
-    | type :: Datatype:
-        type.id
-    | type :: TVar:
-        // this can be done with new-∀ (in the poly? case), but only new-∃ exists at the moment
-        if type.rep
-        | loop(type.rep)
-        | tvar_names.get(type, 'Any')
-    | ~else: error(#'to_contract,
-                   "got confused, trying to generate a contract for " +& type)
 
 fun to_expression(type :: Type,  tvar_names :: Map = {}): // FIXME: `tvar_names` should be `===`-based
   recur loop (type = type):
@@ -273,7 +227,15 @@ fun gen_tvar(src, is_arrow = #false):
 
 fun type_to_string(tmap :: MutableMap):
   fun (type :: Type):
-    recur loop (type = type) :~ String:
+    recur loop(type = type) :~ String:
+      fun loop_at(type, context) :~ String:
+        let str = loop(type)
+        match type
+        | _ :: Arrow:
+            "(" ++ str ++ ")"
+        | _ :: TupleOf:
+            "(" ++ str ++ ")"
+        | ~else str
       match type
       | type :: TVar:
           cond
@@ -283,7 +245,8 @@ fun type_to_string(tmap :: MutableMap):
               let a = tmap.get(type, #false)
               if a
               | a
-              | let a = (((if type.src == #'poly | "" | "_") :~ String)
+              | let a = ("#'"
+                           ++ ((if type.src == #'poly | "" | "_") :~ String)
                            ++ (block:
                                  let n = tmap.length()
                                  if n < 26
@@ -291,9 +254,9 @@ fun type_to_string(tmap :: MutableMap):
                                  | "a" +& n))
                 tmap[type] := a
                 a
-      | _ :: Bool: "Bool"
-      | _ :: Num: "Num"
-      | _ :: Sym: "Sym"
+      | _ :: Bool: "Boolean"
+      | _ :: Num: "Number"
+      | _ :: Sym: "Symbol"
       | _ :: Shrub: "Shrub"
       | _ :: Vd: "Void"
       | _ :: Str: "String"
@@ -303,22 +266,22 @@ fun type_to_string(tmap :: MutableMap):
           | []:
               "() -> " ++ loop(type.result)
           | [arg]:
-              loop(arg) ++ " -> " ++ loop(type.result)
+              loop_at(arg, #'arrow) ++ " -> " ++ loop(type.result)
           | [arg0, arg, ...]:
               "(" ++ loop(arg0) ++ String.append(& [", " ++ loop(arg), ...]) ++ ") -> " ++ loop(type.result)
       | type :: ListOf:
-          "ListOf(" ++ loop(type.element) ++ ")"
+          "Listof(" ++ loop(type.element) ++ ")"
       | type :: BoxOf:
-          "BoxOf(" ++ loop(type.element) ++ ")"
+          "Boxof(" ++ loop(type.element) ++ ")"
       | type :: ArrayOf:
-          "ArrayOf(" ++ loop(type.element) ++ ")"
+          "Arrayof(" ++ loop(type.element) ++ ")"
       | type :: MapOf:
-          "MapOf(" ++ loop(type.key) ++ ", " ++ loop(type.val) ++ ")"
+          "Mapof(" ++ loop(type.key) ++ ", " ++ loop(type.val) ++ ")"
       | type :: TupleOf:
           match type.args
-          | []: "TupleOf()"
+          | []: "()"
           | [arg0, arg, ...]:
-              "TupleOf(" ++ loop(arg0) ++ String.append(& [", " ++ loop(arg), ...]) ++ ")"
+              loop_at(arg0, #'tuple) ++ String.append(& [" * " ++ loop_at(arg, #'tuple), ...])
       | type :: ParameterOf:
           [#'ParameterOf, loop(type.element)]
       | type :: Poly:

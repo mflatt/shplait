@@ -9,7 +9,7 @@ def n:
   def x = 10
   x
 
-def m :: Num = 11
+def m :: Number = 11
 
 fun f(x :: #'a, y :: #'b):
   fun h(z :: #'c):
@@ -22,14 +22,14 @@ f("ok", "b")
 cons(1, [])
 def g = []
 
-fun sum(l :: ListOf(Num)):
+fun sum(l :: Listof(Number)):
   if l == []
   | 0
   | first(l) + sum(rest(l))
 
 if 1 == 2 | "yes" | "no"
 
-// (a Bool -> a)
+// (a, Boolean) -> a
 fun poly_rec(a, ok):
   if ok
   | a
@@ -75,3 +75,7 @@ fun combine(p, f):
   | OneD(x): x
   | TwoD(x, y): f(x, y)
 combine(TwoD(1, "a"), fun (x, y): x + 0)
+
+fun check_my_type(x :: Number * Number * String -> (String -> Number)):
+  "x"
+

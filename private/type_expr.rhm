@@ -10,29 +10,38 @@ space.enforest type_expr:
   space_path shplait/type
   macro_definer macro
   meta_namespace type_expr_meta:
-   parse_syntax_class Parsed
-   parsed_packer _pack
-   parsed_unpacker _unpack
-   parse_checker: fun (stx, proc):
-                    if _unpack(stx, fun (_): #false)
-                    | stx
-                    | match stx
-                      | '$(t :: type_expr_meta.Parsed)': t
-   export:
-     pack
-     unpack
-   fun pack(t :: t.Type):
-     _pack(t_s.type_to_syntax(t))
-   fun unpack(stx):
-     t_s.syntax_to_type(_unpack(stx))
+    description "type"
+    reflection space
+    parse_syntax_class Parsed
+    parse_infix_more_syntax_class AfterInfixParsed
+    parsed_packer _pack
+    parsed_unpacker _unpack
+    identifier_parser: fun(stx):
+                         syntax_meta.error("expected a type", stx)
+    parse_checker: fun (stx, proc):
+                     if _unpack(stx, fun (_): #false)
+                     | stx
+                     | match stx
+                       | '$(t :: type_expr_meta.Parsed)': t
+    export:
+      pack
+      unpack
+    fun pack(t :: t.Type):
+      Syntax.relocate(_pack(t_s.type_to_syntax(t)), t.src)
+    fun unpack(stx):
+      t_s.syntax_to_type(_unpack(stx))
 
 export:
   only_space type_expr:
-    Num
-    Str
-    Bool    
+    Number
+    String
+    Boolean
+    Void
     #'
-    ListOf
+    Listof
+    #%parens
+    ->
+    *
 
 module define:
   export:
@@ -50,15 +59,32 @@ meta:
   def current_tvars_box = Parameter.make(IdMap{})
   def current_tvar_lookup = Parameter.make(fun (_): #false)
 
-type_expr.macro 'Num':
+  syntax_class ParsedType:
+    fields: type
+    kind: ~group
+  | '$(tp :: type_expr_meta.Parsed)':
+      field type:
+        extract_parsed(tp)
+
+  fun extract_parsed(tp):
+    match type_expr_meta.unpack(tp)
+    | _ :: t.ParenOf:
+        syntax_meta.error("parenthesized types without `->` afterward", tp)
+    | ty: ty
+
+type_expr.macro 'Number':
   ~op_stx self
   type_expr_meta.pack(t.Num(self))
 
-type_expr.macro 'Str':
+type_expr.macro 'String':
   ~op_stx self
   type_expr_meta.pack(t.Str(self))
 
-type_expr.macro 'Bool':
+type_expr.macro 'Boolean':
+  ~op_stx self
+  type_expr_meta.pack(t.Bool(self))
+
+type_expr.macro 'Void':
   ~op_stx self
   type_expr_meta.pack(t.Bool(self))
 
@@ -75,14 +101,51 @@ type_expr.macro '#' $(id :: Identifier)':
             tv)
   type_expr_meta.pack(tv)
 
-type_expr.macro 'ListOf ($(elem :: type_expr_meta.Parsed))':
+type_expr.macro 'Listof ($(elem :: ParsedType))':
   ~op_stx self
-  type_expr_meta.pack(t.ListOf(self, type_expr_meta.unpack(elem)))
+  type_expr_meta.pack(t.ListOf(self, elem.type))
+
+type_expr.macro
+| '#%parens ($(elem :: ParsedType))':
+    type_expr_meta.pack(elem.type)
+| '#%parens $(args && '($(elem :: ParsedType), ...)')':
+    ~op_stx self
+    type_expr_meta.pack(t.ParenOf(args, [elem.type, ...]))  
+
+type_expr.macro '$args -> $(result :: type_expr_meta.AfterInfixParsed('->')) $()':
+  ~op_stx self
+  ~associativity ~right
+  ~weaker_than *
+  let r_ty: extract_parsed(result)
+  values(match type_expr_meta.unpack(args)
+         | ps :: t.ParenOf:
+             type_expr_meta.pack(t.Arrow(self, ps.args, r_ty))
+         | arg:
+             type_expr_meta.pack(t.Arrow(self, [arg], r_ty)),
+         '$result.tail ...')
+
+type_expr.macro '$init * $(next :: type_expr_meta.AfterInfixParsed('*')) $()':
+  ~op_stx self
+  let init_ty: extract_parsed(init)
+  let next_ty: extract_parsed(next)
+  recur loop (args = [next_ty, init_ty],
+              src = '$init $self $next',
+              tail = '$next.tail ...'):
+    match tail:
+    | ('$op $tail ...' where '$(bound_as type_expr_meta.space: '*')' = op):
+        let '$(next :: type_expr_meta.AfterInfixParsed('*'))' = '$tail ...'
+        loop([extract_parsed(next), & args],
+             '$src $op $next',
+             '$next.tail ...')
+    | ~else:
+        values(type_expr_meta.pack(t.TupleOf(src, List.reverse(args))),
+               tail)
 
 meta:
   fun parse(stx, src, tvars_box, lookup_tvar):
     parameterize { current_tvars_box: tvars_box,
-                   current_tvar_lookup: lookup_tvar}:
+                   current_tvar_lookup: lookup_tvar}:      
       match stx
       | '': t.gen_tvar(src)
-      | '$(t :: type_expr_meta.Parsed)': type_expr_meta.unpack(t)
+      | '$(t :: ParsedType)':
+          t.type

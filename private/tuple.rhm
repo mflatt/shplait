@@ -1,0 +1,30 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+
+export:
+  rename:
+    shvalues as values
+
+class Tuple(args :~ List):
+  private implements Printable
+  private override print(op):
+    rhombus.display("values(", op)
+    for:
+      each:
+        arg: args
+        i: 0..
+      when i > 0
+      | rhombus.display(", ")
+      rhombus.print(arg, op)
+    rhombus.display(")", op)
+
+expr.macro 'shvalues $(args && '($(expr :: expr_meta.Parsed), ...)')':
+  ~op_stx self
+  let [ty, ...] = [t_s.lookup_type(expr), ...]
+  t_s.wrap_type('Tuple([$expr, ...])',
+                t.TupleOf('$self $args', [ty, ...]))
+  
