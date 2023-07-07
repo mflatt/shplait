@@ -4,6 +4,7 @@ import:
     "type.rhm" as t
     "id_map.rhm" open
     "box.rhm" open
+  "argument.rhm" open
   "type_statinfo.rhm" as t_s
   "frame.rhm" as f
   "unify.rhm".unify
@@ -18,16 +19,6 @@ export:
     call as #%call
 
 meta:
-  syntax_class Argument:
-    kind ~group
-    fields:
-      id
-      type_seq
-  | '$(id :: Identifier)':
-      field type_seq = ''
-  | '$(id :: Identifier) :: $te ...':
-      field type_seq = '$te ...'
-
   syntax_class MaybeType:
     kind ~sequence
     fields:

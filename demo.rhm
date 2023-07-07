@@ -9,6 +9,8 @@ def n:
   def x = 10
   x
 
+def m :: Num = 11
+
 fun f(x :: #'a, y :: #'b):
   fun h(z :: #'c):
     z

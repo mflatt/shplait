@@ -18,12 +18,8 @@ export:
   relet_frame
 
 meta:
-  class Frame(mutable datatypes :: IdMap = IdMap{},
-              mutable opaques :: IdMap = IdMap{},
-              mutable aliases :: IdMap = IdMap{},
-              mutable defn_types = [],
+  class Frame(mutable defn_types = [],
               mutable final_defn_types = [],
-              mutable variants :: IdMap = IdMap{},
               ~parent: mutable parent :: maybe(Frame) = #false,
               mutable children :: List = [],
               ~poly_context: mutable poly_context :: List,

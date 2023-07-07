@@ -4,6 +4,7 @@ import:
     "type.rhm" as t
     "id_map.rhm" open
     "box.rhm" open
+  "argument.rhm" open
   "frame.rhm" as f
   "type_statinfo.rhm" as t_s
   "unify.rhm".unify
@@ -16,20 +17,26 @@ export:
     define as def
 
 meta:
-  fun build_def(self, id, rhs):
+  fun build_def(self, id, type_seq, rhs):
     let tmp = Syntax.make_temp_id(id)
-    let tvar_box = Box(IdMap{})  
-    let (mode, ty):
+    let tvar_box = Box(IdMap{})
+    let (mode, ty):      
       parameterize { current_value_tvar_box: tvar_box }:
-        match rhs
-        | '$(v :: value_meta.Parsed)': values('~defn',
-                                              t.create_defn(t_s.syntax_to_type(v),
-                                                            f.get_current_frame().poly_context,
-                                                            f.get_current_frame().all_tvars(),
-                                                            IdMap.val_set(tvar_box.val)))
-        | ~else values('', t.as_non_poly(t.gen_tvar('$id'),
-                                         f.get_current_frame().poly_context,
-                                         f.get_current_frame().all_tvars()))
+        fun default():
+          values('', t.as_non_poly(f.parse_type(type_seq, id, tvar_box),
+                                   f.get_current_frame().poly_context,
+                                   f.get_current_frame().all_tvars()))
+        match type_seq
+        | '':
+            match rhs
+            | '$(v :: value_meta.Parsed)':
+                values('~defn',
+                       t.create_defn(t_s.syntax_to_type(v),
+                                     f.get_current_frame().poly_context,
+                                     f.get_current_frame().all_tvars(),
+                                     IdMap.val_set(tvar_box.val)))
+            | ~else default()
+        | ~else default()
     f.record_frame_defn_type(id, ty)
     let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.val)    
     '«statinfo.macro '$id': '(($t_s.type_key,
@@ -43,14 +50,14 @@ meta:
                     $rhs)»'
 
 defn.macro
-| 'define $(id :: Identifier) $(eql && '=') $rhs':
+| 'define $(lhs :: Argument) $(eql && '=') $rhs':
     ~op_stx self
-    build_def(self, id, rhs)
-| 'define $(id :: Identifier): $(rhs :: Group)':
+    build_def(self, lhs.id, lhs.type_seq, rhs)
+| 'define $(lhs :: Argument): $(rhs :: Group)':
     ~op_stx self
-    build_def(self, id, rhs)
-| 'define $(id :: Identifier): $block':
+    build_def(self, lhs.id, lhs.type_seq, rhs)
+| 'define $(lhs :: Argument): $block':
     ~op_stx self
-    build_def(self, id,
+    build_def(self, lhs.id, lhs.type_seq,
               // this is Shplait's `block`:
               'block: $block')

@@ -1,0 +1,16 @@
+#lang rhombus/static/and_meta
+
+export:
+  meta:
+    Argument
+
+meta:
+  syntax_class Argument:
+    kind ~sequence
+    fields:
+      id
+      type_seq
+  | '$(id :: Identifier)':
+      field type_seq = ''
+  | '$(id :: Identifier) :: $te ...':
+      field type_seq = '$te ...'

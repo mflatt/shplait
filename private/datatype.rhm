@@ -4,6 +4,7 @@ import:
     "type.rhm" as t
     "box.rhm" open
     "id_map.rhm" open
+  "argument.rhm" open
   "frame.rhm" as f
   "type_statinfo.rhm" as t_s
   "type_expr.rhm"!define.type_expr  
@@ -14,19 +15,8 @@ import:
 export:
   type
 
-meta:
-  syntax_class Field:
-    kind ~group
-    fields:
-      id
-      type_seq
-  | '$(id :: Identifier)':
-      field type_seq = ''
-  | '$(id :: Identifier) :: $te ...':
-      field type_seq = '$te ...'
-
 decl.macro 'type $(id :: Identifier)
-            | $(var_id :: Identifier) ($(field :: Field), ...)
+            | $(var_id :: Identifier) ($(field :: Argument), ...)
             | ...':
   let tvar_box = Box(IdMap{})
   let [[field_ty, ...], ...] = [[f.parse_type(field.type_seq, field.id, tvar_box), ...], ...]
