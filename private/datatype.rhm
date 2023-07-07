@@ -9,24 +9,38 @@ import:
   "type_statinfo.rhm" as t_s
   "type_expr.rhm"!define.type_expr  
   "type_expr.rhm"!define.type_expr_meta
+  "type_expr.rhm"!parse.current_tvars_box
   "pattern.rhm".pattern
   "pattern.rhm".pattern_meta
 
 export:
   type
 
-decl.macro 'type $(id :: Identifier)
+meta:
+  syntax_class MaybeArgs:
+    kind ~sequence
+    fields:
+      [arg, ...]
+  | '':
+      field [arg, ...] = []
+  | '($arg, ...)'
+
+decl.macro 'type $(id :: Identifier) $(args :: MaybeArgs)
             | $(var_id :: Identifier) ($(field :: Argument), ...)
             | ...':
+  ~op_stx self
   let tvar_box = Box(IdMap{})
+  let arg_tys :~ List = parse_arg_types([args.arg, ...], self, args, tvar_box)
+  let [arg_ty, ...] = arg_tys
   let [[field_ty, ...], ...] = [[f.parse_type(field.type_seq, field.id, tvar_box), ...], ...]
   let [var_tmp_id, ...] = [Syntax.make_temp_id(var_id), ...]
-  let dty = t.Datatype(id, id, [])
-  let [var_ty, ...] = [t.Arrow(var_id, [field_ty, ...], dty), ...]
+  let dty = t.Datatype(id, id, arg_tys)
+  let [var_ty, ...] = [t.poly_ize(t.Arrow(var_id, [field_ty, ...], dty), arg_tys), ...]
   Function.pass(f.record_frame_defn_type(var_id, var_ty), ...)
   let dty_sym = t_s.type_to_syntax(dty)
   let [var_ty_sym, ...] = [t_s.type_to_syntax(var_ty), ...]
   let len = [var_id, ...].length()
+  let dt_arg_len = arg_tys.length()
   '«namespace ~open:
       class $id():
         nonfinal
@@ -36,20 +50,44 @@ decl.macro 'type $(id :: Identifier)
       export:
         rename: $var_id as $var_tmp_id
         ...
-    type_expr.macro '$id':
-      type_expr_meta.pack(t_s.syntax_to_type('$dty_sym'))
+    $(if [arg_ty, ...] == []
+      | '«type_expr.macro '$id':
+            type_expr_meta.pack(t_s.syntax_to_type('$dty_sym'))»'
+      | let [arg_g_id, ...] = [Syntax.make_temp_id(arg_ty), ...]
+        '«type_expr.macro '$id($('$')$arg_g_id, ...)':
+            type_expr_meta.pack(instantiate_datatype('$dty_sym', [$arg_g_id, ...]))»')
     expr.macro '$var_id':
       t_s.wrap_type('$var_tmp_id',
                     t_s.syntax_to_type('$var_ty_sym'))
     ...
     pattern.macro '$var_id':
       pattern_meta.pack('($id,
+                          $dt_arg_len,
                           $len,
                           $var_tmp_id,
-                          [$(t_s.type_to_syntax(field_ty)), ...])')
+                          $var_ty_sym)')
     ...
     // for use by `f.build_register_defn_types`:
     statinfo.macro '$var_id':
       '(($t_s.type_key, $var_ty_sym))'
     ...
     »'
+
+meta:
+  fun parse_arg_types([arg_g, ...], self, args, tvars_box):
+    when args == []
+    | syntax_meta.error("empty parenthesized sequence of type variables not allowed", self, args)
+    for List:
+      each arg_g: [arg_g, ...]
+      match arg_g
+      | '#'$(id :: Identifier)':
+          f.parse_type(arg_g, self, tvars_box)
+      | ~else:
+          syntax_meta.error("expected a type variable", self, arg_g)
+
+  fun instantiate_datatype(ty_sym, [arg_g, ...]):
+    match t_s.syntax_to_type(ty_sym)
+    | dt :: t.Datatype:
+        let tvars_box = current_tvars_box()
+        dt with (args = [f.parse_type(arg_g, arg_g, tvars_box),
+                         ...])

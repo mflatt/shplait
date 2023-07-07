@@ -102,7 +102,7 @@ meta:
                   [body, ...],
                   else_body):
     let '$(expr :: expr_meta.Parsed)' = expr_in
-    let [[dt_id, dt_n, pat_id, [pat_ty, ...]], ...]:
+    let [[dt_id, dt_arg_n, dt_n, pat_id, pat_ctr_ty,], ...]:
       for List:
         each ctr: [ctr, ...]
         match ctr
@@ -110,6 +110,7 @@ meta:
             pattern_meta.unpack(pat)
         | ~else syntax_meta.error("expected a variant name", self, ctr)
     let the_dt_id = [dt_id, ...][0]    
+    let the_dt_arg_n = [dt_arg_n, ...][0]    
     for values(seen = IdMap{}):
       each:
         ctr: [ctr, ...]
@@ -119,12 +120,18 @@ meta:
       when seen[ctr]
       | syntax_meta.error("duplicate case for variant", self, ctr)
       seen ++ IdMap{ ctr: #true }
-    t.unify_do(self, t_s.lookup_type(expr), t.Datatype(self, the_dt_id, []))
+    let dt_args:
+      for List:
+        each i: 0..the_dt_arg_n
+        t.gen_tvar(expr_in)
+    let dt_ty = t.Datatype(self, the_dt_id, dt_args)
+    t.unify_do(self, t_s.lookup_type(expr), dt_ty)
     if else_body
     | when [dt_n, ...][0] == [dt_n, ...].length():
       | syntax_meta.error("else case is unreachable", self)
     | unless [dt_n, ...][0] == [dt_n, ...].length()
       | syntax_meta.error("missing at least one variant case", self)
+    let [[pat_ty, ...], ...]: [t.Arrow.args(t.instantiate_constructor_at(pat_ctr_ty, dt_ty)), ...]
     let [[arg_id, ...], ...] = [[Syntax.make_temp_id(pat_ty), ...], ...]
     for:
       each:

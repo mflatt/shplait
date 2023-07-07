@@ -11,7 +11,7 @@ export:
   Datatype OpaqueDatatype MapOf ParameterOf
   gen_tvar
   to_contract to_expression
-  create_defn as_non_poly get_defn_tvars
+  create_defn poly_ize as_non_poly get_defn_tvars
   Poly poly_instance at_source instantiate_constructor_at
   unify_do unify_defn_do
   let_based_poly_do
@@ -299,8 +299,13 @@ fun type_to_string(tmap :: MutableMap):
       | _ :: Str: "String"
       | _ :: Chr: "Char"
       | type :: Arrow:
-          let [arg, ...] = type.args
-          "(" ++ String.append(& [loop(arg) ++ " ", ...]) ++ "-> " ++ loop(type.result) ++ ")"
+          match type.args
+          | []:
+              "() -> " ++ loop(type.result)
+          | [arg]:
+              loop(arg) ++ " -> " ++ loop(type.result)
+          | [arg0, arg, ...]:
+              "(" ++ loop(arg0) ++ String.append(& [", " ++ loop(arg), ...]) ++ ") -> " ++ loop(type.result)
       | type :: ListOf:
           "ListOf(" ++ loop(type.element) ++ ")"
       | type :: BoxOf:
@@ -310,8 +315,10 @@ fun type_to_string(tmap :: MutableMap):
       | type :: MapOf:
           "MapOf(" ++ loop(type.key) ++ ", " ++ loop(type.val) ++ ")"
       | type :: TupleOf:
-          let [arg, ...] = type.args
-          [#'TupleOf, [loop(arg), ...]]
+          match type.args
+          | []: "TupleOf()"
+          | [arg0, arg, ...]:
+              "TupleOf(" ++ loop(arg0) ++ String.append(& [", " ++ loop(arg), ...]) ++ ")"
       | type :: ParameterOf:
           [#'ParameterOf, loop(type.element)]
       | type :: Poly:
@@ -319,10 +326,10 @@ fun type_to_string(tmap :: MutableMap):
       | type :: OpaqueDatatype:
           'OpaqueDatatype(#false, '$(type.id)', [], '$(type.pred)')'
       | type :: Datatype:
-          if type.args == []
-          | to_string(type.id)
-          | let [arg, ...] = type.args
-            type.id +& "(...)"
+          match type.args
+          | []: to_string(type.id)
+          | [arg0, arg, ...]:
+              to_string(type.id) ++ "(" ++ loop(arg0) ++ String.append(& [", " ++ loop(arg), ...]) ++ ")"
       | type :: TVar:
           tmap.get(type, #false)
             || (if type.rep
@@ -400,7 +407,7 @@ fun as_non_poly(t :: Type, poly_context, tvars):
   non_poly_do(t, poly_context)
   NonPolyDefn(t.src, t, tvars)
 
-fun instance(old_tvar, new_tvar):
+fun instance(old_tvar :: TVar, new_tvar):
   fun loop(t):
     match t
     | _ when t === old_tvar: new_tvar
@@ -455,7 +462,7 @@ fun instantiate_constructor_at(t :: Type, dt :: Datatype):
   recur loop (t = t, orig_poly :~ List = []):
     match t
     | t :: Poly:
-        loop(t.type, [t.type, & orig_poly])
+        loop(t.type, [t.tvar, & orig_poly])
     | ~else:
         unless orig_poly.length() == dt.args.length()
         | error("constructor abstraction mismatch")
@@ -466,7 +473,7 @@ fun instantiate_constructor_at(t :: Type, dt :: Datatype):
               loop(instance(o, List.first(new))(t), orig, List.rest(new))
 
 fun create_defn(t :: Type, poly_context, base_tvars, tvars):
-  let p = poly_ize(t, poly_context, base_tvars)
+  let p = poly_ize_wrt(t, poly_context, base_tvars)
   Defn(t.src,
        p,
        if (p is_a Poly) | #false | p,
@@ -476,8 +483,11 @@ fun create_defn(t :: Type, poly_context, base_tvars, tvars):
        base_tvars,
        tvars)
 
-fun poly_ize(t :: Type, poly_context, base_tvars):
-  recur loop (tvars = extract_tvars(t, poly_context, base_tvars),
+fun poly_ize_wrt(t :: Type, poly_context, base_tvars):
+  poly_ize(t, extract_tvars(t, poly_context, base_tvars))
+
+fun poly_ize(t :: Type, tvars :: List):
+  recur loop (tvars = tvars.reverse(),
               t :~ Type = t):
     match tvars
     | []: t
@@ -664,7 +674,7 @@ fun resolve_defn_types(env :: List) :~ List:
     | t :: Defn:
         t.rhs || (block:
                     let b = simplify_all_do(t.proto_rhs)
-                    let poly = poly_ize(b, t.poly_context, t.base_tvars)
+                    let poly = poly_ize_wrt(b, t.poly_context, t.base_tvars)
                     t.insts.for_each(fun (Pair(a, d)):
                                        unify_do(a, d, poly_instance(poly)))
                     poly)

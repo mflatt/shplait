@@ -65,3 +65,13 @@ match Rectangle(10, 12)
 match ["apple"]
 | []: "ok"
 | cons(f, r): f
+
+type PosnOf(#'a, #'b)
+| OneD(x :: #'a)
+| TwoD(x :: #'a, y :: #'b)
+  
+fun combine(p, f):
+  match p
+  | OneD(x): x
+  | TwoD(x, y): f(x, y)
+combine(TwoD(1, "a"), fun (x, y): x + 0)

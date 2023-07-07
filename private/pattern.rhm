@@ -17,5 +17,5 @@ space.transform pattern:
       stx
     fun unpack(stx :: Syntax):
       match stx
-      | '($dt_id, $dt_n, $pat_id, [$ty, ...])':
-          [dt_id, dt_n.unwrap(), pat_id, [t_s.syntax_to_type(ty), ...]]
+      | '($dt_id, $dt_arg_len, $dt_n, $pat_id, $ty)':
+          [dt_id, dt_arg_len.unwrap(), dt_n.unwrap(), pat_id, t_s.syntax_to_type(ty)]
