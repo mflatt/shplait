@@ -257,7 +257,7 @@ fun type_to_string(tmap :: MutableMap):
       | _ :: Bool: "Boolean"
       | _ :: Num: "Number"
       | _ :: Sym: "Symbol"
-      | _ :: Shrub: "Shrub"
+      | _ :: Shrub: "Syntax"
       | _ :: Vd: "Void"
       | _ :: Str: "String"
       | _ :: Chr: "Char"

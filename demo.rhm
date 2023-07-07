@@ -79,3 +79,10 @@ combine(TwoD(1, "a"), fun (x, y): x + 0)
 fun check_my_type(x :: Number * Number * String -> (String -> Number)):
   "x"
 
+match 'y'
+| 'x': "yes"
+| '$other': "no"
+
+match 'y $['z', 'w']; q'
+| '$v ...; ...': v
+| ~else: [[]]

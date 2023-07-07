@@ -12,6 +12,7 @@ import:
   "arithmetic.rhm"
   "list.rhm"
   "tuple.rhm"
+  "syntax.rhm"
 
 export:
   all_from(.type_expr)
@@ -25,5 +26,5 @@ export:
   all_from(.arithmetic)
   all_from(.list)
   all_from(.tuple)
+  all_from(.syntax)
   #%parens
-

@@ -1,0 +1,73 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+
+export:
+  rename:
+    shquotes as #%quotes
+  only_space expr:
+    $
+
+module convert:
+  export:
+    meta:
+      convert_pat
+
+expr.macro '«shquotes '$tmpl'»':
+  ~op_stx self
+  t_s.wrap_type('«#%quotes '$tmpl'»',
+                t.Shrub(self))
+
+meta:
+  fun convert_pat(pat):
+    fun group(pat):
+      fun dots(hd, tl):
+        let [tm_pat_cvt, [[tm_id, tm_tmpl, tm_id_ty], ...]] = group(hd)
+        let [g_pat_cvt, g_ids] = group(tl)
+        ['$tm_pat_cvt $('...') $g_pat_cvt', [[tm_id, '[$tm_tmpl, $('...')]', t.ListOf(t.Type.src(tm_id_ty), tm_id_ty)],
+                                             ...,
+                                             &g_ids]]
+      match pat:
+      | '':
+          ['', []]
+      | '$(op && '...') $_ ...':
+          syntax_meta.error("misplaced ellipses", op)
+      | '$(op && '$') $id $('...') $tail ...':
+          dots('$op $id', '$tail ...')
+      | '$tm $('...') $tail ...':
+          dots(tm, '$tail ...')
+      | '«$(op && '$') '$(t :: Term)' $tail ...»':
+          let [pat_cvt, ids] = group('$tail ...')
+          ['«$('$')'$t' $pat_cvt»', ids]
+      | '$(op && '$') $id $tail ...':
+          unless id is_a Identifier
+          | syntax_meta.error("expected an identifier after `$`", id)
+          let [pat_cvt, ids] = group('$tail ...')
+          let tmpl = Syntax.make_temp_id(id)
+          ['$(Syntax.relocate('$', op)) ($tmpl :: Term) $pat_cvt', [[id, tmpl, t.Shrub(id)], &ids]]
+      | '$(op && '$') $_ ...':
+          syntax_meta.error("misplaced escape", op)
+      | '$tm $tail ...':
+          let [pat_cvt, ids] = group('$tail ...')
+          ['$tm $pat_cvt', ids]
+    fun multi(pat):
+      match pat
+      | '': ['', []]
+      | '$(g :: Group)': group(pat)
+      | '$g; $('...'); $tail; ...':
+          let [g_pat_cvt,  [[g_id, g_tmpl, g_id_ty], ...]] = group('$g')
+          let [m_pat_cvt, m_ids] = multi('$tail; ...')
+          ['$g_pat_cvt; $('...'); $m_pat_cvt', [[g_id, '[$g_tmpl, $('...')]', t.ListOf(t.Type.src(g_id_ty), g_id_ty)],
+                                                ...,
+                                                &m_ids]]
+      | '$g; $tail; ...':
+          let [g_pat_cvt, g_ids] = group('$tail ...')
+          let [m_pat_cvt, m_ids] = multi('$tail; ...')
+          ['$g_pat_cvt; $m_pat_cvt', [& g_ids, &m_ids]]
+          
+    match pat:
+    | '...': [pat, []]
+    | '$': [pat, []]
+    | ~else multi(pat)

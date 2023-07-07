@@ -7,6 +7,7 @@ import:
   "type_statinfo.rhm" as t_s
   "unify.rhm".unify
   "list.rhm".cons
+  "syntax.rhm"!convert.convert_pat
 
 export:
   rename:
@@ -30,6 +31,18 @@ meta:
   | '| $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)
      | ~else: $(empty_body :: Group)'
 
+  syntax_class SyntaxClauses:
+    fields:
+      [pat, ...]
+      [body, ...]
+      else_body
+  | '«| '$pat': $(body :: Group)
+      | ...»':
+      field else_body = #false
+  | '«| '$pat': $(body :: Group)
+      | ...
+      | ~else: $(else_body :: Group)»'
+
 expr.macro
 | 'shmatch $expr ... $(lcs :: ListClauses)':
     ~op_stx self
@@ -37,6 +50,13 @@ expr.macro
                      '$expr ...',
                      lcs.empty_body,
                      lcs.f_id, lcs.r_id, lcs.cons_body)
+| 'shmatch $expr ... $(scs :: SyntaxClauses)':
+    ~op_stx self
+    parse_syntax_match(self,
+                       '$expr ...',
+                       [scs.pat, ...],
+                       [scs.body, ...],
+                       scs.else_body)
 | 'shmatch $expr ...
    | $(ctr :: Identifier) ($(field :: Identifier), ...):
        $(body :: Group)
@@ -75,10 +95,7 @@ meta:
     let r:
       '«match $expr
         | []: unify ~expr $(t_s.type_to_syntax(tv)):
-                ~self:
-                  $self
-                ~init_tvars: []
-                ~defns:«»
+                ~self: $self
                 ~body:
                   $empty_body 
         | [first, & rest]:
@@ -87,12 +104,42 @@ meta:
             statinfo.macro '$f_id': '(($t_s.type_key, $(t_s.type_to_syntax(elem_tv))))'
             statinfo.macro '$r_id': '(($t_s.type_key, $(t_s.type_to_syntax(t.ListOf(self, elem_tv)))))'
             unify ~expr $(t_s.type_to_syntax(tv)):
-              ~self:
-                  $self
-              ~init_tvars: []
-              ~defns:«»
+              ~self: $self
               ~body:
                 $cons_body»'
+    t_s.wrap_type(r, tv)
+
+  fun parse_syntax_match(self,
+                         expr_in,
+                         [pat, ...],
+                         [body, ...],
+                         else_body):
+    let '$(expr :: expr_meta.Parsed)' = expr_in
+    t.unify_do(expr_in, t_s.lookup_type(expr), t.Shrub(self))
+    let tv = t.gen_tvar(self)
+    let [[pat_cvt, [[pat_id, pat_cvt_tmpl, pat_id_ty], ...]], ...]: [convert_pat(pat), ...]
+    let [else, ...]:
+      if else_body
+      | ['~else:
+            unify ~expr $(t_s.type_to_syntax(tv)):
+              ~self: $self
+              ~body:
+                $else_body']
+      | []
+    let r:
+      '«match $expr
+        | '$pat_cvt':
+            def $pat_id = dynamic($pat_cvt_tmpl)
+            ...
+            statinfo.macro '$pat_id': '(($t_s.type_key, $(t_s.type_to_syntax(pat_id_ty))))'
+            ...
+            unify ~expr $(t_s.type_to_syntax(tv)):
+              ~self: $self
+              ~body:
+                $body
+        | ...
+        | $else
+        | ...»'
     t_s.wrap_type(r, tv)
 
 
@@ -149,8 +196,6 @@ meta:
       | ['~else:
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~self: $self
-              ~init_tvars: []
-              ~defns:«»
               ~body:
                 $else_body']
       | []
@@ -162,10 +207,7 @@ meta:
             statinfo.macro '$field': '(($t_s.type_key, $(t_s.type_to_syntax(field_tv))))'
             ...
             unify ~expr $(t_s.type_to_syntax(tv)):
-              ~self:
-                  $self
-              ~init_tvars: []
-              ~defns:«»
+              ~self: $self
               ~body:
                 $body
         | ...

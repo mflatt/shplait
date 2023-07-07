@@ -9,28 +9,37 @@ import:
 export:
   unify
 
-expr.macro 'unify $mode $type:
-              ~self:
-                $self
-              ~init_tvars:
-                [($id, $ty_stx), ...]
-              ~defns:
-                $defn
-                ...
-              ~body:
-                $(body :: Group)':
-  let tv = t.gen_tvar(self)
-  let b:
-    'block:
-       f.relet_frame: f.Frame(~parent:
-                                f.get_current_frame(),
-                              ~tvars:
-                                IdMap{ '$id': $(t_s.syntax_to_type(ty_stx)), ... })
+expr.macro
+| 'unify $mode $type:
+     ~self: $self
+     ~body: $(body :: Group)':
+    'unify $mode $type:
+       ~self: $self
+       ~init_tvars: []
+       ~defns:«»
+       ~body: $(body :: Group)'
+| 'unify $mode $type:
+     ~self:
+       $self
+     ~init_tvars:
+       [($id, $ty_stx), ...]
+     ~defns:
        $defn
        ...
-       unify_phase_2 $mode $type $self:
-         $body'
-  t_s.wrap_type(b, tv)
+     ~body:
+       $(body :: Group)':
+    let tv = t.gen_tvar(self)
+    let b:
+      'block:
+         f.relet_frame: f.Frame(~parent:
+                                  f.get_current_frame(),
+                                ~tvars:
+                                  IdMap{ '$id': $(t_s.syntax_to_type(ty_stx)), ... })
+         $defn
+         ...
+         unify_phase_2 $mode $type $self:
+           $body'
+    t_s.wrap_type(b, tv)
 
 expr.macro 'unify_phase_2 $mode $type $self:
               $(body :: Group)':
