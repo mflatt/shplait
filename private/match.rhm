@@ -6,12 +6,96 @@ import:
   "pattern.rhm".pattern_meta
   "type_statinfo.rhm" as t_s
   "unify.rhm".unify
+  "list.rhm".cons
 
 export:
   rename:
     shmatch as match
 
 meta:
+  syntax_class ListClauses:
+    fields:
+      empty_body
+      f_id
+      r_id
+      cons_body
+  | '| []: $(empty_body :: Group)
+     | $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)'
+  | '| $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)
+     | []: $(empty_body :: Group)'
+  | '| []: $(empty_body :: Group)
+     | ~else: $(cons_body :: Group)':
+      field f_id: 'f'
+      field r_id: 'r'
+  | '| $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)
+     | ~else: $(empty_body :: Group)'
+
+expr.macro
+| 'shmatch $expr ... $(lcs :: ListClauses)':
+    ~op_stx self
+    parse_list_match(self,
+                     '$expr ...',
+                     lcs.empty_body,
+                     lcs.f_id, lcs.r_id, lcs.cons_body)
+| 'shmatch $expr ...
+   | $(ctr :: Identifier) ($(field :: Identifier), ...):
+       $(body :: Group)
+   | ...
+   | ~else:
+       $(else_body :: Group)':
+    ~op_stx self
+    parse_match(self,
+                '$expr ...',
+                [[ctr, [field, ...]], ...],
+                [body, ...],
+                else_body)
+| 'shmatch $expr ...
+   | $(ctr :: Identifier) ($(field :: Identifier), ...):
+       $(body :: Group)
+   | ...':
+    ~op_stx self
+    parse_match(self,
+                '$expr ...',
+                [[ctr, [field, ...]], ...],
+                [body, ...],
+                #false)
+| 'shmatch $x ...':
+    ~op_stx self
+    syntax_meta.error("bad syntax", '$self $x ...')
+
+meta:
+  fun parse_list_match(self,
+                       expr_in,
+                       empty_body,
+                       f_id, r_id, cons_body):
+    let '$(expr :: expr_meta.Parsed)' = expr_in
+    let elem_tv = t.gen_tvar(self)
+    t.unify_do(expr_in, t_s.lookup_type(expr), t.ListOf(self, elem_tv))
+    let tv = t.gen_tvar(self)
+    let r:
+      '«match $expr
+        | []: unify ~expr $(t_s.type_to_syntax(tv)):
+                ~self:
+                  $self
+                ~init_tvars: []
+                ~defns:«»
+                ~body:
+                  $empty_body 
+        | [first, & rest]:
+            def $f_id = first
+            def $r_id = rest
+            statinfo.macro '$f_id': '(($t_s.type_key, $(t_s.type_to_syntax(elem_tv))))'
+            statinfo.macro '$r_id': '(($t_s.type_key, $(t_s.type_to_syntax(t.ListOf(self, elem_tv)))))'
+            unify ~expr $(t_s.type_to_syntax(tv)):
+              ~self:
+                  $self
+              ~init_tvars: []
+              ~defns:«»
+              ~body:
+                $cons_body»'
+    t_s.wrap_type(r, tv)
+
+
   fun parse_match(self,
                   expr_in,
                   [[ctr, [field, ...]], ...],
@@ -81,27 +165,3 @@ meta:
         | $else
         | ...»'
     t_s.wrap_type(r, tv)
-
-expr.macro
-| 'shmatch $expr ...
-   | $(ctr :: Identifier) ($(field :: Identifier), ...):
-       $(body :: Group)
-   | ...
-   | ~else:
-       $(else_body :: Group)':
-    ~op_stx self
-    parse_match(self,
-                '$expr ...',
-                [[ctr, [field, ...]], ...],
-                [body, ...],
-                else_body)
-| 'shmatch $expr ...
-   | $(ctr :: Identifier) ($(field :: Identifier), ...):
-       $(body :: Group)
-   | ...':
-    ~op_stx self
-    parse_match(self,
-                '$expr ...',
-                [[ctr, [field, ...]], ...],
-                [body, ...],
-                #false)

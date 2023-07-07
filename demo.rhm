@@ -17,7 +17,7 @@ fun f(x :: #'a, y :: #'b):
 f(1, "b")
 f("ok", "b")
 
-[]
+cons(1, [])
 def g = []
 
 fun sum(l :: ListOf(Num)):
@@ -59,3 +59,7 @@ type Color
 match Rectangle(10, 12)
 | Circle(x): x
 | Rectangle(x, y): x
+
+match ["apple"]
+| []: "ok"
+| cons(f, r): f
