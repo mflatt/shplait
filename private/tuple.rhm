@@ -9,6 +9,9 @@ export:
   rename:
     shvalues as values
 
+module tuple:
+  export Tuple
+
 class Tuple(args :~ List):
   private implements Printable
   private override print(op):
@@ -24,7 +27,8 @@ class Tuple(args :~ List):
 
 expr.macro 'shvalues $(args && '($(expr :: expr_meta.Parsed), ...)')':
   ~op_stx self
-  let [ty, ...] = [t_s.lookup_type(expr), ...]
-  t_s.wrap_type('Tuple([$expr, ...])',
-                t.TupleOf('$self $args', [ty, ...]))
-  
+  if [expr, ...].length() == 1
+  | [expr, ...][0]
+  | let [ty, ...] = [t_s.lookup_type(expr), ...]
+    t_s.wrap_type('Tuple([$expr, ...])',
+                  t.TupleOf('$self $args', [ty, ...]))

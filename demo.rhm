@@ -11,6 +11,9 @@ def n:
 
 def m :: Number = 11
 
+def values (n1, n2) = values(3, 4)
+[n1, n2]
+
 fun f(x :: #'a, y :: #'b):
   fun h(z :: #'c):
     z

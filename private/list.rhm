@@ -10,6 +10,7 @@ export:
   first
   rest
   cons
+  length
 
 expr.macro 'brackets [$(elem :: expr_meta.Parsed), ...]':
   ~op_stx self
@@ -36,3 +37,9 @@ expr.macro 'cons':
   let tv = t.gen_tvar(self)
   let ty = t.ListOf(self, tv)
   t_s.wrap_type('List.cons', t.Poly(self, tv, t.Arrow(self, [tv, ty], ty)))
+
+expr.macro 'length':
+  ~op_stx self
+  let tv = t.gen_tvar(self)
+  let ty = t.ListOf(self, tv)
+  t_s.wrap_type('List.length', t.Poly(self, tv, t.Arrow(self, [ty], t.Num(self))))

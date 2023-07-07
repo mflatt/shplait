@@ -11,7 +11,7 @@
     expr: block
     defn: block)
 
-@title{Splait}
+@title{Shplait}
 
 Shplait is a language for implementing interpreters.
 
@@ -21,7 +21,26 @@ Shplait is a language for implementing interpreters.
 @table_of_contents()
 
 @// ------------------------------------------------------------
-@section{Syntactic Categories}
+@section{Notation}
+
+Shplait syntax is based on @deftech{shrubbery} syntax, which is
+described at
+@secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top").
+Superficially, Shplait resembles
+@secref(~doc: [#'lib, "rhombus/scribblings/rhombus.scrbl"], "top"),
+which also uses shrubbery notation, but Shplait is statically typed,
+much smaller, and has a different set of constructs overall.
+
+Shrubbery notation defines the syntax of identifiers and numbers, and it
+defines how token sequences are grouped by parentheses, brackets,
+braces, quotes, and indentation. We define Shplait using patterns over
+Shrubbery forms.
+
+In the pattern form a syntactic form, @litchar{...} indicates zero or
+more repetitions of the preceding form. The preceding form can be an
+individual term, a group, or an alternative. (Words like @italic{term},
+@italic{group}, and @italic{alternative} are defined as part of the
+specificaiton of shrubbery notation.)
 
 @doc(
   ~nonterminal_key: block
@@ -53,7 +72,8 @@ Shplait is a language for implementing interpreters.
   @rhombus(Number, ~at shplait/type).}
 
   @item{@rhombus(typed_id) stands for either an identifier or an
-  identifier followed by @rhombus(::) and a declared type.}
+  identifier followed by @rhombus(::) and a declared type. Note that there
+  cannot be spaces between the two @litchar{:}s in @litchar(::).}
 
 )
 
@@ -62,43 +82,13 @@ Shplait is a language for implementing interpreters.
 @// ------------------------------------------------------------
 @section(~tag: "sec:type"){Types}
 
-@doc(
-  type 'Number'
-  type 'String'
-  type 'Boolean'
-){
+Every Shplait expression has a type. When you don't annotation a binding
+or expression with a type, then Shplait infers one that you could have
+written.
 
- Types for primitive values.
-
-}
-
-
-@doc(
-  type 'Listof($type)'
-){
-
- The type of a list whose elements have type @rhombus(type).
-
-}
-
-
-@doc(
-  ~nonterminal:
-    arg_type: block type    
-    result_type: block type
-  type '$arg_type -> $result_type'
-  type '($arg_type, ...) -> $result_type'
-){
-
- The type of a function. The @rhombus(arg_type)s specify the types of
- arguments, while @rhombus(result_type) is the type of the result.
-
- The @rhombus(->, ~at rhombus/type) operator associates to the right, so
- @rhombus(a -> b -> c) is the type of a function that takes @rhombus(a)
- and returns a function of type @rhombus(b -> c).
-
-}
-
+There are some built-in types like @rhombus(Number, ~at shplait/type),
+some built-in type constructors like @rhombus(->, ~at shplait/type),
+and new types can be defined with @rhombus(type).
 
 @doc(
   type '#' $id'
@@ -110,6 +100,37 @@ Shplait is a language for implementing interpreters.
 
 }
 
+@doc(
+  ~nonterminal:
+    variant_id: block id
+    of_id: block id
+  decl.macro 'type $id $maybe_type_args
+              | $variant_id ($typed_id, ...)
+              | ...'              
+  grammar maybe_type_args:
+    ϵ
+    (#' $of_id, #' $of_id, ...)
+){
+
+ Defines a new type, either @rhombus(id) or or @rhombus(id(type, ...)).
+ A plain @rhombus(id) type is defined when @rhombus(maybe_type_args) is
+ empty.
+
+ Each @rhombus(variant_id) is defined as a constructor function, which
+ takes arguments according to the @rhombus(typed_id) field declarations
+ and produces a value of type @rhombus(id) or @rhombus(id(type, ...)).
+
+ When a @rhombus(id(type, ...)) is defined, then @rhombus(id) is a
+ polymorphic type constructor. The constructors are polymorphic on the
+ the degree that @rhombus(type) forms in the constructor
+ @rhombus(typed_id)s refer to the @rhombus(of_id) type variables in
+ @rhombus(maybe_type_args).
+
+ See the @rhombus(match) form for dispatching on variants of a type.
+
+}
+
+
 @// ------------------------------------------------------------
 @section(~tag: "sec:defn"){Definitions and Functions}
 
@@ -119,9 +140,16 @@ Shplait is a language for implementing interpreters.
                 $defn
                 ...
                 $expr'
+  defn.macro 'def values($typed_id, ...) = $expr'
+  defn.macro 'def values($typed_id, ...):
+                $defn
+                ...
+                $expr'  
 ){
 
-  A definition of @rhombus(id) to the result of @rhombus(expr).
+ A definition of one @rhombus(typed_id) to the result of @rhombus(expr),
+ or to multiple @rhombus(typed_id)s to the components of the @tech{tuple} result
+ of @rhombus(expr),
 
 }
 
@@ -174,65 +202,18 @@ Shplait is a language for implementing interpreters.
 
 @doc(
   ~nonterminal:
-    variant_id: block id
-    of_id: block id
-  decl.macro 'type $id $maybe_type_args
-              | $variant_id ($typed_id, ...)
-              | ...'              
-  grammar maybe_type_args:
-    ϵ
-    (#' $of_id, #' $of_id, ...)
+    arg_type: block type    
+    result_type: block type
+  type '$arg_type -> $result_type'
+  type '($arg_type, ...) -> $result_type'
 ){
 
- Defines a new type, either @rhombus(id) or or @rhombus(id(type, ...)).
- A plain @rhombus(id) type is defined when @rhombus(maybe_type_args) is
- empty.
+ The type of a function. The @rhombus(arg_type)s specify the types of
+ arguments, while @rhombus(result_type) is the type of the result.
 
- Each @rhombus(variant_id) is defined as a constructor function, which
- takes arguments according to the @rhombus(typed_id) field declarations
- and produces a value of type @rhombus(id) or @rhombus(id(type, ...)).
-
- When a @rhombus(id(type, ...)) is defined, then @rhombus(id) is a
- polymorphic type constructor. The constructors are polymorphic on the
- the degree that @rhombus(type) forms in the constructor
- @rhombus(typed_id)s refer to the @rhombus(of_id) type variables in
- @rhombus(maybe_type_args).
-
-}
-
-
-@// ------------------------------------------------------------
-@section(~tag: "sec:arith"){Arithmetic and Equality}
-
-@doc(
-  expr.macro '$expr + $expr'
-  expr.macro '$expr - $expr'
-  expr.macro '$expr * $expr'
-  expr.macro '$expr / $expr'
-){
-
- Arithmetic.
-
-}
-
-@doc(
-  expr.macro '$expr == $expr'
-  expr.macro '$expr != $expr'
-){
-
- Compares any two values for (in)equality, as long as the
- @rhombus(expr)s have the same type.
-
-}
-
-@doc(
-  expr.macro '$expr < $expr'
-  expr.macro '$expr > $expr'
-  expr.macro '$expr <= $expr'
-  expr.macro '$expr >= $expr'
-){
-
- Number comparisons.
+ The @rhombus(->, ~at rhombus/type) operator associates to the right, so
+ @rhombus(a -> b -> c) is the type of a function that takes @rhombus(a)
+ and returns a function of type @rhombus(b -> c).
 
 }
 
@@ -319,7 +300,7 @@ Shplait is a language for implementing interpreters.
  can be replaced with @rhombus(~else).
 
  In the syntax-pattern form of @rhombus(match), @rhombus(target_expr)
- must produce a syntax object, and it is compared to the quoted
+ must produce a @tech{syntax object}, and it is compared to the quoted
  @rhombus(pattern)s until a match is found. A pattern can include an
  escaped with @rhombus($) to bind an identifier to the corresponding
  piece of syntax, and it can include @rhombus(...) for repetitions; when
@@ -328,3 +309,203 @@ Shplait is a language for implementing interpreters.
 
 }
 
+@// ------------------------------------------------------------
+@section(~tag: "sec:builtin"){Predefined Types and Functions}
+
+@local_table_of_contents()
+
+@// ------------------------------------------------------------
+@subsection(~tag: "sec:number"){Numbers}
+
+@doc(
+  type 'Number'
+){
+
+ The type for expressions that produce numbers.
+
+}
+
+
+@doc(
+  expr.macro '$expr + $expr'
+  expr.macro '$expr - $expr'
+  expr.macro '$expr * $expr'
+  expr.macro '$expr / $expr'
+){
+
+ Arithmetic on @rhombus(expr)s of type
+ @rhombus(Number, ~at shplait/type), and the overall arithmetic
+ expression also has type @rhombus(Number, ~at shplait/type).
+
+}
+
+@doc(
+  expr.macro '$expr < $expr'
+  expr.macro '$expr > $expr'
+  expr.macro '$expr <= $expr'
+  expr.macro '$expr >= $expr'
+){
+
+ Numeric comparison on @rhombus(expr)s of type
+ @rhombus(Number, ~at shplait/type). The overall comparison expression
+ has type @rhombus(Boolean, ~at shplait/type).
+
+}
+
+@// ------------------------------------------------------------
+@subsection(~tag: "sec:boolean"){Booleans and Equality}
+
+@doc(
+  type 'Boolean'
+){
+
+ The type for expressions that produce booleans.
+
+}
+
+@doc(
+  expr.macro '! $expr'
+){
+
+ Produces @rhombus(#true) when @rhombus(expr) produces @rhombus(#false)
+ and vice versa.
+
+}
+
+
+@doc(
+  expr.macro '$expr == $expr'
+  expr.macro '$expr != $expr'
+){
+
+ Compares any two values for (in)equality, as long as the
+ @rhombus(expr)s have the same type. The overall comparison expression
+ has type @rhombus(Boolean, ~at shplait/type).
+
+}
+
+@// ------------------------------------------------------------
+@subsection(~tag: "sec:string"){String}
+
+@doc(
+  type 'String'
+){
+
+ The type for expressions that produce strings.
+
+}
+
+@// ------------------------------------------------------------
+@subsection(~tag: "sec:list"){Lists}
+
+A list has elements of a uniform type. That is, the elements of a list
+can have any type, but they must all have the same type for a given
+list. See also @tech{tuples}.
+
+A list is written with square brackets, such as @rhombus([1, 2, 3]).
+Using square brackets implicitly uses the @rhombus(#%brackets) form, but
+@rhombus(#%brackets) is normally not written.
+
+@doc(
+  type 'Listof($type)'
+){
+
+ The type of a list whose elements have type @rhombus(type).
+
+}
+
+@doc(
+  expr.macro '#%brackets [$expr, ...]'
+){
+
+ Produces a list whose elements in order as the values produced by the
+ @rhombus(expr)s. All of the @rhombus(expr)s must have the same type.
+ Normally, @rhombus(#%brackets) is omitted, since it's implied when using
+ square brackets as an expression form.
+
+}
+
+@doc(
+  fun cons(elem :: #'a, lst :: Listof(#'a)) :: #'a
+  fun first(lst :: Listof(#'a)) :: #'a
+  fun rest(lst :: Listof(#'a)) :: Listof(#'a)
+  fun length(lst :: Listof(#'a)) :: Number
+){
+
+ The @rhombus(cons) function produces a list given its first element
+ plus the rest of the elements already in a list. The @rhombus(first)
+ function returns the first element of a nonempty list. The
+ @rhombus(rest) funrction returns a list containing all but the first
+ element of a nonempty list. The @rhombus(length) funrction returns the
+ number of elements in a list.
+
+ The @rhombus(first) and @rhombus(rest) functions raise anexception when
+ given an empty list.
+
+}
+
+@// ------------------------------------------------------------
+@subsection(~tag: "sec:tuple"){Tuples}
+
+A @deftech{tuple} is similar to a list, but its type reflects a fixed
+number of elements in the tuple, and the elements can have different
+types. A tuple of one element is equivalent to just the element.
+
+@doc(
+  type '$type * $type ... * $type'
+){
+
+ The type of a tuple whose elements each have the corresponding
+ @rhombus(type).
+
+ The @rhombus(*, ~at shplait/type) type operator for tuples has higher
+ precedence (i.e., joins more tightly) than the
+ @rhombus(->, ~at shplait/type) type operator for functions.
+
+}
+
+@doc(
+  expr.macro 'values($expr, ...)'
+){
+
+ Creates a tuple whose elements are produced by the @rhombus(expr)s.
+
+}
+
+@// ------------------------------------------------------------
+@subsection(~tag: "sec:stxobj"){Syntax Objects}
+
+A @deftech{syntax object} is a quoted term using single quotes, such as
+@rhombus('1 + * 4 f()'). A syntax object is not a string, even though it
+uses quote marks; instead, the usual @tech{shrubbery} rules apply inside
+quotes, and shrubbery structure is preserved in a syntax object.
+
+When a syntax object is written using quotes, the @rhombus(#%quotes)
+form is used implicitly, similar to the way that square brackets
+implicitly use @rhombus(#%brackets).
+
+@doc(
+  type 'Syntax'
+){
+
+ The type for expressions that produce @tech{syntax objects}.
+
+}
+
+@doc(
+  expr.macro '«#%quotes '$term ...
+                         ...'»'
+){
+
+ Produces a syntax object, quoting the @rhombus(term)s literally intead
+ of treating them as subexpressions. Usually, @rhombus(#%quotes) is
+ omitted, since it is implied by using quotes as an expression form.
+
+ When @rhombus($) is used as a @rhombus(term) and isn't the only
+ @rhombus(term), then it escapes so that the following @rhombus(term) is
+ used as an expression after all. Typically, the escaped term is an
+ identifier or a parenthesized expression. Whatever the expression
+ produces is spliced into the syntax object in place of the @rhombus($)
+ and escaped expression.
+
+}
