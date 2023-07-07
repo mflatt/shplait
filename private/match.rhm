@@ -1,0 +1,107 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+    "id_map.rhm" open
+  "pattern.rhm".pattern_meta
+  "type_statinfo.rhm" as t_s
+  "unify.rhm".unify
+
+export:
+  rename:
+    shmatch as match
+
+meta:
+  fun parse_match(self,
+                  expr_in,
+                  [[ctr, [field, ...]], ...],
+                  [body, ...],
+                  else_body):
+    let '$(expr :: expr_meta.Parsed)' = expr_in
+    let [[dt_id, dt_n, pat_id, [pat_ty, ...]], ...]:
+      for List:
+        each ctr: [ctr, ...]
+        match ctr
+        | '$(pat :: pattern_meta.Parsed)':
+            pattern_meta.unpack(pat)
+        | ~else syntax_meta.error("expected a variant name", self, ctr)
+    let the_dt_id = [dt_id, ...][0]    
+    for values(seen = IdMap{}):
+      each:
+        ctr: [ctr, ...]
+        dt_id: [dt_id, ...]
+      unless syntax_meta.equal_binding(dt_id, the_dt_id)
+      | syntax_meta.error("variant not from the same type as earlier variants", self, ctr)
+      when seen[ctr]
+      | syntax_meta.error("duplicate case for variant", self, ctr)
+      seen ++ IdMap{ ctr: #true }
+    t.unify_do(self, t_s.lookup_type(expr), t.Datatype(self, the_dt_id, []))
+    if else_body
+    | when [dt_n, ...][0] == [dt_n, ...].length():
+      | syntax_meta.error("else case is unreachable", self)
+    | unless [dt_n, ...][0] == [dt_n, ...].length()
+      | syntax_meta.error("missing at least one variant case", self)
+    let [[arg_id, ...], ...] = [[Syntax.make_temp_id(pat_ty), ...], ...]
+    for:
+      each:
+        ctr: [ctr, ...]
+        pat_id: [pat_id, ...]
+        [pat_ty, ...]: [[pat_ty, ...], ...]
+        [field, ...]: [[field, ...], ...]
+      when [pat_ty, ...].length() != [field, ...].length()
+      | syntax_meta.error("wrong field count", self, ctr)
+    let tv = t.gen_tvar(self)
+    let [[field_tv, ...], ...] = [[t.gen_tvar(field), ...], ...]
+    Function.pass(t.unify_do(field, field_tv, pat_ty), ..., ...)
+    let [else, ...]:
+      if else_body
+      | ['~else:
+            unify ~expr $(t_s.type_to_syntax(tv)):
+              ~self: $self
+              ~init_tvars: []
+              ~defns:«»
+              ~body:
+                $else_body']
+      | []
+    let r:
+      '«match $expr
+        | $pat_id($arg_id, ...):
+            def $field = $arg_id
+            ...
+            statinfo.macro '$field': '(($t_s.type_key, $(t_s.type_to_syntax(field_tv))))'
+            ...
+            unify ~expr $(t_s.type_to_syntax(tv)):
+              ~self:
+                  $self
+              ~init_tvars: []
+              ~defns:«»
+              ~body:
+                $body
+        | ...
+        | $else
+        | ...»'
+    t_s.wrap_type(r, tv)
+
+expr.macro
+| 'shmatch $expr ...
+   | $(ctr :: Identifier) ($(field :: Identifier), ...):
+       $(body :: Group)
+   | ...
+   | ~else:
+       $(else_body :: Group)':
+    ~op_stx self
+    parse_match(self,
+                '$expr ...',
+                [[ctr, [field, ...]], ...],
+                [body, ...],
+                else_body)
+| 'shmatch $expr ...
+   | $(ctr :: Identifier) ($(field :: Identifier), ...):
+       $(body :: Group)
+   | ...':
+    ~op_stx self
+    parse_match(self,
+                '$expr ...',
+                [[ctr, [field, ...]], ...],
+                [body, ...],
+                #false)

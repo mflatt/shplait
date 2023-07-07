@@ -1,0 +1,21 @@
+#lang rhombus/static/and_meta
+import:
+  "type_statinfo.rhm" as t_s
+
+export:
+  pattern
+  meta:
+    pattern_meta
+
+space.transform pattern:
+  space_path shplait/pattern
+  macro_definer macro
+  meta_namespace pattern_meta:
+    parse_syntax_class Parsed
+    export pack unpack
+    fun pack(stx :: Syntax):
+      stx
+    fun unpack(stx :: Syntax):
+      match stx
+      | '($dt_id, $dt_n, $pat_id, [$ty, ...])':
+          [dt_id, dt_n.unwrap(), pat_id, [t_s.syntax_to_type(ty), ...]]

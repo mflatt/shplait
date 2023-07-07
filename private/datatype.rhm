@@ -1,0 +1,65 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+    "box.rhm" open
+    "id_map.rhm" open
+  "frame.rhm" as f
+  "type_statinfo.rhm" as t_s
+  "type_expr.rhm"!define.type_expr  
+  "type_expr.rhm"!define.type_expr_meta
+  "pattern.rhm".pattern
+  "pattern.rhm".pattern_meta
+
+export:
+  type
+
+meta:
+  syntax_class Field:
+    kind ~group
+    fields:
+      id
+      type_seq
+  | '$(id :: Identifier)':
+      field type_seq = ''
+  | '$(id :: Identifier) :: $te ...':
+      field type_seq = '$te ...'
+
+decl.macro 'type $(id :: Identifier)
+            | $(var_id :: Identifier) ($(field :: Field), ...)
+            | ...':
+  let tvar_box = Box(IdMap{})
+  let [[field_ty, ...], ...] = [[f.parse_type(field.type_seq, field.id, tvar_box), ...], ...]
+  let [var_tmp_id, ...] = [Syntax.make_temp_id(var_id), ...]
+  let dty = t.Datatype(id, id, [])
+  let [var_ty, ...] = [t.Arrow(var_id, [field_ty, ...], dty), ...]
+  Function.pass(f.record_frame_defn_type(var_id, var_ty), ...)
+  let dty_sym = t_s.type_to_syntax(dty)
+  let [var_ty_sym, ...] = [t_s.type_to_syntax(var_ty), ...]
+  let len = [var_id, ...].length()
+  '«namespace ~open:
+      class $id():
+        nonfinal
+      class $var_id ($field.id, ...):
+        extends $id
+      ...
+      export:
+        rename: $var_id as $var_tmp_id
+        ...
+    type_expr.macro '$id':
+      type_expr_meta.pack(t_s.syntax_to_type('$dty_sym'))
+    expr.macro '$var_id':
+      t_s.wrap_type('$var_tmp_id',
+                    t_s.syntax_to_type('$var_ty_sym'))
+    ...
+    pattern.macro '$var_id':
+      pattern_meta.pack('($id,
+                          $len,
+                          $var_tmp_id,
+                          [$(t_s.type_to_syntax(field_ty)), ...])')
+    ...
+    // for use by `f.build_register_defn_types`:
+    statinfo.macro '$var_id':
+      '(($t_s.type_key, $var_ty_sym))'
+    ...
+    »'

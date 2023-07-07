@@ -23,7 +23,7 @@ meta:
       parameterize { current_value_tvar_box: tvar_box }:
         match rhs
         | '$(v :: value_meta.Parsed)': values('~defn',
-                                              t.create_defn(t_s.syntax_to_type(v.parsed),
+                                              t.create_defn(t_s.syntax_to_type(v),
                                                             f.get_current_frame().poly_context,
                                                             f.get_current_frame().all_tvars(),
                                                             IdMap.val_set(tvar_box.val)))

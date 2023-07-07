@@ -34,6 +34,12 @@ export:
     #'
     ListOf
 
+module define:
+  export:
+    type_expr
+    meta:
+      type_expr_meta
+
 module parse:
   export:
     meta:

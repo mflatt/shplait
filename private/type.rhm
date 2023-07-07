@@ -319,8 +319,10 @@ fun type_to_string(tmap :: MutableMap):
       | type :: OpaqueDatatype:
           'OpaqueDatatype(#false, '$(type.id)', [], '$(type.pred)')'
       | type :: Datatype:
-          let [arg, ...] = type.args
-          'Datatype(#false, '$(type.id)', [$(loop(arg)), ...])'
+          if type.args == []
+          | to_string(type.id)
+          | let [arg, ...] = type.args
+            type.id +& "(...)"
       | type :: TVar:
           tmap.get(type, #false)
             || (if type.rep
@@ -793,7 +795,7 @@ fun extract_tvars(t, poly_context :: List, base_tvars :: Set):
       | t :: ParameterOf:
           loop(t.element)
       | t :: Datatype:
-          List.append(& t.args.map(loop))
+          Set.append(& t.args.map(loop))
       | t :: Poly:
           loop(t.type) ++ { t.tvar: #false }
       | ~else: Set{}     

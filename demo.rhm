@@ -21,10 +21,17 @@ f("ok", "b")
 def g = []
 
 fun sum(l :: ListOf(Num)):
-  first(l) + first(rest(l))
+  if l == []
+  | 0
+  | first(l) + sum(rest(l))
 
 if 1 == 2 | "yes" | "no"
 
+// (a Bool -> a)
+fun poly_rec(a, ok):
+  if ok
+  | a
+  | poly_rec(a, #true)
 
 cond
 | ~else: "else"
@@ -41,3 +48,14 @@ cond
 cond
 | 1 == 2: "no"
 
+type Shape
+| Circle(r)
+| Rectangle(w, h)
+
+type Color
+| RGB(r, g, b)
+| CMYK(c, m, y, k)
+
+match Rectangle(10, 12)
+| Circle(x): x
+| Rectangle(x, y): x
