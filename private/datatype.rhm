@@ -36,9 +36,15 @@ decl.macro 'type $(id :: Identifier) $(args :: MaybeArgs)
   let [var_tmp_id, ...] = [Syntax.make_temp_id(var_id), ...]
   let dty = t.Datatype(id, id, arg_tys)
   let [var_ty, ...] = [t.poly_ize(t.Arrow(var_id, [field_ty, ...], dty), arg_tys), ...]
-  Function.pass(f.record_frame_defn_type(var_id, var_ty), ...)
-  let dty_sym = t_s.type_to_syntax(dty)
   let [var_ty_sym, ...] = [t_s.type_to_syntax(var_ty), ...]
+  Function.pass(f.record_frame_defn_type(var_ty_sym, var_ty), ...)
+  let dty_sym = t_s.type_to_syntax(dty)
+  let [[var_field_ty, ...], ...] = [[t.poly_ize(t.Arrow(field.id, [dty], field_ty), arg_tys), ...], ...]
+  let [[var_field_ty_sym, ...], ...] = [[t_s.type_to_syntax(var_field_ty), ...], ...]
+  Function.pass(f.record_frame_defn_type(var_field_ty_sym, var_field_ty), ..., ...)
+  let [[var_tmp_id_x, ...], ...]: // workaround nested `...` mismatch
+    fun dup(v, ls :~ List): ls.map(fun (_): v)
+    [dup(var_tmp_id, [field.id, ...]), ...]
   let len = [var_id, ...].length()
   let dt_arg_len = arg_tys.length()
   '«namespace ~open:
@@ -60,16 +66,21 @@ decl.macro 'type $(id :: Identifier) $(args :: MaybeArgs)
       t_s.wrap_type('$var_tmp_id',
                     t_s.syntax_to_type('$var_ty_sym'))
     ...
+    namespace $var_id:
+      export:
+        $field.id
+        ...
+      expr.macro '$field.id':
+        t_s.wrap_type('$(var_tmp_id_x) . $(field.id)',
+                      t_s.syntax_to_type('$var_field_ty_sym'))
+      ...
+    ...
     pattern.macro '$var_id':
       pattern_meta.pack('($id,
                           $dt_arg_len,
                           $len,
                           $var_tmp_id,
                           $var_ty_sym)')
-    ...
-    // for use by `f.build_register_defn_types`:
-    statinfo.macro '$var_id':
-      '(($t_s.type_key, $var_ty_sym))'
     ...
     »'
 

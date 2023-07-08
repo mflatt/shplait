@@ -41,14 +41,15 @@ meta:
                                       IdMap.val_set(tvar_box.val))])
             | ~else default()
         | ~else default()
-    Function.pass(f.record_frame_defn_type(id, ty), ...)
+    let [ty_sym, ...] = [t_s.type_to_syntax(ty), ...]
+    Function.pass(f.record_frame_defn_type(ty_sym, ty), ...)
     let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.val)
     let (tuple_lhs, tuple_ty):
       match [[id, ...], [ty, ...]]:
       | [[id], [ty]]: values(id, ty)
       | _: values('tu.Tuple([$id, ...])', t.TupleOf(self, [ty, ...]))
     '«statinfo.macro '$id': '(($t_s.type_key,
-                               $(t_s.type_to_syntax(ty))))'
+                               $ty_sym))'
       ...
       def $tuple_lhs:
         dynamic(unify ~defn $(t_s.type_to_syntax(tuple_ty)):

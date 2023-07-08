@@ -73,7 +73,7 @@ specificaiton of shrubbery notation.)
 
   @item{@rhombus(typed_id) stands for either an identifier or an
   identifier followed by @rhombus(::) and a declared type. Note that there
-  cannot be spaces between the two @litchar{:}s in @litchar(::).}
+  cannot be spaces between the two @litchar{:}s in @litchar{::}.}
 
 )
 
@@ -103,6 +103,7 @@ and new types can be defined with @rhombus(type).
 @doc(
   ~nonterminal:
     variant_id: block id
+    field_id: block id
     of_id: block id
   decl.macro 'type $id $maybe_type_args
               | $variant_id ($typed_id, ...)
@@ -120,13 +121,20 @@ and new types can be defined with @rhombus(type).
  takes arguments according to the @rhombus(typed_id) field declarations
  and produces a value of type @rhombus(id) or @rhombus(id(type, ...)).
 
- When a @rhombus(id(type, ...)) is defined, then @rhombus(id) is a
- polymorphic type constructor. The constructors are polymorphic on the
- the degree that @rhombus(type) forms in the constructor
- @rhombus(typed_id)s refer to the @rhombus(of_id) type variables in
- @rhombus(maybe_type_args).
+ See the @rhombus(match) form for dispatching on variants of a type with
+ pattern matching to extract field values. As an alternative,
+ @rhombus(variant_id.field_id) can be used as an accessor function,
+ where @rhombus(field_id) is the identifier within a field's
+ @rhombus(typed_id); the accessor takes an instance of the variant and
+ extracts the corresponding field value, and it raises an exception when
+ applied to value (of an expression) of type @rhombus(id) that is not an
+ instance of @rhombus(variant_id).
 
- See the @rhombus(match) form for dispatching on variants of a type.
+ When a @rhombus(id(type, ...)) is defined, then @rhombus(id) is a
+ polymorphic type constructor, and the corresponding field-accessor
+ functions are also polymorphic. These are polymorphic only to the degree
+ that @rhombus(type) forms in the constructor @rhombus(typed_id)s refer
+ to the @rhombus(of_id) type variables in @rhombus(maybe_type_args).
 
 }
 
