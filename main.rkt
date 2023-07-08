@@ -4,6 +4,7 @@
          (prefix-in rhombus: rhombus)
          (for-syntax
           (prefix-in rhombus: rhombus/parse))
+         (prefix-in rhombus: rhombus/parse)
          rhombus/private/bounce
          "private/frame.rhm")
 
@@ -47,7 +48,13 @@
         #`(#%mb e ...
                 (begin-for-syntax
                   (rhombus:rhombus-expression #,(syntax-parse (build_register_defn_types)
-                                                  [(parsed kw (re g)) #'g]))))])]))
+                                                  [(parsed kw (re g)) #'g])))
+                #,@(map (lambda (sm)
+                          #`(rhombus:rhombus-top #,(syntax-parse sm
+                                                     #:datum-literals (multi)
+                                                     [(multi g) #'g]
+                                                     [_ sm])))
+                        (get_submodules)))])]))
 
 (define-syntax (shplait-top-interaction stx)
   (syntax-parse stx

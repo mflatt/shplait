@@ -3,6 +3,7 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "value.rhm".value
 
 export:
   rename:
@@ -11,6 +12,14 @@ export:
   rest
   cons
   length
+
+value.macro
+| 'brackets []':
+    ~op_stx self
+    let tv = t.gen_tvar(self)  
+    t_s.type_to_syntax(t.Poly(self, tv, t.ListOf(self, tv)))
+| 'brackets [$_, ...]':
+    '#false'
 
 expr.macro 'brackets [$(elem :: expr_meta.Parsed), ...]':
   ~op_stx self

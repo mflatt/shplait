@@ -15,6 +15,8 @@ import:
   "tuple.rhm"
   "syntax.rhm"
   "exn.rhm"
+  "check.rhm"
+  "module.rhm"
 
 export:
   all_from(.type_expr)
@@ -31,4 +33,6 @@ export:
   all_from(.tuple)
   all_from(.syntax)
   all_from(.exn)
+  all_from(.check)
+  all_from(.module)
   #%parens

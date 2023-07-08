@@ -1,0 +1,13 @@
+#lang rhombus/static/and_meta
+import:
+  "frame.rhm" as f
+
+export:
+  rename:
+    shmodule as module
+
+decl.macro 'shmodule $(id :: Identifier):
+              $body':
+  f.register_submodule('module $id: $body')
+  ''
+  

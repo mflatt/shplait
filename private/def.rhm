@@ -33,7 +33,7 @@ meta:
         match [type_seq, ...]
         | ['']:
             match rhs
-            | '$(v :: value_meta.Parsed)':
+            | '$(v :: value_meta.Parsed)' when v.unwrap():
                 values('~defn',
                        [t.create_defn(t_s.syntax_to_type(v),
                                       poly_context,

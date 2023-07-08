@@ -769,7 +769,7 @@ fun extract_tvars(t, poly_context :: List, base_tvars :: Set):
       | t :: Datatype:
           Set.append(& t.args.map(loop))
       | t :: Poly:
-          loop(t.type) ++ { t.tvar: #false }
+          loop(t.type).remove(t.tvar)
       | ~else: Set{}     
   tvars.to_list()
 

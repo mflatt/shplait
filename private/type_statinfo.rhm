@@ -14,17 +14,21 @@ export:
     register_type
 
 meta:
-  def table = MutableMap()
+  def ty_to_sym = MutableMap()
+  def sym_to_ty = MutableMap()
 
   def type_key = 'type_key'
 
   fun type_to_syntax(ty :: t.Type):
-    let sym = Symbol.gen()
-    table[sym] := ty
-    Syntax.make(sym)    
-  
+    Syntax.make(ty_to_sym.get(ty,
+                              fun ():
+                                let sym = Symbol.gen()
+                                ty_to_sym[ty] := sym                                
+                                sym_to_ty[sym] := ty
+                                sym))
+
   fun syntax_to_type(stx :: Syntax):
-    table[stx.unwrap()]
+    sym_to_ty[stx.unwrap()]
 
   fun lookup_poly_type(expr :: Syntax):
     let id = statinfo_meta.lookup(expr, type_key)
@@ -39,4 +43,5 @@ meta:
     statinfo_meta.wrap(expr, '(($type_key, $(type_to_syntax(ty))))')
 
   fun register_type(sym, ty):
-    table[sym] := ty
+    sym_to_ty[sym] := ty
+    ty_to_sym[ty] := sym

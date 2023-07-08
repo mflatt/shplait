@@ -1,0 +1,35 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/measure
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+
+export:
+  rename:
+    shcheck as check
+  time
+
+expr.macro
+| 'shcheck:
+     $(left :: expr_meta.Parsed)
+     ~is $(right :: expr_meta.Parsed)':
+    ~op_stx self
+    t.unify_do(self, t_s.lookup_type(left), t_s.lookup_type(right))
+    '$('check'.relocate(self)):
+       $left
+       ~is $right'
+| 'shcheck:
+     $(left :: expr_meta.Parsed)
+     ~raises $(right :: expr_meta.Parsed)':
+    ~op_stx self
+    t.unify_do(self, t_s.lookup_type(right), t.Str(self))
+    '$('check'.relocate(self)):
+       $left
+       ~raises $right'
+
+expr.macro
+| 'time: $(expr :: expr_meta.Parsed)':
+    t_s.wrap_type('measure.time:
+                     $expr',
+                  t_s.lookup_type(expr))

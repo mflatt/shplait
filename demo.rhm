@@ -100,3 +100,11 @@ syntax_to_number('7')
 
 type N = Number
 fun fx(x :: N): x
+
+module test:
+  check:
+    fx(10)
+    ~is 10
+  check:
+    first([])
+    ~raises "contract violation"

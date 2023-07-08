@@ -230,4 +230,3 @@ expr.macro '$left shis_a $(ctr :: Identifier)':
   t.unify_do(self, t_s.lookup_type(left), dt_ty)
   t_s.wrap_type('$left is_a $pat_id',
                 t.Bool(self))
-  
