@@ -8,10 +8,12 @@ import:
   "unify.rhm".unify
   "list.rhm".cons
   "syntax.rhm"!convert.convert_pat
+  "syntax.rhm"!convert.syntax_def
 
 export:
   rename:
     shmatch as match
+    shis_a as is_a
 
 meta:
   syntax_class ListClauses:
@@ -117,7 +119,7 @@ meta:
     let '$(expr :: expr_meta.Parsed)' = expr_in
     t.unify_do(expr_in, t_s.lookup_type(expr), t.Shrub(self))
     let tv = t.gen_tvar(self)
-    let [[pat_cvt, [[pat_id, pat_cvt_tmpl, pat_id_ty], ...]], ...]: [convert_pat(pat), ...]
+    let [[pat_cvt, [[pat_id, pat_cvt_tmpl, pat_depth], ...]], ...]: [convert_pat(pat), ...]
     let [else, ...]:
       if else_body
       | ['~else:
@@ -129,9 +131,7 @@ meta:
     let r:
       '«match $expr
         | '$pat_cvt':
-            def $pat_id = dynamic($pat_cvt_tmpl)
-            ...
-            statinfo.macro '$pat_id': '(($t_s.type_key, $(t_s.type_to_syntax(pat_id_ty))))'
+            syntax_def $pat_id: $pat_cvt_tmpl $pat_depth
             ...
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~self: $self
@@ -214,3 +214,20 @@ meta:
         | $else
         | ...»'
     t_s.wrap_type(r, tv)
+
+expr.macro '$left shis_a $(ctr :: Identifier)':
+  ~op_stx self
+  let [dt_id, dt_arg_n, dt_n, pat_id, pat_ctr_ty,]:
+    match ctr
+    | '$(pat :: pattern_meta.Parsed)':
+        pattern_meta.unpack(pat)
+    | ~else syntax_meta.error("expected a variant name", self, ctr)
+  let dt_args:
+      for List:
+        each i: 0..dt_arg_n
+        t.gen_tvar(left)
+  let dt_ty = t.Datatype(self, dt_id, dt_args)
+  t.unify_do(self, t_s.lookup_type(left), dt_ty)
+  t_s.wrap_type('$left is_a $pat_id',
+                t.Bool(self))
+  

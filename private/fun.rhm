@@ -94,14 +94,9 @@ defn.macro
 expr.macro '$fn call ($(arg :: expr_meta.Parsed), ...)':
   ~stronger_than: ~other
   let res_tv = t.gen_tvar(fn)
-  let (fn_exp, fn_opaque) = expr_meta.parse_all(fn)
-  fun parse_all_as_tuple(e): let (e, o) = expr_meta.parse_all(e)
-                             [e, o]
-  let [[arg_exp, arg_opaque], ...] = [parse_all_as_tuple(arg), ...]
   t.unify_do(fn,
              t_s.lookup_type(fn),
-             t.Arrow(fn_exp,
-                     [t_s.lookup_type(arg_exp), ...],
+             t.Arrow(fn,
+                     [t_s.lookup_type(arg), ...],
                      res_tv))
-  // FIXME: should use opaques
-  t_s.wrap_type('$fn_exp ($arg_exp, ...)', res_tv)
+  t_s.wrap_type('$fn ($arg, ...)', res_tv)

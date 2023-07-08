@@ -1,0 +1,20 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+
+export:
+  rename:
+    sherror as error
+    shprintln as println
+
+expr.macro 'sherror':
+  ~op_stx self
+  let tv = t.gen_tvar(self)
+  t_s.wrap_type('error', t.Poly(self, tv, t.Arrow(self, [t.Sym(self), t.Str(self)], tv)))
+
+expr.macro 'shprintln':
+  ~op_stx self
+  let tv = t.gen_tvar(self)
+  t_s.wrap_type('println', t.Poly(self, tv, t.Arrow(self, [tv], t.Vd(self))))

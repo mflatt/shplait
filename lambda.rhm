@@ -1,0 +1,216 @@
+#lang shplait
+
+type Value
+| numV(n :: Number)
+| closV(arg :: Symbol,
+        body :: Exp,
+        env :: Env)
+
+type Exp
+| numE(n :: Number)
+| idE(s :: Symbol)
+| plusE(l :: Exp,
+        r :: Exp)
+| multE(l :: Exp,
+        r :: Exp)
+| letE(n :: Symbol,
+       rhs :: Exp,
+       body :: Exp)
+| lamE(n :: Symbol,
+       body :: Exp)
+| appE(fun :: Exp,
+       arg :: Exp)
+
+type Binding
+| bind(name :: Symbol,
+       val :: Value)
+
+type Env = Listof(Binding)
+
+def mt_env = []
+def extend_env = cons
+
+// parse ----------------------------------------
+fun parse(s :: Syntax) :: Exp:
+  match s
+  | '($es ...)':
+      parse('$es ...')
+  | '$t':
+      cond
+      | syntax_is_number(t): numE(syntax_to_number(s))
+      | syntax_is_symbol(t): idE(syntax_to_symbol(s))
+      | ~else:
+          error(#'parse, "bad syntax")
+  | '$left + $right':
+      plusE(parse(left), parse(right))
+  | '$left * $right':
+      plusE(parse(left), parse(right))
+  | 'let $id = $es ...:
+       $body ...':
+      letE(syntax_to_symbol(id),
+           parse('$es ...'),
+           parse('$body ...'))
+  | 'fun ($id): $body ...':
+      lamE(syntax_to_symbol(id),
+           parse('$body ...'))
+  | '$fn($arg ...)':
+      appE(parse(fn),
+           parse('$arg ...'))
+  | ~else:
+      error(#'parse, "bad syntax")
+
+/*
+(module+ test
+  (test (parse `2)
+        (numE 2))
+  (test (parse `x)
+        (idE 'x))
+  (test (parse `{+ 2 1})
+        (plusE (numE 2) (numE 1)))
+  (test (parse `{* 3 4})
+        (multE (numE 3) (numE 4)))
+  (test (parse `{+ {* 3 4} 8})
+        (plusE (multE (numE 3) (numE 4))
+               (numE 8)))
+  (test (parse `{let {[x {+ 1 2}]}
+                  y})
+        (letE 'x (plusE (numE 1) (numE 2))
+              (idE 'y)))
+  (test (parse `{lambda {x} 9})
+        (lamE 'x (numE 9)))
+  (test (parse `{double 9})
+        (appE (idE 'double) (numE 9)))
+  (test/exn (parse `{{+ 1 2}})
+            "invalid input"))
+
+*/
+      
+// interp ----------------------------------------
+fun interp(a :: Exp, env :: Env) :: Value:
+  match a
+  | numE(n): numV(n)
+  | idE(s): lookup(s, env)
+  | plusE(l, r): num_plus(interp(l, env), interp(r, env))
+  | multE(l, r): num_mult(interp(l, env), interp(r, env))
+  | letE(n, rhs, body):
+      interp(body,
+             extend_env(bind(n, interp(rhs, env)),
+                        env))
+  | lamE(n, body): closV(n, body, env)
+  | appE(fun, arg):
+      match interp(fun, env)
+      | closV(n, body, c_env):
+          interp(body,
+                 extend_env(bind(n, interp(arg, env)),
+                            c_env))
+      | ~else: error(#'interp, "not a function")
+
+/*
+                                    
+(module+ test
+  (test (interp (parse `2) mt-env)
+        (numV 2))
+  (test/exn (interp (parse `x) mt-env)
+            "free variable")
+  (test (interp (parse `x) 
+                (extend-env (bind 'x (numV 9)) mt-env))
+        (numV 9))
+  (test (interp (parse `{+ 2 1}) mt-env)
+        (numV 3))
+  (test (interp (parse `{* 2 1}) mt-env)
+        (numV 2))
+  (test (interp (parse `{+ {* 2 3} {+ 5 8}})
+                mt-env)
+        (numV 19))
+  (test (interp (parse `{lambda {x} {+ x x}})
+                mt-env)
+        (closV 'x (plusE (idE 'x) (idE 'x)) mt-env))
+  (test (interp (parse `{let {[x 5]}
+                          {+ x x}})
+                mt-env)
+        (numV 10))
+  (test (interp (parse `{let {[x 5]}
+                          {let {[x {+ 1 x}]}
+                            {+ x x}}})
+                mt-env)
+        (numV 12))
+  (test (interp (parse `{let {[x 5]}
+                          {let {[y 6]}
+                            x}})
+                mt-env)
+        (numV 5))
+  (test (interp (parse `{{lambda {x} {+ x x}} 8})
+                mt-env)
+        (numV 16))
+
+  (test/exn (interp (parse `{1 2}) mt-env)
+            "not a function")
+  (test/exn (interp (parse `{+ 1 {lambda {x} x}}) mt-env)
+            "not a number")
+  (test/exn (interp (parse `{let {[bad {lambda {x} {+ x y}}]}
+                              {let {[y 5]}
+                                {bad 2}}})
+                    mt-env)
+            "free variable")
+
+  #;
+  (time (interp (parse `{let {[x2 {lambda {n} {+ n n}}]}
+                          {let {[x4 {lambda {n} {x2 {x2 n}}}]}
+                            {let {[x16 {lambda {n} {x4 {x4 n}}}]}
+                              {let {[x256 {lambda {n} {x16 {x16 n}}}]}
+                                {let {[x65536 {lambda {n} {x256 {x256 n}}}]}
+                                  {x65536 1}}}}}})
+                mt-env)))
+*/
+               
+// num_plus and num_mult ----------------------------------------
+fun num_op(op :: (Number, Number) -> Number, l :: Value, r :: Value) :: Value:
+  cond
+  | l is_a numV && r is_a numV:
+      numV(op(numV.n(l), numV.n( r)))
+  | ~else:
+      error(#'interp, "not a number")
+fun num_plus(l :: Value, r :: Value) :: Value:
+  num_op(fun (a, b): a+b, l, r)
+fun num_mult(l :: Value, r :: Value) :: Value:
+  num_op(fun (a, b): a*b, l, r)
+
+
+/*
+(module+ test
+  (test (num+ (numV 1) (numV 2))
+        (numV 3))
+  (test (num* (numV 2) (numV 3))
+        (numV 6)))
+*/
+  
+// lookup ----------------------------------------
+fun lookup(n :: Symbol, env :: Env) :: Value:
+  match env
+  | []: error(#'lookup, "free variable")
+  | cons(b, rst_env):
+      cond
+      | n == bind.name(b):
+          bind.val(b)
+      | ~else:
+          lookup(n, rst_env)
+
+/*
+(module+ test
+  (test/exn (lookup 'x mt-env)
+            "free variable")
+  (test (lookup 'x (extend-env (bind 'x (numV 8)) mt-env))
+        (numV 8))
+  (test (lookup 'x (extend-env
+                    (bind 'x (numV 9))
+                    (extend-env (bind 'x (numV 8)) mt-env)))
+        (numV 9))
+  (test (lookup 'y (extend-env
+                    (bind 'x (numV 9))
+                    (extend-env (bind 'y (numV 8)) mt-env)))
+        (numV 8)))
+*/
+
+interp(parse('let f = (fun (x): x+2):
+                f(10)'),
+       mt_env)

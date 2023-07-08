@@ -11,8 +11,10 @@ import:
   "match.rhm"
   "arithmetic.rhm"
   "list.rhm"
+  "symbol.rhm"
   "tuple.rhm"
   "syntax.rhm"
+  "exn.rhm"
 
 export:
   all_from(.type_expr)
@@ -25,6 +27,8 @@ export:
   all_from(.match)
   all_from(.arithmetic)
   all_from(.list)
+  all_from(.symbol)
   all_from(.tuple)
   all_from(.syntax)
+  all_from(.exn)
   #%parens

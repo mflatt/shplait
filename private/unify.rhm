@@ -54,4 +54,4 @@ expr.macro 'unify_phase_2 $mode $type $self:
       // finishing the frame relies on the fact that the expander
       // will first fully expand all of the preceding definitions
       f.finish_current_frame()
-  expr // FIXME: `opaque_expr` should work
+  opaque_expr

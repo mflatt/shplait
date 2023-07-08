@@ -165,7 +165,6 @@ fun get_defn_tvars(t :: Type) :: Set:
   | NonPolyDefn(_, _, tvars): tvars
   | ~else: []
 
-
 fun to_expression(type :: Type,  tvar_names :: Map = {}): // FIXME: `tvar_names` should be `===`-based
   recur loop (type = type):
     match type

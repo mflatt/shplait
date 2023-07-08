@@ -29,7 +29,7 @@ space.enforest type_expr:
       unpack
     fun pack(t :: t.Type):
       let pk = _pack(t_s.type_to_syntax(t))
-      if t.src
+      if t.src is_a Syntax
       | Syntax.relocate(pk, t.src)
       | pk
     fun unpack(stx):
@@ -157,7 +157,7 @@ type_expr.macro '$init * $(next :: type_expr_meta.AfterInfixParsed('*')) $()':
                tail)
 
 meta:
-  fun parse(stx, src, tvars_box, lookup_type, lookup_tvar):
+  fun parse(stx, src :: Syntax, tvars_box, lookup_type, lookup_tvar):
     parameterize { current_tvars_box: tvars_box,
                    current_type_lookup: lookup_type,
                    current_tvar_lookup: lookup_tvar}:      

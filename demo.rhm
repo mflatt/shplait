@@ -54,32 +54,33 @@ cond
 | 1 == 2: "no"
 
 type Shape
-| Circle(r)
-| Rectangle(w, h)
+| circle(r)
+| rectangle(w, h)
 
 type Color
-| RGB(r, g, b)
-| CMYK(c, m, y, k)
+| rgb(r, g, b)
+| cmyk(c, m, y, k)
 
-match Rectangle(10, 12)
-| Circle(x): x
-| Rectangle(x, y): x
+match rectangle(10, 12)
+| circle(x): x
+| rectangle(x, y): x
 
-Circle.r(Circle(22))
+circle.r(circle(22))
+circle(22) is_a circle
 
 match ["apple"]
 | []: "ok"
 | cons(f, r): f
 
 type PosnOf(#'a, #'b)
-| OneD(x :: #'a)
-| TwoD(x :: #'a, y :: #'b)
+| oneD(x :: #'a)
+| twoD(x :: #'a, y :: #'b)
   
 fun combine(p, f):
   match p
-  | OneD(x): x
-  | TwoD(x, y): f(x, y)
-combine(TwoD(1, "a"), fun (x, y): x + 0)
+  | oneD(x): x
+  | twoD(x, y): f(x, y)
+combine(twoD(1, "a"), fun (x, y): x + 0)
 
 fun check_my_type(x :: Number * Number * String -> (String -> Number)):
   "x"
@@ -89,11 +90,13 @@ match 'y'
 | '$other': "no"
 
 match 'y $['z', 'w']; q'
-| '$v ...; ...': v
-| ~else: [[]]
+| '$v ...; ...': '($v ...) ...'
+| ~else: 'no'
 
 syntax_is_number('9')
-syntax_unwrap_number('7')
+syntax_to_number('7')
+
+'1 $(number_to_syntax(3 + 4)) 8'
 
 type N = Number
 fun fx(x :: N): x

@@ -4,6 +4,11 @@ import:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
 
+// Wrap Rhombus's syntax patterns and templates to check
+// types, which means our own layer of repetition binding.
+// Repetitions from syntax patterns can only be used
+// in syntax templates (i.e., no generalized repetition forms)
+
 export:
   rename:
     shquotes as #%quotes
@@ -15,21 +20,24 @@ module convert:
   export:
     meta:
       convert_pat
+    syntax_def
 
 expr.macro '«shquotes '$tmpl'»':
   ~op_stx self
-  t_s.wrap_type('«#%quotes '$tmpl'»',
+  let [tmpl_cvt, [[id, tmp_id, depth], ...]] = convert_tmpl(tmpl)
+  t_s.wrap_type('«block:
+                    def $(nest_rep(tmp_id, depth)) = reference_syntax_pattern_var($id, $depth)
+                    ...
+                    #%quotes '$tmpl_cvt'»',
                 t.Shrub(self))
 
 meta:
-  fun convert_pat(pat):
-    fun group(pat):
+  fun convert(pat, handle_id, handle_escape):
+    fun group(pat, depth):
       fun dots(hd, tl):
-        let [tm_pat_cvt, [[tm_id, tm_tmpl, tm_id_ty], ...]] = group(hd)
-        let [g_pat_cvt, g_ids] = group(tl)
-        ['$tm_pat_cvt $('...') $g_pat_cvt', [[tm_id, '[$tm_tmpl, $('...')]', t.ListOf(t.Type.src(tm_id_ty), tm_id_ty)],
-                                             ...,
-                                             &g_ids]]
+        let [tm_pat_cvt, tm_ids] = group(hd, depth+1)
+        let [g_pat_cvt, g_ids] = group(tl, depth)
+        ['$tm_pat_cvt $('...') $g_pat_cvt', [&tm_ids, &g_ids]]
       match pat:
       | '':
           ['', []]
@@ -39,47 +47,126 @@ meta:
           dots('$op $id', '$tail ...')
       | '$tm $('...') $tail ...':
           dots(tm, '$tail ...')
-      | '«$(op && '$') '$(t :: Term)' $tail ...»':
-          let [pat_cvt, ids] = group('$tail ...')
-          ['«$('$')'$t' $pat_cvt»', ids]
+      | '$(op && '$') $expr $tail ...' when handle_escape && (depth == 0):
+          let [pat_cvt, ids] = group('$tail ...', depth)
+          ['$(Syntax.relocate('$', op)) $(handle_escape(expr)) $pat_cvt', ids]
       | '$(op && '$') $id $tail ...':
           unless id is_a Identifier
-          | syntax_meta.error("expected an identifier after `$`", id)
-          let [pat_cvt, ids] = group('$tail ...')
+          | syntax_meta.error("expected an identifier after `$` at ellipsis depth " +& depth,
+                              id)
+          let [pat_cvt, ids] = group('$tail ...', depth)
           let tmpl = Syntax.make_temp_id(id)
-          ['$(Syntax.relocate('$', op)) ($tmpl :: Term) $pat_cvt', [[id, tmpl, t.Shrub(id)], &ids]]
+          ['$(Syntax.relocate('$', op)) $(handle_id(tmpl)) $pat_cvt', [[id, tmpl, depth], &ids]]
       | '$(op && '$') $_ ...':
           syntax_meta.error("misplaced escape", op)
       | '$tm $tail ...':
-          let [pat_cvt, ids] = group('$tail ...')
-          ['$tm $pat_cvt', ids]
-    fun multi(pat):
+          let [tm_cvt, tm_ids] = term(tm, depth)
+          let [pat_cvt, ids] = group('$tail ...', depth)
+          ['$tm_cvt $pat_cvt', [& tm_ids, & ids]]
+    fun multi(pat, depth):
       match pat
       | '': ['', []]
-      | '$(g :: Group)': group(pat)
+      | '$(g :: Group)': group(pat, depth)
       | '$g; $('...'); $tail; ...':
-          let [g_pat_cvt,  [[g_id, g_tmpl, g_id_ty], ...]] = group('$g')
-          let [m_pat_cvt, m_ids] = multi('$tail; ...')
-          ['$g_pat_cvt; $('...'); $m_pat_cvt', [[g_id, '[$g_tmpl, $('...')]', t.ListOf(t.Type.src(g_id_ty), g_id_ty)],
-                                                ...,
-                                                &m_ids]]
+          let [g_pat_cvt,  g_ids] = group('$g', depth+1)
+          let [m_pat_cvt, m_ids] = multi('$tail; ...', depth)
+          ['$g_pat_cvt; $('...'); $m_pat_cvt', [&g_ids, &m_ids]]
       | '$g; $tail; ...':
-          let [g_pat_cvt, g_ids] = group('$tail ...')
-          let [m_pat_cvt, m_ids] = multi('$tail; ...')
-          ['$g_pat_cvt; $m_pat_cvt', [& g_ids, &m_ids]]
-          
+          let [g_pat_cvt, g_ids] = group('$tail ...', depth)
+          let [m_pat_cvt, m_ids] = multi('$tail; ...', depth)
+          ['$g_pat_cvt; $m_pat_cvt', [& g_ids, &m_ids]]      
+    fun term(pat, depth):
+      match pat
+      | '($m)':
+          let [m_pat_cvt, m_ids] = multi(m, depth)
+          ['($m_pat_cvt)', m_ids]
+      | '[$m]':
+          let [m_pat_cvt, m_ids] = multi(m, depth)
+          ['[$m_pat_cvt]', m_ids]
+      | '{$m}':
+          let [m_pat_cvt, m_ids] = multi(m, depth)
+          ['{$m_pat_cvt}', m_ids]
+      | '«'$m'»':
+          let [m_pat_cvt, m_ids] = multi(m, depth)
+          ['«'$m_pat_cvt'»', m_ids]
+      | ': $m':
+          let [m_pat_cvt, m_ids] = multi(m, depth)
+          [': $m_pat_cvt', m_ids]
+      | '| $m
+         | ...':
+          let [[m_pat_cvt, m_ids], ...] = [multi(m, depth), ...]
+          ['| $m_pat_cvt
+            | ...',
+           List.append(m_ids, ...)]
+      | ~else:
+          [pat, []]
     match pat:
     | '...': [pat, []]
     | '$': [pat, []]
-    | ~else multi(pat)
+    | ~else multi(pat, 0)
+  fun convert_pat(pat):
+    convert(pat, fun (id): '($id :: Term)', #false)
+  fun convert_tmpl(pat):
+    convert(pat, fun (id): id, fun (expr): '(reference_syntax($expr))')
+
+expr.macro 'reference_syntax($(arg :: expr_meta.Parsed))':
+  t.unify_do(arg, t_s.lookup_type(arg), t.Shrub(arg))
+  'check_single_term($arg)'
+
+fun check_single_term(stx :: Syntax):
+  unless stx is_a Term
+  | error("syntax object does not have a single term\n"
+            +& "  syntax object: " +& stx) // FIXME: print syntax object as value
+  stx
+
+space.transform syntax_var:
+  space_path shplait/syntax_var
+  macro_definer macro
+  meta_namespace syntax_var_meta:
+    parse_syntax_class Parsed
+
+meta:
+  fun misuse_of_pattern_variable(id):
+    syntax_meta.error("misuse of syntax variable (outside of quotes)", id)
+
+defn.macro 'syntax_def $id: $pat_id $depth':
+  '«
+     expr.macro '$id':
+       ~op_stx self
+       $(if depth.unwrap() == 0
+         | 't_s.wrap_type('$pat_id', t.Shrub(self))'
+         | 'misuse_of_pattern_variable(self)')
+     syntax_var.macro '$id':
+       '($pat_id, $depth)'
+    »'
+
+meta:
+  fun nest_rep(e, depth):
+    if depth == 0
+    | e
+    | '[$(nest_rep(e, depth-1)), $('...')]'
+
+expr.macro 'reference_syntax_pattern_var($id, $depth)':
+  match id
+  | '$(d :: syntax_var_meta.Parsed)':
+      let '($pat_id, $pat_id_depth)' = d
+      unless depth.unwrap() == pat_id_depth.unwrap()
+      | syntax_meta.error("syntax variable is used at the wrong ellipsis depth\n"
+                            +& "  used at depth: " +& depth +& "\n"
+                            +& "  allowed only at depth: " +& pat_id_depth,
+                          id)
+      nest_rep(pat_id, depth.unwrap())
+  | ~else:
+      syntax_meta.error("identifier after `$` is not a syntax variable",
+                        id)
 
 fun oops(who, stx, what):
   error(who, "syntax object does not wrap a " +& what +& ":\n"
-               +& "  syntax object: " +& Syntax.to_source_string(stx))
+               +& "  syntax object: " +& stx)
 
-decl.nestable_macro 'extractor $is_x $unwrap_x $Ty $Ann $what':
+decl.nestable_macro 'extractor $is_x $unwrap_x $wrap_x $Ty $Ann $what':
   '«
-     export: $is_x $unwrap_x
+     export: $is_x $unwrap_x $wrap_x
      def stx_is_x:
        fun $is_x(stx :~ Syntax):
          (stx is_a Term) && (stx.unwrap() is_a $Ann)
@@ -89,13 +176,20 @@ decl.nestable_macro 'extractor $is_x $unwrap_x $Ty $Ann $what':
          let v = if stx is_a Term | stx.unwrap() | #'~no
          if v is_a $Ann | v | oops(#'$unwrap_x, stx, $what)
        $unwrap_x
+     def stx_wrap_x:
+       fun $wrap_x(v):
+         '$('$')v'
+       $wrap_x
      expr.macro '$is_x':
        ~op_stx self
        t_s.wrap_type('stx_is_x', t.Arrow(self, [t.Shrub(self)], t.Bool(self)))
      expr.macro '$unwrap_x':
        ~op_stx self
        t_s.wrap_type('stx_unwrap_x', t.Arrow(self, [t.Shrub(self)], t . $Ty(self)))
+     expr.macro '$wrap_x':
+       ~op_stx self
+       t_s.wrap_type('stx_wrap_x', t.Arrow(self, [t . $Ty(self)], t.Shrub(self)))
    »'
-extractor syntax_is_number syntax_unwrap_number Num Number "number"
-extractor syntax_is_boolean syntax_unwrap_boolean Bool Boolean "boolean"  
-extractor syntax_is_symbol syntax_unwrap_symbol Sym Symbol "symbol"
+extractor syntax_is_number syntax_to_number number_to_syntax Num Number "number"
+extractor syntax_is_boolean syntax_to_boolean boolean_to_syntax Bool Boolean "boolean"  
+extractor syntax_is_symbol syntax_to_symbol symbol_to_syntax Sym Symbol "symbol"

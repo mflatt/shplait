@@ -1,0 +1,13 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+
+export:
+  rename:
+    symbol as #'
+
+expr.macro 'symbol $(id :: Identifier)':
+  ~op_stx self
+  t_s.wrap_type('#' $id', t.Sym(self))

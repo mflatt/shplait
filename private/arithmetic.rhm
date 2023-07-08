@@ -41,3 +41,26 @@ decl.macro 'def_equality $op $type_constr':
 
 def_equality ==
 def_equality !=
+
+export:
+  rename:
+    shand as &&
+    shor as ||
+
+meta:
+  fun parse_bool(left, right, self, op):
+    let bool = t.Bool(self)
+    t.unify_do(self, t_s.lookup_type(left), bool)
+    t.unify_do(self, t_s.lookup_type(right), bool)
+    t_s.wrap_type('$left $op $right', bool)
+
+expr.macro '$left shand $right':
+  ~op_stx self
+  ~stronger_than: shor
+  ~weaker_than: ~other
+  parse_bool(left, right, self, '&&')
+
+expr.macro '$left shor $right':
+  ~op_stx self
+  ~weaker_than: ~other
+  parse_bool(left, right, self, '||')
