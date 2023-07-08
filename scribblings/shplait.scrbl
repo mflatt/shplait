@@ -553,18 +553,18 @@ implicitly use @rhombus(#%brackets).
   fun syntax_is_number(stx :: Syntax) :: Boolean
   fun syntax_is_boolean(stx :: Syntax) :: Boolean
   fun syntax_is_symbol(stx :: Syntax) :: Boolean
-  fun syntax_unwrap_number(stx :: Syntax) :: Number
-  fun syntax_unwrap_boolean(stx :: Syntax) :: Boolean
-  fun syntax_unwrap_symbol(stx :: Syntax) :: Symbol
+  fun syntax_to_number(stx :: Syntax) :: Number
+  fun syntax_to_boolean(stx :: Syntax) :: Boolean
+  fun syntax_to_symbol(stx :: Syntax) :: Symbol
 ){
 
  Functions like @rhombus(syntax_is_number) check whether a @tech{syntax
   object} has a single term representing a number, returning
  @rhombus(#true) if so and @rhombus(#false) otherwise. Other functions
- check for different kinds of primitive values.
+ check for different kinds of primitive values as representations.
 
- Functions like @rhombus(syntax_unwrap_number) extract the number that
- is inside a syntax object term, but if @rhombus(syntax_is_number) would
- return @rhombus(#false), then an exception is raised.
+ Functions like @rhombus(syntax_to_number) extract the number that a
+ syntax object represents, but if @rhombus(syntax_is_number) would return
+ @rhombus(#false), then an exception is raised.
 
 }
