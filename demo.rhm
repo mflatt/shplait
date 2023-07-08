@@ -94,3 +94,6 @@ match 'y $['z', 'w']; q'
 
 syntax_is_number('9')
 syntax_unwrap_number('7')
+
+type N = Number
+fun fx(x :: N): x

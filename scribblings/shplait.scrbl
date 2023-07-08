@@ -105,6 +105,8 @@ and new types can be defined with @rhombus(type).
     variant_id: block id
     field_id: block id
     of_id: block id
+    as_type: block type
+  decl.macro 'type $id = $as_type'
   decl.macro 'type $id $maybe_type_args
               | $variant_id ($typed_id, ...)
               | ...'              
@@ -116,6 +118,9 @@ and new types can be defined with @rhombus(type).
  Defines a new type, either @rhombus(id) or or @rhombus(id(type, ...)).
  A plain @rhombus(id) type is defined when @rhombus(maybe_type_args) is
  empty.
+
+ Using @rhombus(type) with @rhombus(=) defines @rhombus(id) as an alias
+ for @rhombus(as_type).
 
  Each @rhombus(variant_id) is defined as a constructor function, which
  takes arguments according to the @rhombus(typed_id) field declarations

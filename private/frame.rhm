@@ -5,10 +5,14 @@ import:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
   "type_expr.rhm"!parse as tyex
+  "type_expr.rhm"!define.type_expr_meta
+  "type_defn.rhm".type_defn_meta
 
 export:
   meta:
     Frame
+    find_type_definitions
+    lookup_found_type_definition
     get_current_frame
     parse_type
     finish_current_frame
@@ -18,7 +22,8 @@ export:
   relet_frame
 
 meta:
-  class Frame(mutable defn_types = [],
+  class Frame(mutable type_defns :~ IdMap = IdMap{},
+              mutable defn_types = [],
               mutable final_defn_types = [],
               ~parent: mutable parent :: maybe(Frame) = #false,
               mutable children :: List = [],
@@ -57,8 +62,27 @@ meta:
     let v = syntax_parameter_meta.lookup('tvar')
     v || t.gen_tvar(#false)
 
+  fun find_type_definitions(': $g; ...'):
+    let fr = get_current_frame()
+    for:
+      each g: [g, ...]
+      match g
+      | '$(td :: type_defn_meta.Parsed)':
+          let (id, type, tvars) = type_defn_meta.unpack(td)
+          when id && !fr.type_defns[id]
+          | fr.type_defns := fr.type_defns ++ IdMap{ id: [type, tvars] }
+      | ~else: #void
+
+  fun lookup_found_type_definition(id):
+    let [type, tvars] = get_current_frame().type_defns[id]
+    values(type, tvars)
+
   fun parse_type(stx, src, tvars_box):
     tyex.parse(stx, src, tvars_box,
+               fun (id):
+                 match get_current_frame().type_defns[id]
+                 | [type, tvars]: type_expr_meta.pack(type)
+                 | ~else #false,
                fun (id):
                  recur loop (fr :: Frame = get_current_frame()):
                    fr.tvars[id] || (fr.parent && loop(fr.parent)))

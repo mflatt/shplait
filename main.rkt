@@ -34,6 +34,7 @@
   (syntax-parse stx
     #:datum-literals (top)
     [(_ (top form ...))
+     (find_type_definitions #'(block form ...))
      (define b
        (local-expand #'(rhombus:#%module-begin
                         (top

@@ -10,8 +10,10 @@ import:
   "type_expr.rhm"!define.type_expr  
   "type_expr.rhm"!define.type_expr_meta
   "type_expr.rhm"!parse.current_tvars_box
+  "type_defn.rhm".type_defn  
+  "type_defn.rhm".type_defn_meta
   "pattern.rhm".pattern
-  "pattern.rhm".pattern_meta
+  "pattern.rhm".pattern_meta  
 
 export:
   type
@@ -25,64 +27,89 @@ meta:
       field [arg, ...] = []
   | '($arg, ...)'
 
-decl.macro 'type $(id :: Identifier) $(args :: MaybeArgs)
-            | $(var_id :: Identifier) ($(field :: Argument), ...)
-            | ...':
-  ~op_stx self
-  let tvar_box = Box(IdMap{})
-  let arg_tys :~ List = parse_arg_types([args.arg, ...], self, args, tvar_box)
-  let [arg_ty, ...] = arg_tys
-  let [[field_ty, ...], ...] = [[f.parse_type(field.type_seq, field.id, tvar_box), ...], ...]
-  let [var_tmp_id, ...] = [Syntax.make_temp_id(var_id), ...]
-  let dty = t.Datatype(id, id, arg_tys)
-  let [var_ty, ...] = [t.poly_ize(t.Arrow(var_id, [field_ty, ...], dty), arg_tys), ...]
-  let [var_ty_sym, ...] = [t_s.type_to_syntax(var_ty), ...]
-  Function.pass(f.record_frame_defn_type(var_ty_sym, var_ty), ...)
-  let dty_sym = t_s.type_to_syntax(dty)
-  let [[var_field_ty, ...], ...] = [[t.poly_ize(t.Arrow(field.id, [dty], field_ty), arg_tys), ...], ...]
-  let [[var_field_ty_sym, ...], ...] = [[t_s.type_to_syntax(var_field_ty), ...], ...]
-  Function.pass(f.record_frame_defn_type(var_field_ty_sym, var_field_ty), ..., ...)
-  let [[var_tmp_id_x, ...], ...]: // workaround nested `...` mismatch
-    fun dup(v, ls :~ List): ls.map(fun (_): v)
-    [dup(var_tmp_id, [field.id, ...]), ...]
-  let len = [var_id, ...].length()
-  let dt_arg_len = arg_tys.length()
-  '«namespace ~open:
-      class $id():
-        nonfinal
-      class $var_id ($field.id, ...):
-        extends $id
-      ...
-      export:
-        rename: $var_id as $var_tmp_id
+type_defn.macro
+| 'type $(id :: Identifier) = $ty_e ...':
+    ~op_stx self
+    let type = f.parse_type('$ty_e ...', self, Box(IdMap{}))
+    type_defn_meta.pack(id, type, IdMap{})
+| 'type $(id :: Identifier) $(args :: MaybeArgs)
+   | $_
+   | ...':
+    ~op_stx self
+    let tvar_box = Box(IdMap{})
+    let arg_tys :~ List = parse_arg_types([args.arg, ...], self, args, tvar_box)
+    let dty = t.Datatype(id, id, arg_tys)
+    type_defn_meta.pack(id, dty, tvar_box.val)
+| 'type $_ ...':
+    type_defn_meta.pack_nothing()
+
+decl.macro
+| 'type $(id :: Identifier) = $ty_e ...':
+    let (ty, tvars) = f.lookup_found_type_definition(id)
+    // The rest seems like the long way around, but it's to
+    // make sure the type is reconstructed via `f.record_frame_defn_type`
+    let ty_sym = t_s.type_to_syntax(ty)
+    f.record_frame_defn_type(ty_sym, ty)
+    '«type_expr.macro '$id':
+        type_expr_meta.pack(t_s.syntax_to_type('$ty_sym'))»'
+| 'type $(id :: Identifier) $(args :: MaybeArgs)
+   | $(var_id :: Identifier) ($(field :: Argument), ...)
+   | ...':
+    ~op_stx self
+    let (dty :: t.Datatype, tvars) = f.lookup_found_type_definition(id)
+    let tvar_box = Box(tvars)
+    let arg_tys = dty.args
+    let [arg_ty, ...] = arg_tys
+    let [[field_ty, ...], ...] = [[f.parse_type(field.type_seq, field.id, tvar_box), ...], ...]
+    let [var_tmp_id, ...] = [Syntax.make_temp_id(var_id), ...]
+    let [var_ty, ...] = [t.poly_ize(t.Arrow(var_id, [field_ty, ...], dty), arg_tys), ...]
+    let [var_ty_sym, ...] = [t_s.type_to_syntax(var_ty), ...]
+    Function.pass(f.record_frame_defn_type(var_ty_sym, var_ty), ...)
+    let dty_sym = t_s.type_to_syntax(dty)
+    let [[var_field_ty, ...], ...] = [[t.poly_ize(t.Arrow(field.id, [dty], field_ty), arg_tys), ...], ...]
+    let [[var_field_ty_sym, ...], ...] = [[t_s.type_to_syntax(var_field_ty), ...], ...]
+    Function.pass(f.record_frame_defn_type(var_field_ty_sym, var_field_ty), ..., ...)
+    let [[var_tmp_id_x, ...], ...]: // workaround nested `...` mismatch
+      fun dup(v, ls :~ List): ls.map(fun (_): v)
+      [dup(var_tmp_id, [field.id, ...]), ...]
+    let len = [var_id, ...].length()
+    let dt_arg_len = arg_tys.length()
+    '«namespace ~open:
+        class $id():
+          nonfinal
+        class $var_id ($field.id, ...):
+          extends $id
         ...
-    $(if [arg_ty, ...] == []
-      | '«type_expr.macro '$id':
-            type_expr_meta.pack(t_s.syntax_to_type('$dty_sym'))»'
-      | let [arg_g_id, ...] = [Syntax.make_temp_id(arg_ty), ...]
-        '«type_expr.macro '$id($('$')$arg_g_id, ...)':
-            type_expr_meta.pack(instantiate_datatype('$dty_sym', [$arg_g_id, ...]))»')
-    expr.macro '$var_id':
-      t_s.wrap_type('$var_tmp_id',
-                    t_s.syntax_to_type('$var_ty_sym'))
-    ...
-    namespace $var_id:
-      export:
-        $field.id
-        ...
-      expr.macro '$field.id':
-        t_s.wrap_type('$(var_tmp_id_x) . $(field.id)',
-                      t_s.syntax_to_type('$var_field_ty_sym'))
+        export:
+          rename: $var_id as $var_tmp_id
+          ...
+      $(if [arg_ty, ...] == []
+        | '«type_expr.macro '$id':
+              type_expr_meta.pack(t_s.syntax_to_type('$dty_sym'))»'
+        | let [arg_g_id, ...] = [Syntax.make_temp_id(arg_ty), ...]
+          '«type_expr.macro '$id($('$')$arg_g_id, ...)':
+              type_expr_meta.pack(instantiate_datatype('$dty_sym', [$arg_g_id, ...]))»')
+      expr.macro '$var_id':
+        t_s.wrap_type('$var_tmp_id',
+                      t_s.syntax_to_type('$var_ty_sym'))
       ...
-    ...
-    pattern.macro '$var_id':
-      pattern_meta.pack('($id,
-                          $dt_arg_len,
-                          $len,
-                          $var_tmp_id,
-                          $var_ty_sym)')
-    ...
-    »'
+      namespace $var_id:
+        export:
+          $field.id
+          ...
+        expr.macro '$field.id':
+          t_s.wrap_type('$(var_tmp_id_x) . $(field.id)',
+                        t_s.syntax_to_type('$var_field_ty_sym'))
+        ...
+      ...
+      pattern.macro '$var_id':
+        pattern_meta.pack('($id,
+                            $dt_arg_len,
+                            $len,
+                            $var_tmp_id,
+                            $var_ty_sym)')
+      ...
+      »'
 
 meta:
   fun parse_arg_types([arg_g, ...], self, args, tvars_box):

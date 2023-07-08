@@ -1,0 +1,36 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "id_map.rhm" open
+  "type_statinfo.rhm" as t_s
+
+// a `type_defn` binding is used in an initial whole-program
+// pass to gather all defined types
+
+export:
+  type_defn
+  meta:
+    type_defn_meta
+
+space.transform type_defn:
+  space_path shplait/type_defn
+  macro_definer macro
+  meta_namespace type_defn_meta:
+    parse_syntax_class Parsed
+    export: pack pack_nothing unpack
+    fun pack(id :: Syntax, ty, tvars):
+      let { tv_id: tv_ty, ... } = IdMap.flatten(tvars)
+      '($id, $(t_s.type_to_syntax(ty)), [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...])'
+    fun pack_nothing():
+      '#false'
+    fun unpack(stx :: Syntax):
+      match stx
+      | '#false': values(#false, #false)
+      | '($id, $ty_sym, [($tv_id, $tv_ty_sym), ...])':          
+          values(id,
+                 t_s.syntax_to_type(ty_sym),
+                 for values(tvars = IdMap{}):
+                   each:
+                     tv_id: [tv_id, ...]
+                     tv_ty_sym: [tv_ty_sym, ...]
+                   tvars ++ IdMap{ tv_id: t_s.syntax_to_type(tv_ty_sym)})
