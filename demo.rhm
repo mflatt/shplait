@@ -91,3 +91,6 @@ match 'y'
 match 'y $['z', 'w']; q'
 | '$v ...; ...': v
 | ~else: [[]]
+
+syntax_is_number('9')
+syntax_unwrap_number('7')

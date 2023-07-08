@@ -9,6 +9,7 @@ export:
     shquotes as #%quotes
   only_space expr:
     $
+// more exports macro-generated for `syntax_is_number`, etc.
 
 module convert:
   export:
@@ -71,3 +72,30 @@ meta:
     | '...': [pat, []]
     | '$': [pat, []]
     | ~else multi(pat)
+
+fun oops(who, stx, what):
+  error(who, "syntax object does not wrap a " +& what +& ":\n"
+               +& "  syntax object: " +& Syntax.to_source_string(stx))
+
+decl.nestable_macro 'extractor $is_x $unwrap_x $Ty $Ann $what':
+  '«
+     export: $is_x $unwrap_x
+     def stx_is_x:
+       fun $is_x(stx :~ Syntax):
+         (stx is_a Term) && (stx.unwrap() is_a $Ann)
+       $is_x
+     def stx_unwrap_x:
+       fun $unwrap_x(stx :~ Syntax):
+         let v = if stx is_a Term | stx.unwrap() | #'~no
+         if v is_a $Ann | v | oops(#'$unwrap_x, stx, $what)
+       $unwrap_x
+     expr.macro '$is_x':
+       ~op_stx self
+       t_s.wrap_type('stx_is_x', t.Arrow(self, [t.Shrub(self)], t.Bool(self)))
+     expr.macro '$unwrap_x':
+       ~op_stx self
+       t_s.wrap_type('stx_unwrap_x', t.Arrow(self, [t.Shrub(self)], t . $Ty(self)))
+   »'
+extractor syntax_is_number syntax_unwrap_number Num Number "number"
+extractor syntax_is_boolean syntax_unwrap_boolean Bool Boolean "boolean"  
+extractor syntax_is_symbol syntax_unwrap_symbol Sym Symbol "symbol"

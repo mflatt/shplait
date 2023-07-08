@@ -393,13 +393,38 @@ and new types can be defined with @rhombus(type).
 }
 
 @// ------------------------------------------------------------
-@subsection(~tag: "sec:string"){String}
+@subsection(~tag: "sec:string"){Strings}
 
 @doc(
   type 'String'
 ){
 
  The type for expressions that produce strings.
+
+}
+
+@// ------------------------------------------------------------
+@subsection(~tag: "sec:symbol"){Symbols}
+
+A @deftech{symbol} is similar to a string in that it simply comprises a
+sequence of characters, but a symbol expression as written with a
+@rhombus(#') prefix, instead of in double quotes. Also, the character
+sequence of a symbol must be valid for an identifier.
+
+Symbols are used primarily as the representation of an identifier within
+quoted code as a @tech{syntax object}. For example, the syntax object
+@rhombus('f(apple)') wraps the symbols @rhombus(#'f) and
+@rhombus(#'apple), while @rhombus('f("apple")') wraps a symbol
+@rhombus(#'f) and a string @rhombus("apple"). The difference in those
+examples is between representing a function call whose argument is the
+variable @rhombus(apple) versus a function call whose argument is the
+string @rhombus("apple").
+
+@doc(
+  type 'Symbol'
+){
+
+ The type for expressions that produce @tech{symbols}.
 
 }
 
@@ -515,5 +540,26 @@ implicitly use @rhombus(#%brackets).
  identifier or a parenthesized expression. Whatever the expression
  produces is spliced into the syntax object in place of the @rhombus($)
  and escaped expression.
+
+}
+
+
+@doc(
+  fun syntax_is_number(stx :: Syntax) :: Boolean
+  fun syntax_is_boolean(stx :: Syntax) :: Boolean
+  fun syntax_is_symbol(stx :: Syntax) :: Boolean
+  fun syntax_unwrap_number(stx :: Syntax) :: Number
+  fun syntax_unwrap_boolean(stx :: Syntax) :: Boolean
+  fun syntax_unwrap_symbol(stx :: Syntax) :: Symbol
+){
+
+ Functions like @rhombus(syntax_is_number) check whether a @tech{syntax
+  object} has a single term representing a number, returning
+ @rhombus(#true) if so and @rhombus(#false) otherwise. Other functions
+ check for different kinds of primitive values.
+
+ Functions like @rhombus(syntax_unwrap_number) extract the number that
+ is inside a syntax object term, but if @rhombus(syntax_is_number) would
+ return @rhombus(#false), then an exception is raised.
 
 }

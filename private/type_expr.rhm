@@ -37,6 +37,7 @@ export:
     String
     Boolean
     Syntax
+    Symbol
     Void
     #'
     Listof
@@ -84,6 +85,10 @@ type_expr.macro 'String':
 type_expr.macro 'Boolean':
   ~op_stx self
   type_expr_meta.pack(t.Bool(self))
+
+type_expr.macro 'Symbol':
+  ~op_stx self
+  type_expr_meta.pack(t.Sym(self))
 
 type_expr.macro 'Syntax':
   ~op_stx self
