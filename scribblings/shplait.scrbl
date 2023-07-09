@@ -130,7 +130,7 @@ and new types can be defined with @rhombus(type).
     field_id: block id
     of_id: block id
     as_type: block type
-  decl.macro 'type $id = $as_type'
+  decl.macro 'type $id $maybe_type_args = $as_type'
   decl.macro 'type $id $maybe_type_args
               | $variant_id ($typed_id, ...)
               | ...'              
@@ -144,9 +144,27 @@ and new types can be defined with @rhombus(type).
  empty.
 
  Using @rhombus(type) with @rhombus(=) defines @rhombus(id) as an alias
- for @rhombus(as_type).
+ for @rhombus(as_type). If @rhombus(maybe_type_args) is not empty, then
+ @rhombus(as_type) can refer to the arguments, and those references are
+ replaced with the @rhombus(type)s supplied when @rhombus(id(type, ...))
+ is used as a type. Any other type variables references in @rhombus(as_type)
+ are unified across all instantiations of the type alias.
 
- Each @rhombus(variant_id) is defined as a constructor function, which
+@examples(
+  ~eval: eval
+  ~defn:
+    type NumList = Listof(Number)
+  ~repl:
+    def ns :: NumList = [1, 2, 3]
+  ~defn:
+    type Tagged(#'a) = (Symbol * #'a)
+  ~repl:
+    def now :: Tagged(Number) = values(#'time, 1200)
+    def who :: Tagged(String) = values(#'name, "Alice")
+)
+
+ When @rhombus(type) is used with @rhombus(variant_id) cases,
+ each @rhombus(variant_id) is defined as a constructor function, which
  takes arguments according to the @rhombus(typed_id) field declarations
  and produces a value of type @rhombus(id) or @rhombus(id(type, ...)).
 
@@ -185,7 +203,7 @@ and new types can be defined with @rhombus(type).
 )
 
 
- When a @rhombus(id(type, ...)) is defined, then @rhombus(id) is a
+ When a @rhombus(id(type, ...)) is defined with @rhombus(variant_id)s, then @rhombus(id) is a
  polymorphic type constructor, and the corresponding field-accessor
  functions are also polymorphic. These are polymorphic only to the degree
  that @rhombus(type) forms in the constructor @rhombus(typed_id)s refer

@@ -12,11 +12,11 @@ export:
   Datatype OpaqueDatatype MapOf ParameterOf
   ParenOf
   ListOfShrub
-  LazyParseType
+  LazyParseType TypeConstructor
   gen_tvar
   to_expression
   create_defn poly_ize as_non_poly get_defn_tvars
-  Poly poly_instance at_source instantiate_constructor_at
+  Poly poly_instance at_source instantiate_constructor_at instantiate_at
   unify_do unify_defn_do
   let_based_poly_do
   lookup
@@ -166,10 +166,20 @@ class NonPolyDefn(base, tvars):
   override clone():
     error("shouldn't clone non-poly defn")
 
-class LazyParseType(mutable thunk_or_type):
+/*
+  LazyParseType and TypeConstructor are used for type aliases,
+  and they are fully handled by parsing.
+*/
+class LazyParseType(arg_tvars :: List.of(TVar),
+                    mutable thunk_or_type):
   extends Type
   override clone():
     error("shouldn't clone lazy type")  
+class TypeConstructor(base,
+                      arg_tvars :: List.of(TVar)):
+  extends Type
+  override clone():
+    error("shouldn't clone type constructor")  
 
 fun get_defn_tvars(t :: Type) :: Set:
   match t
@@ -436,14 +446,17 @@ fun poly_instance(t :: Type):
 
 
 fun instantiate_constructor_at(t :: Type, dt :: Datatype):
+  instantiate_at(t, dt.args)
+  
+fun instantiate_at(t :: Type, args :: List.of(Type)):
   recur loop (t = t, orig_poly :~ List = []):
     match t
     | t :: Poly:
         loop(t.type, [t.tvar, & orig_poly])
     | ~else:
-        unless orig_poly.length() == dt.args.length()
+        unless orig_poly.length() == args.length()
         | error("constructor abstraction mismatch")
-        recur loop (t = t, orig = orig_poly.reverse(), new = dt.args):
+        recur loop (t = t, orig = orig_poly.reverse(), new = args):
           match orig
           | []: t
           | [o, & orig]:

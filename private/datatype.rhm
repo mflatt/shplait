@@ -28,11 +28,16 @@ meta:
   | '($arg, ...)'
 
 type_defn.macro
-| 'type $(id :: Identifier) = $ty_e ...':
+| 'type $(id :: Identifier) $(args :: MaybeArgs) = $ty_e ...':
     ~op_stx self
     let tvar_box = Box(IdMap{})
-    let type_thunk = fun (): f.parse_type('$ty_e ...', self, tvar_box)
-    type_defn_meta.pack(id, t.LazyParseType(id, type_thunk), tvar_box.val)
+    let arg_tys :~ List = parse_arg_types([args.arg, ...], self, args, tvar_box)
+    let type_thunk = (fun ():
+                        let ty = f.parse_type('$ty_e ...', self, tvar_box)
+                        if arg_tys.length() == 0
+                        | ty
+                        | t.TypeConstructor(id, t.poly_ize(ty, arg_tys), arg_tys))
+    type_defn_meta.pack(id, t.LazyParseType(id, arg_tys, type_thunk), tvar_box.val)
 | 'type $(id :: Identifier) $(args :: MaybeArgs)
    | $_
    | ...':
@@ -45,14 +50,21 @@ type_defn.macro
     type_defn_meta.pack_nothing()
 
 decl.macro
-| 'type $(id :: Identifier) = $ty_e ...':
+| 'type $(id :: Identifier) $(args :: MaybeArgs) = $ty_e ...':
     let (ty, tvars) = f.lookup_found_type_definition(id)
-    // The rest seems like the long way around, but it's to
-    // make sure the type is reconstructed via `f.record_frame_defn_type`
-    let ty_sym = t_s.type_to_syntax(ty)
-    f.record_frame_defn_type(ty_sym, ty)
-    '«type_expr.macro '$id':
-        type_expr_meta.pack(t_s.syntax_to_type('$ty_sym'))»'
+    match ty
+    | ty :: t.TypeConstructor:
+        let [arg_tvar, ...] = ty.arg_tvars
+        let [arg_g_id, ...] = [Syntax.make_temp_id(arg_tvar), ...]
+        let ty_sym = t_s.type_to_syntax(ty.base)
+        f.record_frame_defn_type(ty_sym, ty.base)
+        '«type_expr.macro '$id($('$')$arg_g_id, ...)':
+              type_expr_meta.pack(instantiate_alias('$ty_sym', [$arg_g_id, ...]))»'
+    | ~else:
+        let ty_sym = t_s.type_to_syntax(ty)
+        f.record_frame_defn_type(ty_sym, ty)    
+        '«type_expr.macro '$id':
+            type_expr_meta.pack(t_s.syntax_to_type('$ty_sym'))»'
 | 'type $(id :: Identifier) $(args :: MaybeArgs)
    | $(var_id :: Identifier) ($(field :: Argument), ...)
    | ...':
@@ -130,3 +142,9 @@ meta:
         let tvars_box = current_tvars_box()
         dt with (args = [f.parse_type(arg_g, arg_g, tvars_box),
                          ...])
+
+  fun instantiate_alias(ty_sym, [arg_g, ...]):
+    let tvars_box = current_tvars_box()
+    t.instantiate_at(t_s.syntax_to_type(ty_sym),
+                     [f.parse_type(arg_g, arg_g, tvars_box),
+                      ...])

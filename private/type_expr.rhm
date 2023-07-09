@@ -43,7 +43,7 @@ meta:
   | '$(id :: Identifier) $xtail ...':
       def t = current_type_lookup()(id)
       match_when t
-      def (xp, tl) = parse_type_from_lookup(t, '$xtail ...',
+      def (xp, tl) = parse_type_from_lookup(id, t, '$xtail ...',
                                             ~nonempty_tail_ok: #false)
       field xparsed = xp
   | '$(t :: type_expr_meta.Parsed)':
@@ -56,21 +56,36 @@ meta:
   | '$(id :: Identifier) $xtail ...':
       def t = current_type_lookup()(id)
       match_when t
-      def (xp, tl) = parse_type_from_lookup(t, '$xtail ...')      
+      def (xp, tl) = parse_type_from_lookup(id, t, '$xtail ...')      
       field xparsed = xp
       field [tail, ...] = tl
   | '$(t :: type_expr_meta.AfterInfixParsed(op))':
       field xparsed = force_type(t)
       field [tail, ...] = [t.tail, ...]
 
-  fun parse_type_from_lookup(ty_p, '$tail ...',
+  fun parse_type_from_lookup(id, ty_p, '$tail ...',
                              ~nonempty_tail_ok: nonempty_tail_ok = #true):
     let ty = force_type(type_expr_meta.unpack(ty_p))
     match ty
     | ty :: t.Datatype when ty.args.length() != 0:
-        match '$tail ...':
-        | '($(arg :: XParsed), ...)':
+        match '$id $tail ...':
+        | '$_ ($(arg :: XParsed), ...)':
+            unless [arg, ...].length() == ty.args.length()
+            | syntax_meta.error("wrong number of type arguments\n"
+                                  +& "expected count: " +& ty.args.length() +& "\n"
+                                  +& "given count: " +& [arg, ...].length() +& "\n",
+                                '$id $tail ...')
             values(type_expr_meta.pack(ty with (args = [type_expr_meta.unpack(arg), ...])),
+                   [])
+    | ty :: t.TypeConstructor:
+        match '$id $tail ...':
+        | '$_ ($(arg :: XParsed), ...)':
+            unless [arg, ...].length() == ty.arg_tvars.length()
+            | syntax_meta.error("wrong number of type arguments\n"
+                                  +& "expected count: " +& ty.arg_tvars.length() +& "\n"
+                                  +& "given count: " +& [arg, ...].length() +& "\n",
+                                '$id $tail ...')
+            values(type_expr_meta.pack(t.instantiate_at(ty.base, [type_expr_meta.unpack(arg), ...])),
                    [])
     | ~else:
         unless nonempty_tail_ok || [tail, ...].length() == 0
