@@ -12,6 +12,7 @@ export:
   Datatype OpaqueDatatype MapOf ParameterOf
   ParenOf
   ListOfShrub
+  LazyParseType
   gen_tvar
   to_expression
   create_defn poly_ize as_non_poly get_defn_tvars
@@ -164,6 +165,11 @@ class NonPolyDefn(base, tvars):
   extends Type
   override clone():
     error("shouldn't clone non-poly defn")
+
+class LazyParseType(mutable thunk_or_type):
+  extends Type
+  override clone():
+    error("shouldn't clone lazy type")  
 
 fun get_defn_tvars(t :: Type) :: Set:
   match t

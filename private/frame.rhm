@@ -78,7 +78,7 @@ meta:
 
   fun lookup_found_type_definition(id):
     let [type, tvars] = get_current_frame().type_defns[id]
-    values(type, tvars)
+    values(tyex.force_type(type), tvars)
 
   fun parse_type(stx, src, tvars_box):
     tyex.parse(stx, src, tvars_box,

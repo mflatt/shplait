@@ -30,8 +30,9 @@ meta:
 type_defn.macro
 | 'type $(id :: Identifier) = $ty_e ...':
     ~op_stx self
-    let type = f.parse_type('$ty_e ...', self, Box(IdMap{}))
-    type_defn_meta.pack(id, type, IdMap{})
+    let tvar_box = Box(IdMap{})
+    let type_thunk = fun (): f.parse_type('$ty_e ...', self, tvar_box)
+    type_defn_meta.pack(id, t.LazyParseType(id, type_thunk), tvar_box.val)
 | 'type $(id :: Identifier) $(args :: MaybeArgs)
    | $_
    | ...':

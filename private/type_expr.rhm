@@ -47,7 +47,7 @@ meta:
                                             ~nonempty_tail_ok: #false)
       field xparsed = xp
   | '$(t :: type_expr_meta.Parsed)':
-      field xparsed = t
+      field xparsed = force_type(t)
 
   syntax_class XAfterInfixParsed(op):
     kind: ~group
@@ -60,12 +60,12 @@ meta:
       field xparsed = xp
       field [tail, ...] = tl
   | '$(t :: type_expr_meta.AfterInfixParsed(op))':
-      field xparsed = t
+      field xparsed = force_type(t)
       field [tail, ...] = [t.tail, ...]
 
   fun parse_type_from_lookup(ty_p, '$tail ...',
                              ~nonempty_tail_ok: nonempty_tail_ok = #true):
-    let ty = type_expr_meta.unpack(ty_p)
+    let ty = force_type(type_expr_meta.unpack(ty_p))
     match ty
     | ty :: t.Datatype when ty.args.length() != 0:
         match '$tail ...':
@@ -75,8 +75,21 @@ meta:
     | ~else:
         unless nonempty_tail_ok || [tail, ...].length() == 0
         | syntax_meta.error("extra terms after type name", '$tail ...')
-        values(ty_p, [tail, ...])
+        values(type_expr_meta.pack(ty), [tail, ...])
 
+  fun force_type(ty):
+    match ty
+    | ty :: t.LazyParseType:
+        if ty.thunk_or_type is_a t.Type
+        | ty.thunk_or_type
+        | when !ty.thunk_or_type
+          | syntax_meta.error("cyclic type definition", ty.src)
+          let thunk = ty.thunk_or_type
+          ty.thunk_or_type := #false  
+          let new_ty = thunk()
+          ty.thunk_or_type := new_ty
+          new_ty
+    | ~else ty
 
 export:
   only_space type_expr:
@@ -103,6 +116,7 @@ module parse:
     meta:
       parse
       current_tvars_box
+      force_type
 
 meta:
   def current_tvars_box = Parameter.make(IdMap{})
