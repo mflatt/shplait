@@ -198,6 +198,7 @@ and new types can be defined with @rhombus(type).
     | leaf(v :: #'a)
     | node(left :: Treeof(#'a), right :: Treeof(#'a))
   ~repl:
+    node
     node(leaf(1), leaf(2))
     node(leaf("apple"), leaf("banana"))
 )
@@ -250,7 +251,24 @@ and new types can be defined with @rhombus(type).
 
  A definition of one @rhombus(typed_id) to the result of @rhombus(expr),
  or to multiple @rhombus(typed_id)s to the components of the @tech{tuple} result
- of @rhombus(expr),
+ of @rhombus(expr).
+
+@examples(
+  ~eval: eval
+  ~defn:
+    def x = 1
+    def x2 :: Number = 2
+  ~repl:
+    x
+    x2  
+  ~defn:
+    ~error:
+      def s :: String = 0
+  ~defn:
+    def values(x3 :: Number, s2 :: String):
+      def three = 3
+      values(three, "apple")
+  )
 
 }
 
@@ -286,6 +304,23 @@ and new types can be defined with @rhombus(type).
  @rhombus(fun_expr(arg_expr, ...)) is an implicit use of
  @rhombus(#%call).
 
+@examples(
+  ~eval: eval
+  ~defn:
+    fun fib(n :: Number) :: Number:
+      cond
+      | n == 0: 1
+      | n == 1: 1
+      | ~else: fib(n-1)+fib(n-2)
+  ~repl:
+    fib(10)
+  ~defn:
+    fun on_three(f :: Number -> Number) :: Listof(Number):
+      [f(1), f(2), f(3)]
+  ~repl:
+    on_three(fun (x): x*10)
+)
+
 }
 
 @doc(
@@ -298,6 +333,14 @@ and new types can be defined with @rhombus(type).
  A function call. Typically, @rhombus(#%call) is not written, but an
  expression of the form @rhombus(fun_expr(arg_expr, ...)) is an implicit
  use of @rhombus(#%call).
+
+@examples(
+  ~eval: eval
+  ~defn:
+    fun add1(x): x+1
+  ~repl:
+    add1 #%call (0)
+)
 
 }
 
@@ -316,6 +359,22 @@ and new types can be defined with @rhombus(type).
  @rhombus(a -> b -> c) is the type of a function that takes @rhombus(a)
  and returns a function of type @rhombus(b -> c).
 
+@examples(
+  ~eval: eval
+  ~repl:
+    fun (x): x + 1
+  ~defn:
+    fun make_adder(n :: Number) :: Number -> Number:
+      fun (x): x + n
+  ~repl:
+    make_adder
+  ~defn:
+    fun apply_adder(adder :: Number -> Number) :: Number:
+      adder(10)
+  ~repl:
+    apply_adder
+)
+
 }
 
 @// ------------------------------------------------------------
@@ -331,7 +390,22 @@ and new types can be defined with @rhombus(type).
               | $else_expr'
 ){
 
- Conditional.
+ A conditional form, where the type of @rhombus(test_expr) must be
+ @rhombus(Boolean, ~at shplait/type) and the types of @rhombus(then_expr)
+ and @rhombus(else_expr) must be the same.
+
+@examples(
+  ~eval: eval
+  ~repl:
+    if 1 == 2
+    | "no (correct)"
+    | "yes (wrong!)"
+  ~repl:
+    ~error:
+      if 1 == 2
+      | "no (correct)"
+      | #'oops
+)
 
 }
 
@@ -353,6 +427,19 @@ and new types can be defined with @rhombus(type).
  order until a true result is found. If no @rhombus(~else) case is
  provided and all @rhombus(test_expr)s produce false, an error is
  reported.
+
+@examples(
+  ~eval: eval
+  ~defn:
+    fun count(n):
+      cond
+      | n == 0: "none"
+      | n == 1: "one"
+      | ~else: "some"
+  ~repl:
+    count(0)
+    count(2)
+)
 
 }
 
@@ -396,16 +483,57 @@ and new types can be defined with @rhombus(type).
  that type. If @rhombus(~else) is not present, every variant associated
  with the type must have a case.
 
+@examples(
+  ~eval: eval
+  ~defn:
+    type Shape
+    | circle(radius)
+    | rectangle(width, height)
+
+    fun area(s :: Shape):
+      match s
+      | circle(r): 3.14*r*r
+      | rectangle(w, h): w*h
+  ~repl:
+    area(circle(1))
+    area(rectangle(3, 4))
+)
+
  In the list form of @rhombus(match), the @rhombus([]) and
  @rhombus(cons) clauses can actually be in either order, and a second one
  can be replaced with @rhombus(~else).
+
+@examples(
+  ~eval: eval
+  ~defn:
+    fun sum(lst :: Listof(Number)) :: Number:
+      match lst
+      | []: 0
+      | cons(f, r): f + sum(r)
+  ~repl:
+    sum([1, 2, 3])
+  ~defn:
+    fun max_element(lst :: Listof(Number)) :: Number:
+      match lst
+      | cons(f, r):
+          match r
+          | []: f
+          | ~else:
+              block:
+                def r_max = max_element(r)
+                if f > r_max | f | r_max
+      | []: error(#'max_element, "empty list")
+  ~repl:
+    max_element([1, 20, 3])      
+)
 
  In the syntax-pattern form of @rhombus(match), @rhombus(target_expr)
  must produce a @tech{syntax object}, and it is compared to the quoted
  @rhombus(pattern)s until a match is found. A pattern can include an
  escape with @rhombus($) followed by an identifier, in which case it
  binds the identifier to one part of the input syntax or as a
- @tech{repetition} for multiple parts.
+ @tech{repetition} for multiple parts. See @secref("sec:stxobj") for
+ examples.
 
 }
 
@@ -437,6 +565,15 @@ and new types can be defined with @rhombus(type).
  @rhombus(Number, ~at shplait/type), and the overall arithmetic
  expression also has type @rhombus(Number, ~at shplait/type).
 
+ The usual precedence and associativity rules apply, except that
+ @rhombus(/) cannot appear to the right of @rhombus(*).
+
+@examples(
+  ~eval: eval
+  ~repl:
+    1 + 2 * 3 + 8 / 2
+)
+
 }
 
 @doc(
@@ -449,6 +586,14 @@ and new types can be defined with @rhombus(type).
  Numeric comparison on @rhombus(expr)s of type
  @rhombus(Number, ~at shplait/type). The overall comparison expression
  has type @rhombus(Boolean, ~at shplait/type).
+
+ These operators have lower precedence than arithmetic operators.
+
+@examples(
+  ~eval: eval
+  ~repl:
+    1 + 2 < 4
+)
 
 }
 
@@ -470,6 +615,14 @@ and new types can be defined with @rhombus(type).
  Produces @rhombus(#true) when @rhombus(expr) produces @rhombus(#false)
  and vice versa.
 
+These operators have lower precedence than arithmetic operators.
+
+@examples(
+  ~eval: eval
+  ~repl:
+    !("apple" == "orange")
+)
+
 }
 
 
@@ -481,6 +634,36 @@ and new types can be defined with @rhombus(type).
  Compares any two values for (in)equality, as long as the
  @rhombus(expr)s have the same type. The overall comparison expression
  has type @rhombus(Boolean, ~at shplait/type).
+
+@examples(
+  ~eval: eval
+  ~repl:
+    1 == 1
+    "apple" == "orange"
+)
+
+}
+
+@doc(
+  expr.macro '$expr && $expr'
+  expr.macro '$expr || $expr'
+){
+
+ Boolean ``and'' and ``or'' in short-circuiting form. That is, if the
+ result of the first @rhombus(expr) is @rhombus(#false) for @rhombus(&&)
+ or @rhombus(#true) for @rhombus(||), then the second expression is not
+ evaluated. Both expressions must have type
+ @rhombus(Boolean, ~at schplait/type).
+
+ These operators have lower precedence than all other operators, and
+ @rhombus(||) has lower precedence than @rhombus(&&).
+
+@examples(
+  ~eval: eval
+  ~repl:
+    1 == 1  &&  2 == 2
+    1 == 2  ||  2 != 2
+)
 
 }
 
@@ -520,6 +703,20 @@ string @rhombus("apple").
 
 }
 
+@doc(
+  expr.macro '#' $id'
+){
+
+ A literal symbol.
+
+@examples(
+  ~eval: eval
+  #'apple
+  "apple"
+)
+
+}
+
 @// ------------------------------------------------------------
 @subsection(~tag: "sec:list"){Lists}
 
@@ -548,6 +745,13 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
  Normally, @rhombus(#%brackets) is omitted, since it's implied when using
  square brackets as an expression form.
 
+@examples(
+  ~eval: eval
+  [1, 2, 3 + 4]
+  ["apple", "banana"]
+  []
+)
+
 }
 
 @doc(
@@ -566,6 +770,16 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 
  The @rhombus(first) and @rhombus(rest) functions raise anexception when
  given an empty list.
+
+@examples(
+  ~eval: eval
+  cons(1, [2, 3])
+  first(["apple", "banana", "coconut"])
+  rest(["apple", "banana", "coconut"])
+  length(["apple", "banana"])
+  ~error:
+    first([])
+)
 
 }
 

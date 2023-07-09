@@ -82,6 +82,13 @@
             (step-top-interaction #f e)
             ...
             (step-top-interaction final? e0))]
+       #; ;; is this needed?
+       [(define-values ids rhs)
+        ;; don't force expansion, because the rhs might refer to the definition
+        (cond
+          [(syntax-e #'final?)
+           #`(begin #,pre-b  (finish-top-interaction))]
+          [else pre-b])]
        [_
         (define b (local-expand pre-b 'top-level null))        
         (cond

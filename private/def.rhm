@@ -19,7 +19,6 @@ export:
 
 meta:
   fun build_def(self, [id, ...], [type_seq, ...], rhs):
-    let [tmp, ...] = [Syntax.make_temp_id(id), ...]
     let tvar_box = Box(IdMap{})
     let poly_context = f.get_current_frame().poly_context
     let base_tvars = f.get_current_frame().all_tvars()

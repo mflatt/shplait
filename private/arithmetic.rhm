@@ -5,24 +5,34 @@ import:
   "frame.rhm" as f
   "type_statinfo.rhm" as t_s
 
-decl.macro 'def_binary $op $type_constr':
-  '«export: rename: binary as $op
-    expr.macro '$('$')left binary $('$')right':
+decl.macro 'def_binary $name $op $type_constr: $option; ...':
+  '«export: rename: $name as $op
+    expr.macro '$('$')left $name $('$')right':
       ~op_stx self
+      $option
+      ...
       t.unify_do(left, t_s.lookup_type(left), t.Num(self))
       t.unify_do(right, t_s.lookup_type(right), t.Num(self))
       t_s.wrap_type('$('$')left $op $('$')right',
                     t. $type_constr ('$('$')left $('$')self $('$')right'))»'
 
-def_binary + Num
-def_binary - Num
-def_binary * Num
-def_binary / Num
+def_binary shplus + Num:
+  ~weaker_than shtimes shdiv
+  ~same_as shminus
+def_binary shminus - Num:
+  ~weaker_than shtimes shdiv
+def_binary shtimes * Num:
+  ~same_on_left_as shdiv
+def_binary shdiv / Num:«»
 
-def_binary < Bool
-def_binary > Bool
-def_binary <= Bool
-def_binary >= Bool
+def_binary shlt < Bool:
+  ~weaker_than shplus shminus shtimes shdiv
+def_binary shgt > Bool:
+  ~weaker_than shplus shminus shtimes shdiv
+def_binary sgle <= Bool:
+  ~weaker_than shplus shminus shtimes shdiv
+def_binary shge >= Bool:
+  ~weaker_than shplus shminus shtimes shdiv
 
 export: rename: _not as !
 expr.macro '_not $right':
@@ -34,6 +44,7 @@ decl.macro 'def_equality $op $type_constr':
   '«export: rename: equals as $op
     expr.macro '$('$')left equals $('$')right':
       ~op_stx self
+      ~weaker_than shplus shminus shtimes shdiv
       let tv = t.gen_tvar(self)
       t.unify_do(left, t_s.lookup_type(left), tv)
       t.unify_do(right, t_s.lookup_type(right), tv)

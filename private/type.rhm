@@ -6,6 +6,7 @@ import:
 
 export:
   Type
+  TVar
   Bool Num Sym Shrub Vd Str Chr
   Arrow ListOf BoxOf TupleOf ArrayOf
   Datatype OpaqueDatatype MapOf ParameterOf
@@ -145,11 +146,10 @@ fun ListOfShrub(src):
  shallower bindings.
 */
 class Defn(base,
-           rhs,
+           mutable rhs,
            poly_context,
            mutable insts :: List,
            mutable proto_rhs,
-           mutable resolved,
            base_tvars :: Set,
            tvars :: Set):
   extends Type
@@ -308,7 +308,6 @@ fun type_to_string(tmap :: MutableMap):
       | type :: Defn:
           cond
           | type.rhs: loop(type.rhs)
-          | type.resolved: loop(type.resolved)
           | ~else loop(type.base)
       | type :: NonPolyDefn:
           loop(type.base)
@@ -451,7 +450,6 @@ fun create_defn(t :: Type, poly_context, base_tvars, tvars):
        if (p is_a Poly) | #false | p,
        poly_context,
        [],
-       #false,
        #false,
        base_tvars,
        tvars)
@@ -651,7 +649,7 @@ fun resolve_defn_types(env :: List) :~ List:
                 let poly = poly_ize_wrt(b, t.poly_context, t.base_tvars)
                 t.insts.for_each(fun (Pair(a, d)):
                                    unify_do(a, d, poly_instance(poly)))
-                t.resolved := poly
+                t.rhs := poly
                 poly)
     | ~else #false
 
