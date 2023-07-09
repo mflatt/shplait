@@ -108,3 +108,10 @@ module test:
   check:
     first([])
     ~raises "contract violation"
+
+type Treeof(#'a)
+| leaf(v :: #'a)
+| node(left :: Treeof(#'a), right :: Treeof(#'a))
+
+node(leaf(1), leaf(2))
+node(leaf("a"), leaf("b"))

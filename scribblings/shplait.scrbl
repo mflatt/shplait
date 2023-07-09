@@ -191,6 +191,17 @@ and new types can be defined with @rhombus(type).
  that @rhombus(type) forms in the constructor @rhombus(typed_id)s refer
  to the @rhombus(of_id) type variables in @rhombus(maybe_type_args).
 
+@examples(
+  ~eval: eval
+  ~defn:
+    type Treeof(#'a)
+    | leaf(v :: #'a)
+    | node(left :: Treeof(#'a), right :: Treeof(#'a))
+  ~repl:
+    node(leaf(1), leaf(2))
+    node(leaf("apple"), leaf("banana"))
+)
+
 }
 
 @doc(

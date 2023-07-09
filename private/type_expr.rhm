@@ -16,9 +16,7 @@ space.enforest type_expr:
     parse_infix_more_syntax_class AfterInfixParsed
     parsed_packer _pack
     parsed_unpacker _unpack
-    identifier_parser: fun(stx):
-                         current_type_lookup()(stx)
-                           || syntax_meta.error("expected a type", stx)
+    identifier_parser: fun(stx): syntax_meta.error("expected a type", stx)
     parse_checker: fun (stx, proc):
                      if _unpack(stx, fun (_): #false)
                      | stx
@@ -27,6 +25,8 @@ space.enforest type_expr:
     export:
       pack
       unpack
+      XParsed
+      XAfterInfixParsed
     fun pack(t :: t.Type):
       let pk = _pack(t_s.type_to_syntax(t))
       if t.src is_a Syntax
@@ -34,6 +34,49 @@ space.enforest type_expr:
       | pk
     fun unpack(stx):
       t_s.syntax_to_type(_unpack(stx))
+
+meta:
+  syntax_class XParsed:
+    kind: ~group
+    fields: xparsed
+    root_swap: xparsed group
+  | '$(id :: Identifier) $xtail ...':
+      def t = current_type_lookup()(id)
+      match_when t
+      def (xp, tl) = parse_type_from_lookup(t, '$xtail ...',
+                                            ~nonempty_tail_ok: #false)
+      field xparsed = xp
+  | '$(t :: type_expr_meta.Parsed)':
+      field xparsed = t
+
+  syntax_class XAfterInfixParsed(op):
+    kind: ~group
+    fields: xparsed [tail, ...]
+    root_swap: xparsed group
+  | '$(id :: Identifier) $xtail ...':
+      def t = current_type_lookup()(id)
+      match_when t
+      def (xp, tl) = parse_type_from_lookup(t, '$xtail ...')      
+      field xparsed = xp
+      field [tail, ...] = tl
+  | '$(t :: type_expr_meta.AfterInfixParsed(op))':
+      field xparsed = t
+      field [tail, ...] = [t.tail, ...]
+
+  fun parse_type_from_lookup(ty_p, '$tail ...',
+                             ~nonempty_tail_ok: nonempty_tail_ok = #true):
+    let ty = type_expr_meta.unpack(ty_p)
+    match ty
+    | ty :: t.Datatype when ty.args.length() != 0:
+        match '$tail ...':
+        | '($(arg :: XParsed), ...)':
+            values(type_expr_meta.pack(ty with (args = [type_expr_meta.unpack(arg), ...])),
+                   [])
+    | ~else:
+        unless nonempty_tail_ok || [tail, ...].length() == 0
+        | syntax_meta.error("extra terms after type name", '$tail ...')
+        values(ty_p, [tail, ...])
+
 
 export:
   only_space type_expr:
@@ -69,7 +112,7 @@ meta:
   syntax_class ParsedType:
     fields: type
     kind: ~group
-  | '$(tp :: type_expr_meta.Parsed)':
+  | '$(tp :: type_expr_meta.XParsed)':
       field type:
         extract_parsed(tp)
 
@@ -127,7 +170,7 @@ type_expr.macro
     ~op_stx self
     type_expr_meta.pack(t.ParenOf(args, [elem.type, ...]))  
 
-type_expr.macro '$args -> $(result :: type_expr_meta.AfterInfixParsed('->')) $()':
+type_expr.macro '$args -> $(result :: type_expr_meta.XAfterInfixParsed('->')) $()':
   ~op_stx self
   ~associativity ~right
   ~weaker_than *
@@ -139,7 +182,7 @@ type_expr.macro '$args -> $(result :: type_expr_meta.AfterInfixParsed('->')) $()
              type_expr_meta.pack(t.Arrow(self, [arg], r_ty)),
          '$result.tail ...')
 
-type_expr.macro '$init * $(next :: type_expr_meta.AfterInfixParsed('*')) $()':
+type_expr.macro '$init * $(next :: type_expr_meta.XAfterInfixParsed('*')) $()':
   ~op_stx self
   let init_ty: extract_parsed(init)
   let next_ty: extract_parsed(next)
