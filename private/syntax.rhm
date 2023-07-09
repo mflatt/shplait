@@ -33,10 +33,10 @@ expr.macro '«shquotes '$tmpl'»':
 
 meta:
   fun convert(pat, handle_id, handle_escape):
-    fun group(pat, depth):
+    fun group(pat, depth, is_before_dots):
       fun dots(hd, tl):
-        let [tm_pat_cvt, tm_ids] = group(hd, depth+1)
-        let [g_pat_cvt, g_ids] = group(tl, depth)
+        let [tm_pat_cvt, tm_ids] = group(hd, depth+1, #true)
+        let [g_pat_cvt, g_ids] = group(tl, depth, #false)
         ['$tm_pat_cvt $('...') $g_pat_cvt', [&tm_ids, &g_ids]]
       match pat:
       | '':
@@ -48,31 +48,32 @@ meta:
       | '$tm $('...') $tail ...':
           dots(tm, '$tail ...')
       | '$(op && '$') $expr $tail ...' when handle_escape && (depth == 0):
-          let [pat_cvt, ids] = group('$tail ...', depth)
+          let [pat_cvt, ids] = group('$tail ...', depth, is_before_dots)
           ['$(Syntax.relocate('$', op)) $(handle_escape(expr)) $pat_cvt', ids]
       | '$(op && '$') $id $tail ...':
           unless id is_a Identifier
           | syntax_meta.error("expected an identifier after `$` at ellipsis depth " +& depth,
                               id)
-          let [pat_cvt, ids] = group('$tail ...', depth)
+          let [pat_cvt, ids] = group('$tail ...', depth, is_before_dots)
           let tmpl = Syntax.make_temp_id(id)
-          ['$(Syntax.relocate('$', op)) $(handle_id(tmpl)) $pat_cvt', [[id, tmpl, depth], &ids]]
+          ['$(Syntax.relocate('$', op)) $(handle_id(tmpl, is_before_dots)) $pat_cvt',
+           [[id, tmpl, depth], &ids]]
       | '$(op && '$') $_ ...':
           syntax_meta.error("misplaced escape", op)
       | '$tm $tail ...':
           let [tm_cvt, tm_ids] = term(tm, depth)
-          let [pat_cvt, ids] = group('$tail ...', depth)
+          let [pat_cvt, ids] = group('$tail ...', depth, is_before_dots)
           ['$tm_cvt $pat_cvt', [& tm_ids, & ids]]
     fun multi(pat, depth):
       match pat
       | '': ['', []]
-      | '$(g :: Group)': group(pat, depth)
+      | '$(g :: Group)': group(pat, depth, #false)
       | '$g; $('...'); $tail; ...':
-          let [g_pat_cvt,  g_ids] = group('$g', depth+1)
+          let [g_pat_cvt,  g_ids] = group('$g', depth+1, #false)
           let [m_pat_cvt, m_ids] = multi('$tail; ...', depth)
           ['$g_pat_cvt; $('...'); $m_pat_cvt', [&g_ids, &m_ids]]
       | '$g; $tail; ...':
-          let [g_pat_cvt, g_ids] = group('$tail ...', depth)
+          let [g_pat_cvt, g_ids] = group('$tail ...', depth, #false)
           let [m_pat_cvt, m_ids] = multi('$tail; ...', depth)
           ['$g_pat_cvt; $m_pat_cvt', [& g_ids, &m_ids]]      
     fun term(pat, depth):
@@ -105,9 +106,19 @@ meta:
     | '$': [pat, []]
     | ~else multi(pat, 0)
   fun convert_pat(pat):
-    convert(pat, fun (id): '($id :: Term)', #false)
+    convert(pat,
+            fun (id, is_before_dots):
+              if is_before_dots
+              | id
+              | '($id :: Sequence)',
+            #false)
   fun convert_tmpl(pat):
-    convert(pat, fun (id): id, fun (expr): '(reference_syntax($expr))')
+    convert(pat,
+            fun (id, is_before_dots): id,
+            fun (expr): '(reference_syntax($expr))')
+
+syntax_class Sequence
+| '$(_ :: Term) $(_ :: Term) ...'
 
 expr.macro 'reference_syntax($(arg :: expr_meta.Parsed))':
   t.unify_do(arg, t_s.lookup_type(arg), t.Shrub(arg))
@@ -161,10 +172,10 @@ expr.macro 'reference_syntax_pattern_var($id, $depth)':
                         id)
 
 fun oops(who, stx, what):
-  error(who, "syntax object does not wrap a " +& what +& ":\n"
+  error(who, "syntax object does not wrap a " +& what +& "\n"
                +& "  syntax object: " +& stx)
 
-decl.nestable_macro 'extractor $is_x $unwrap_x $wrap_x $Ty $Ann $what':
+decl.nestable_macro 'extractor $is_x ($unwrap_x, $post_unwrap) ($wrap_x, $pre_wrap) $Ty $Ann $what':
   '«
      export: $is_x $unwrap_x $wrap_x
      def stx_is_x:
@@ -174,11 +185,11 @@ decl.nestable_macro 'extractor $is_x $unwrap_x $wrap_x $Ty $Ann $what':
      def stx_unwrap_x:
        fun $unwrap_x(stx :~ Syntax):
          let v = if stx is_a Term | stx.unwrap() | #'~no
-         if v is_a $Ann | v | oops(#'$unwrap_x, stx, $what)
+         if v is_a $Ann | $post_unwrap(v) | oops(#'$unwrap_x, stx, $what)
        $unwrap_x
      def stx_wrap_x:
        fun $wrap_x(v):
-         '$('$')v'
+         Syntax.make($pre_wrap(v))
        $wrap_x
      expr.macro '$is_x':
        ~op_stx self
@@ -190,6 +201,11 @@ decl.nestable_macro 'extractor $is_x $unwrap_x $wrap_x $Ty $Ann $what':
        ~op_stx self
        t_s.wrap_type('stx_wrap_x', t.Arrow(self, [t . $Ty(self)], t.Shrub(self)))
    »'
-extractor syntax_is_number syntax_to_number number_to_syntax Num Number "number"
-extractor syntax_is_boolean syntax_to_boolean boolean_to_syntax Bool Boolean "boolean"  
-extractor syntax_is_symbol syntax_to_symbol symbol_to_syntax Sym Symbol "symbol"
+extractor syntax_is_number (syntax_to_number, values) (number_to_syntax, values) Num Number "number"
+extractor syntax_is_boolean (syntax_to_boolean, values) (boolean_to_syntax, values) Bool Boolean "boolean"  
+extractor syntax_is_symbol (syntax_to_symbol, values) (symbol_to_syntax, values) Sym Symbol "symbol"
+extractor syntax_is_list (syntax_to_list, List.rest) (list_to_syntax, add_brackets) ListOfShrub ListShaped "list"
+
+annot.macro 'ListShaped':
+  'matching(['brackets', _, $'...'])'
+fun add_brackets(lst): ['brackets', &lst]

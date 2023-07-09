@@ -315,10 +315,9 @@ and new types can be defined with @rhombus(type).
  In the syntax-pattern form of @rhombus(match), @rhombus(target_expr)
  must produce a @tech{syntax object}, and it is compared to the quoted
  @rhombus(pattern)s until a match is found. A pattern can include an
- escaped with @rhombus($) to bind an identifier to the corresponding
- piece of syntax, and it can include @rhombus(...) for repetitions; when
- a @rhombus($) escape is repeated with @rhombus(...), the escaped
- variable is bound to a list of (list of ...) matches.
+ escape with @rhombus($) followed by an identifier, in which case it
+ binds the identifier to one part of the input syntax or as a
+ @tech{repetition} for multiple parts.
 
 }
 
@@ -513,14 +512,59 @@ types. A tuple of one element is equivalent to just the element.
 @// ------------------------------------------------------------
 @subsection(~tag: "sec:stxobj"){Syntax Objects}
 
-A @deftech{syntax object} is a quoted term using single quotes, such as
+A @deftech{syntax object} is a representation of source code. It is
+written as quoted term using single quotes, such as
 @rhombus('1 + * 4 f()'). A syntax object is not a string, even though it
-uses quote marks; instead, the usual @tech{shrubbery} rules apply inside
+uses quote marks. Instead, the usual @tech{shrubbery} rules apply inside
 quotes, and shrubbery structure is preserved in a syntax object.
 
 When a syntax object is written using quotes, the @rhombus(#%quotes)
 form is used implicitly, similar to the way that square brackets
 implicitly use @rhombus(#%brackets).
+
+@elemtag("stxpat"){Syntax} patterns in @rhombus(match) are also written
+with quotes, and @rhombus($) acts as an escape in syntax patterns as
+well as in syntax-object expressions, which are also known as
+@deftech{templates}:
+
+@itemlist(
+
+@item{When @rhombus($) appears in a pattern, then it must be followed by
+ an identifier. In the simple case that the pattern has no ellipses
+ (written as @litchar{..}), then the identifier is bound to a non-empty
+ sequence of terms from the corresponding part of the input syntax
+ object.
+
+ When an ellipsis appears in a pattern, then it matches 0 or more
+ repetitions of the preceding pattern element. If the preceding element
+ contains a @rhombus($) escape, then the escaped identifier is not bound
+ to a single syntax object, but it is instead bound as a
+ @deftech{repetition} that holds each matched term. A repetition can only
+ be referenced through a corresponding escape in a @tech{template}.
+ Ellipses can be nested in a pattern, and a repettion must be used in a
+ template with the same amount of nesting as in its pattern.
+
+ When an ellipsis appears by itself in a shrubbery group, then the
+ pattern matches 0 or more repetitions of the preceding group. If the
+ group is an alternative written with @litchar{|}, then the pattern
+ matches 0 or more alternatives.}
+
+@item{When @rhombus($) appears in a template, then it must be followed
+ by an identifier or an expression that is written as a single term
+ (e.g., a parenthesized expression).
+
+ If an identifier is provided, then it can refer to a @tech{repetition}
+ that is bound by a syntax-pattern match, as long as the
+ @rhombus($)-escaped identifier in the template is under a number of
+ ellipses that match the repetition binding. Each element of the
+ repetition is put in the result syntax object in place of the escape.
+
+ If an escape does not refer to a repetition, then it must have an
+ expression that produces a syntax object, and it must not be under any
+ ellipses. The syntax object replaces the escape in the result syntax
+ object.}
+
+)
 
 @doc(
   type 'Syntax'
@@ -539,12 +583,8 @@ implicitly use @rhombus(#%brackets).
  of treating them as subexpressions. Usually, @rhombus(#%quotes) is
  omitted, since it is implied by using quotes as an expression form.
 
- When @rhombus($) is used as a @rhombus(term) and isn't the only
- @rhombus(term), then it escapes so that the following @rhombus(term) is
- used as an expression after all. Typically, the escaped term is an
- identifier or a parenthesized expression. Whatever the expression
- produces is spliced into the syntax object in place of the @rhombus($)
- and escaped expression.
+ See @elemref("stxpat"){above} for informaTion about @rhombus($)
+ escapes within the quotes for a syntax object.
 
 }
 
@@ -553,18 +593,44 @@ implicitly use @rhombus(#%brackets).
   fun syntax_is_number(stx :: Syntax) :: Boolean
   fun syntax_is_boolean(stx :: Syntax) :: Boolean
   fun syntax_is_symbol(stx :: Syntax) :: Boolean
-  fun syntax_to_number(stx :: Syntax) :: Number
-  fun syntax_to_boolean(stx :: Syntax) :: Boolean
-  fun syntax_to_symbol(stx :: Syntax) :: Symbol
+  fun syntax_is_list(stx :: Syntax) :: Boolean
 ){
 
- Functions like @rhombus(syntax_is_number) check whether a @tech{syntax
+ The @rhombus(syntax_is_number) function checks whether a @tech{syntax
   object} has a single term representing a number, returning
  @rhombus(#true) if so and @rhombus(#false) otherwise. Other functions
  check for different kinds of primitive values as representations.
 
- Functions like @rhombus(syntax_to_number) extract the number that a
- syntax object represents, but if @rhombus(syntax_is_number) would return
- @rhombus(#false), then an exception is raised.
+ The @rhombus(syntax_is_list) function checks whether a syntax object
+ would match the pattern @rhombus('[$elem ..., ...]'), returning 
+ @rhombus(#true) if so and @rhombus(#false) otherwise.
+
+}
+
+@doc(
+  fun syntax_to_number(stx :: Syntax) :: Number
+  fun syntax_to_boolean(stx :: Syntax) :: Boolean
+  fun syntax_to_symbol(stx :: Syntax) :: Symbol
+  fun syntax_to_list(stx :: Syntax) :: Listof(Syntax)
+){
+
+ The @rhombus(syntax_to_number) function extracts the number that a
+ syntax object represents, but only if @rhombus(syntax_is_number) would
+ return @rhombus(#false); otherwise an exception is raised. Other
+ functions similarly extract values from syntax representations.
+
+
+}
+
+
+@doc(
+  fun number_to_syntax(n :: Number) :: Syntax
+  fun boolean_to_syntax(bool :: Boolean) :: Syntax
+  fun symbol_to_syntax(sym :: Symbol) :: Syntax
+  fun list_to_syntax(lst :: Listof(Syntax)) :: Syntax
+){
+
+ The inverse of @rhombus(syntax_to_number), etc., converting a value
+ into asyntax representation.
 
 }

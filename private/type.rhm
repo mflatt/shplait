@@ -10,6 +10,7 @@ export:
   Arrow ListOf BoxOf TupleOf ArrayOf
   Datatype OpaqueDatatype MapOf ParameterOf
   ParenOf
+  ListOfShrub
   gen_tvar
   to_expression
   create_defn poly_ize as_non_poly get_defn_tvars
@@ -129,6 +130,10 @@ class ParenOf(args :: List.of(Type)):
   extends Type
   override clone():
     this with (args = args.map(Type.clone))
+
+// convenience for `syntax_to_list`
+fun ListOfShrub(src):
+  ListOf(src, Shrub(src))
 
 /*
  A `defn` is a type for a variable bound by `define`. It's meant to
