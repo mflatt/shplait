@@ -12,6 +12,7 @@ import:
   "arithmetic.rhm"
   "list.rhm"
   "symbol.rhm"
+  "string.rhm"
   "tuple.rhm"
   "syntax.rhm"
   "exn.rhm"
@@ -30,6 +31,7 @@ export:
   all_from(.arithmetic)
   all_from(.list)
   all_from(.symbol)
+  all_from(.string)
   all_from(.tuple)
   all_from(.syntax)
   all_from(.exn)

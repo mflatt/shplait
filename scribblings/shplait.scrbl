@@ -116,10 +116,10 @@ and new types can be defined with @rhombus(type).
 @examples(
   ~eval: eval
   ~defn:
-    fun add1(x :: #'a) :: #'b:
+    fun addone(x :: #'a) :: #'b:
       x+1
   ~repl:
-    add1
+    addone
 )
 
 }
@@ -250,6 +250,22 @@ and new types can be defined with @rhombus(type).
 
 }
 
+@doc(
+  type 'Optionof(#'a)'
+  fun none() :: Optionof(#'a)
+  fun some(v :: #'a) :: Optionof(#'a)
+){
+
+ A type and constructors to represent ``success'' with a value and
+ ``failure'' without a value, defined as
+
+@rhombusblock(
+  type Optionof(#'a)
+  | none()
+  | some(val :: #'a)
+)
+
+}
 
 @// ------------------------------------------------------------
 @section(~tag: "sec:defn"){Definitions and Functions}
@@ -355,9 +371,9 @@ and new types can be defined with @rhombus(type).
 @examples(
   ~eval: eval
   ~defn:
-    fun add1(x): x+1
+    fun addone(x): x+1
   ~repl:
-    add1 #%call (0)
+    addone #%call (0)
 )
 
 }
@@ -577,6 +593,7 @@ and new types can be defined with @rhombus(type).
   expr.macro '$expr - $expr'
   expr.macro '$expr * $expr'
   expr.macro '$expr / $expr'
+  expr.macro '$expr mod $expr'
 ){
 
  Arithmetic on @rhombus(expr)s of type
@@ -584,12 +601,13 @@ and new types can be defined with @rhombus(type).
  expression also has type @rhombus(Number, ~at shplait/type).
 
  The usual precedence and associativity rules apply, except that
- @rhombus(/) cannot appear to the right of @rhombus(*).
+ @rhombus(/) or @rhombus(mod) cannot appear to the right of @rhombus(*).
 
 @examples(
   ~eval: eval
   ~repl:
     1 + 2 * 3 + 8 / 2
+    3 mod 2
 )
 
 }
@@ -611,6 +629,39 @@ and new types can be defined with @rhombus(type).
   ~eval: eval
   ~repl:
     1 + 2 < 4
+)
+
+}
+
+
+@doc(
+  fun add1(n :: Number) :: Number
+  fun sub1(n :: Number) :: Number
+){
+
+ Functions that add or substract @rhombus(1) from a given number.
+
+@examples(
+  ~eval: eval
+  add1(0)
+  sub1(0)
+)
+
+}
+
+
+@doc(
+  fun is_even(n :: Number) :: Boolean
+  fun is_odd(n :: Number) :: Boolean
+){
+
+ Reports when a number is even or odd, respectively.
+
+@examples(
+  ~eval: eval
+  ~repl:
+    is_even(2)
+    is_odd(2)
 )
 
 }
@@ -696,6 +747,23 @@ These operators have lower precedence than arithmetic operators.
 
 }
 
+@doc(
+  fun to_string(v :: #'a) :: String
+){
+
+ Converts any value to a printed form as a string.
+
+@examples(
+  ~eval: eval
+  to_string(1)
+  to_string("apple")
+  to_string([1, 2, 3])
+  to_string(fun (x): x)
+  to_string('fun (x): x')
+)
+
+}
+
 @// ------------------------------------------------------------
 @subsection(~tag: "sec:symbol"){Symbols}
 
@@ -776,15 +844,16 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
   fun cons(elem :: #'a, lst :: Listof(#'a)) :: #'a
   fun first(lst :: Listof(#'a)) :: #'a
   fun rest(lst :: Listof(#'a)) :: Listof(#'a)
-  fun length(lst :: Listof(#'a)) :: Number
+  fun is_cons(lst :: Listof(#'a)) :: Boolean
+  fun is_empty(lst :: Listof(#'a)) :: Boolean
 ){
 
  The @rhombus(cons) function produces a list given its first element
  plus the rest of the elements already in a list. The @rhombus(first)
  function returns the first element of a nonempty list. The
  @rhombus(rest) funrction returns a list containing all but the first
- element of a nonempty list. The @rhombus(length) funrction returns the
- number of elements in a list.
+ element of a nonempty list. The @rhombus(is_cons) and @rhombus(is_empty)
+ functions report whether a list is nonempty or empty, respectively.
 
  The @rhombus(first) and @rhombus(rest) functions raise anexception when
  given an empty list.
@@ -794,9 +863,137 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
   cons(1, [2, 3])
   first(["apple", "banana", "coconut"])
   rest(["apple", "banana", "coconut"])
-  length(["apple", "banana"])
   ~error:
     first([])
+)
+
+}
+
+@doc(
+  fun length(lst :: Listof(#'a)) :: Number
+){
+
+ Returns the number of elements in a list.
+
+@examples(
+  ~eval: eval
+  length(["apple", "banana"])
+)
+
+}
+
+@doc(
+  fun append(lst1 :: Listof(#'a), lst2 :: Listof(#'a)) :: Listof(#'a)
+){
+
+ Produces a list that has the items of the first given list followed by
+ the items of the second given list.
+
+@examples(
+  ~eval: eval
+  def my_list = [1, 2, 3]
+  def my_other_list = [3, 4]
+  append(my_list, my_other_list)
+  my_list
+)
+
+}
+
+@doc(
+ fun reverse(lst :: Listof(#'a)) :: Listof(#'a)
+){
+
+ Returns a list that has the same elements as the given one, but in
+ reverse order.
+
+@examples(
+  ~eval: eval
+  reverse([1, 2, 3])
+)
+
+}
+
+@doc(
+  fun member(elem :: #'a, lst :: Listof(#'a)) :: Boolean
+){
+
+ Determines whether a value is an item in a list. Items are compared using
+ @rhombus(==).
+
+@examples(
+  ~eval: eval
+  member(2, [1, 2, 3])
+  member(4, [1, 2, 3])
+)
+
+}
+
+@doc(
+  fun map(f :: #'a -> #'b, lst :: Listof(#'a)) :: Listof(#'b)
+){
+
+ Applies a function in order to each element of a list and forms a new
+ list with the results.
+
+@examples(
+  ~eval: eval
+  map(add1, [1, 2, 3])
+  map(to_string, [1, 2, 3])
+)
+
+}
+
+@doc(
+ fun map2(f :: #'a #'b -> #'c, lst1 :: Listof(#'a), lst2 :: Listof(#'a))
+   :: Listof(#'c)
+){
+
+ Applies a function in order to each pair of elements from two lists in
+ ``parallel,'' forming a new list with the results. An exception is raised
+ if the two lists have different lengths.
+
+@examples(
+  ~eval: eval
+  map2(fun (x, y): x +y, [1, 2, 3], [4, 5, 6])
+)
+
+}
+
+@doc(
+  fun filter(f :: #'a -> Boolean, lst :: Listof(#'a)) :: Listof(#'a)
+){
+
+ Returns a list containing (in order) the items of a given list for which
+ a given function returns true.
+
+@examples(
+  ~eval: eval
+  filter(is_even, [1, 2, 3, 4])
+  filter(is_odd, [1, 2, 3, 4])
+)
+
+}
+
+@doc(
+ fun foldl(f :: (#'a, #'b) -> #'b, init :: #'b, lst :: Listof(#'a))
+   :: #'b
+ fun foldr(f :: (#'a, #'b) -> #'b, init :: #'b, lst :: Listof(#'a))
+   :: #'b
+){
+
+ Applies a function to an accumulated value and each element of a list,
+ each time obtaining a new accumulated value. The second argument to
+ @rhombus(foldl) or @rhombus(foldr) is the initial accumulated value, and
+ it is provided as the first argument in each call to the given function
+ @rhombus(f). While @rhombus(foldl) applies the function or items in the
+ list from from to last, @rhombus(foldr) applies the function or items in
+ the list from last to first.
+
+@examples(
+  ~eval: eval
+  foldl(fun (x, y): x+y, 10, [1, 2, 3])
+  foldl(fun (n, r): cons(to_string(n), r), [], [1, 2, 3])
+  foldr(fun (n, r): cons(to_string(n), r), [], [1, 2, 3])
 )
 
 }

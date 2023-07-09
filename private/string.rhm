@@ -1,0 +1,15 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+
+export:
+  rename:
+    shto_string as to_string
+
+expr.macro 'shto_string':
+  ~op_stx self
+  let tv = t.gen_tvar(self)
+  t_s.wrap_type('to_string', t.Poly(self, tv, t.Arrow(self, [tv], t.Str(self))))
+  

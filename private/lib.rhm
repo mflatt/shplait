@@ -1,0 +1,70 @@
+#lang shplait/private/core
+
+type Optionof(#'a)
+| none()
+| some(val :: #'a)
+
+fun add1(n): n+1
+fun sub1(n): n+1
+
+fun is_even(n): n mod 2 == 0
+fun is_odd(n): n mod 2 == 1
+               
+fun is_cons(l):
+  match l
+  | []: #false
+  | ~else: #true
+
+fun is_empty(l):
+  !is_cons(l)
+
+fun append(lst, lst2):
+  match lst
+  | []: lst2
+  | cons(hd, tl): cons(hd, append(tl, lst2))
+
+fun reverse(lst):
+  block:
+    fun accum_rev(lst, rev):
+      match lst
+      | []: []
+      | cons(hd, tl): accum_rev(tl, cons(hd, rev))
+    accum_rev(lst, [])
+
+fun map(f :: #'a -> #'b, lst :: Listof(#'a)) :: Listof(#'b):
+  match lst
+  | []: []
+  | cons(hd, tl): cons(f(hd), map(f, tl))
+
+fun map2(f :: (#'a, #'b) -> #'c, alst :: Listof(#'a), blst :: Listof(#'b)) :: Listof(#'c):
+  match alst
+  | []:
+      match blst
+      | []: []
+      | ~else: error(#'map2, "too many elements in second list")
+  | cons(ahd, atl):
+      match blst
+      | cons(bhd, btl): cons(f(ahd, bhd), map2(f, atl, btl))
+      | ~else: error(#'map2, "not enough elements in second list")
+
+fun member(elem, lst):
+  match lst
+  | []: #false
+  | cons(hd, tl): elem == hd || member(elem, tl)
+
+fun filter(pred, lst):
+  match lst
+  | []: []
+  | cons(hd, tl): if pred(hd)
+                  | cons(hd, filter(pred, tl))
+                  | filter(pred, tl)
+
+fun foldl(f, accum, lst):
+  match lst
+  | []: accum
+  | cons(hd, tl): foldl(f, f(hd, accum), tl)
+
+fun foldr(f, init, lst):
+  match lst
+  | []: init
+  | cons(hd, tl): f(hd, foldr(f, init, tl))

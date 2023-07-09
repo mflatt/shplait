@@ -17,22 +17,23 @@ decl.macro 'def_binary $name $op $type_constr: $option; ...':
                     t. $type_constr ('$('$')left $('$')self $('$')right'))»'
 
 def_binary shplus + Num:
-  ~weaker_than shtimes shdiv
+  ~weaker_than shtimes shdiv shmod
   ~same_as shminus
 def_binary shminus - Num:
-  ~weaker_than shtimes shdiv
+  ~weaker_than shtimes shdiv shmod
 def_binary shtimes * Num:
-  ~same_on_left_as shdiv
+  ~same_on_left_as shdiv shmod
 def_binary shdiv / Num:«»
+def_binary shmod mod Num:«»
 
 def_binary shlt < Bool:
-  ~weaker_than shplus shminus shtimes shdiv
+  ~weaker_than shplus shminus shtimes shdiv shmod
 def_binary shgt > Bool:
-  ~weaker_than shplus shminus shtimes shdiv
+  ~weaker_than shplus shminus shtimes shdiv shmod
 def_binary sgle <= Bool:
-  ~weaker_than shplus shminus shtimes shdiv
+  ~weaker_than shplus shminus shtimes shdiv shmod
 def_binary shge >= Bool:
-  ~weaker_than shplus shminus shtimes shdiv
+  ~weaker_than shplus shminus shtimes shdiv shmod
 
 export: rename: _not as !
 expr.macro '_not $right':
@@ -44,7 +45,7 @@ decl.macro 'def_equality $op $type_constr':
   '«export: rename: equals as $op
     expr.macro '$('$')left equals $('$')right':
       ~op_stx self
-      ~weaker_than shplus shminus shtimes shdiv
+      ~weaker_than shplus shminus shtimes shdiv shmod
       let tv = t.gen_tvar(self)
       t.unify_do(left, t_s.lookup_type(left), tv)
       t.unify_do(right, t_s.lookup_type(right), tv)
