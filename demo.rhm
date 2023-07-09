@@ -89,7 +89,7 @@ match 'y'
 | 'x': "yes"
 | '$other': "no"
 
-match 'y $['z', 'w']; q'
+match 'y z w; q'
 | '$v ...; ...': '($v ...) ...'
 | ~else: 'no'
 

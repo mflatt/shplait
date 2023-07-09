@@ -60,6 +60,9 @@ meta:
            [[id, tmpl, depth], &ids]]
       | '$(op && '$') $_ ...':
           syntax_meta.error("misplaced escape", op)
+      | '| $alt | ...':
+          let ['$pat; ...', ids] = multi('$alt ; ...', depth)
+          ['| $pat | ...', ids]
       | '$tm $tail ...':
           let [tm_cvt, tm_ids] = term(tm, depth)
           let [pat_cvt, ids] = group('$tail ...', depth, is_before_dots)
@@ -73,9 +76,9 @@ meta:
           let [m_pat_cvt, m_ids] = multi('$tail; ...', depth)
           ['$g_pat_cvt; $('...'); $m_pat_cvt', [&g_ids, &m_ids]]
       | '$g; $tail; ...':
-          let [g_pat_cvt, g_ids] = group('$tail ...', depth, #false)
+          let [g_pat_cvt, g_ids] = group('$g', depth, #false)
           let [m_pat_cvt, m_ids] = multi('$tail; ...', depth)
-          ['$g_pat_cvt; $m_pat_cvt', [& g_ids, &m_ids]]      
+          ['$g_pat_cvt; $m_pat_cvt', [&g_ids, &m_ids]]      
     fun term(pat, depth):
       match pat
       | '($m)':

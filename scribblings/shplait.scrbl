@@ -809,6 +809,16 @@ types. A tuple of one element is equivalent to just the element.
 
  Creates a tuple whose elements are produced by the @rhombus(expr)s.
 
+ In general extract components of a tuple by using @rhombus(def values).
+
+@examples(
+  ~eval: eval
+  def tup = values(1, "apple", fun (x): x)
+  tup
+  def values(n, str, id_func) = tup
+  str
+)
+
 }
 
 @// ------------------------------------------------------------
@@ -818,11 +828,25 @@ A @deftech{syntax object} is a representation of source code. It is
 written as quoted term using single quotes, such as
 @rhombus('1 + * 4 f()'). A syntax object is not a string, even though it
 uses quote marks. Instead, the usual @tech{shrubbery} rules apply inside
-quotes, and shrubbery structure is preserved in a syntax object.
+quotes, and shrubbery structure is preserved in a syntax object. That
+is, a string records a sequence of characters, but a syntax object
+represents structure that might be written in different ways; in
+particular, the printed form of a syntax object tends to use
+@litchar{«»} shrubbery notation instead of shrubbery notation's
+whitespace-sensitive format.
 
 When a syntax object is written using quotes, the @rhombus(#%quotes)
 form is used implicitly, similar to the way that square brackets
 implicitly use @rhombus(#%brackets).
+
+@examples(
+  ~eval: eval
+  'apple'
+  #%quotes 'apple'
+  '1 + 2'
+  'fun (x):
+     x + 1'
+)
 
 @elemtag("stxpat"){Syntax} patterns in @rhombus(match) are also written
 with quotes, and @rhombus($) acts as an escape in syntax patterns as
@@ -837,6 +861,12 @@ well as in syntax-object expressions, which are also known as
  sequence of terms from the corresponding part of the input syntax
  object.
 
+ @examples(
+  ~eval: eval
+  match '1 2 3 4'
+  | '1 $x 4': x
+ )
+
  When an ellipsis appears in a pattern, then it matches 0 or more
  repetitions of the preceding pattern element. If the preceding element
  contains a @rhombus($) escape, then the escaped identifier is not bound
@@ -846,10 +876,47 @@ well as in syntax-object expressions, which are also known as
  Ellipses can be nested in a pattern, and a repettion must be used in a
  template with the same amount of nesting as in its pattern.
 
+ @examples(
+  ~eval: eval
+  ~repl:
+    match 'a a a b d'
+    | 'a ... b c ... d': "matches"
+  ~repl:
+    match 'a a a b'
+    | '$x ... b': 'matches as $x ...'
+  ~repl:
+    match '(a 1) (b 2) (c 3)'
+    | '($x $y) ...': ['$x ...', '$y ...']
+  ~repl:
+    match '(a: 1) (b: 2 3 4) (c: 5 6)'
+    | '($x: $y ...) ...': ['$x ...', '($y ...) ...']
+ )
+
  When an ellipsis appears by itself in a shrubbery group, then the
  pattern matches 0 or more repetitions of the preceding group. If the
  group is an alternative written with @litchar{|}, then the pattern
- matches 0 or more alternatives.}
+ matches 0 or more alternatives.
+
+ @examples(
+  ~eval: eval
+  ~repl:
+    match 'a
+           b c
+           d'
+    | '$x
+       ...':
+        '{$x, ...}'
+  ~repl:
+    match 'cases
+           | a
+           | b c
+           | d'
+    | 'cases
+       | $x
+       | ...':
+        '{$x, ...}'
+ )
+}
 
 @item{When @rhombus($) appears in a template, then it must be followed
  by an identifier or an expression that is written as a single term
@@ -864,7 +931,12 @@ well as in syntax-object expressions, which are also known as
  If an escape does not refer to a repetition, then it must have an
  expression that produces a syntax object, and it must not be under any
  ellipses. The syntax object replaces the escape in the result syntax
- object.}
+ object.
+
+ @examples(
+  ~eval: eval
+  '1 $(if #true | '2' | 'oops') 3'
+ )}
 
 )
 
@@ -929,6 +1001,11 @@ well as in syntax-object expressions, which are also known as
  return @rhombus(#false); otherwise an exception is raised. Other
  functions similarly extract values from syntax representations.
 
+@examples(
+  ~eval: eval
+  syntax_to_number('9')
+  syntax_to_list('[w, x y, z]')
+)
 
 }
 
@@ -942,5 +1019,11 @@ well as in syntax-object expressions, which are also known as
 
  The inverse of @rhombus(syntax_to_number), etc., converting a value
  into asyntax representation.
+
+@examples(
+  ~eval: eval
+  number_to_syntax(9)
+  list_to_syntax(['w', 'x y', 'z'])
+)
 
 }
