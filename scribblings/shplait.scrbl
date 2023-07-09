@@ -11,12 +11,13 @@
     expr: block
     defn: block)
 
+@(def eval: make_rhombus_eval(~lang: #'shplait))
+
 @title{Shplait}
 
 Shplait is a language for implementing interpreters.
 
 @docmodule(~lang, shplait)
-
 
 @table_of_contents()
 
@@ -97,6 +98,29 @@ and new types can be defined with @rhombus(type).
  A type variable, which stands for a type to be chosen later. For
  example, @rhombus(#'a -> #'a) is the type of an identity function that
  accepts any value and returns the same value.
+
+@examples(
+  ~eval: eval
+  ~defn:
+    fun f(x :: #'a) :: Listof(#'a):
+      [x]
+  ~repl:
+    f(1)
+    f("apple")
+)
+
+ Using a type variable does not necessarily delay the choice
+ indefinitely. In some cases, type inference will resolve a type variable
+ to a concrete type.
+
+@examples(
+  ~eval: eval
+  ~defn:
+    fun add1(x :: #'a) :: #'b:
+      x+1
+  ~repl:
+    add1
+)
 
 }
 
@@ -604,6 +628,14 @@ well as in syntax-object expressions, which are also known as
  The @rhombus(syntax_is_list) function checks whether a syntax object
  would match the pattern @rhombus('[$elem ..., ...]'), returning 
  @rhombus(#true) if so and @rhombus(#false) otherwise.
+
+@examples(
+  ~eval: eval
+  syntax_is_number('9')
+  syntax_is_number('apple')
+  syntax_is_list('[w, x y, z]')
+  syntax_is_list('a b c')
+)
 
 }
 

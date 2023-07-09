@@ -25,8 +25,8 @@ export:
 
 meta:
   class Frame(mutable type_defns :~ IdMap = IdMap{},
-              mutable defn_types = [],
-              mutable final_defn_types = [],
+              mutable defn_types :~ List = [],
+              mutable final_defn_types :~ List = [],
               ~parent: mutable parent :: maybe(Frame) = #false,
               mutable children :: List = [],
               ~poly_context: mutable poly_context :: List,
@@ -92,7 +92,9 @@ meta:
 
   fun finish_current_frame():
     let fr = get_current_frame()
-    fr.final_defn_types := t.let_based_poly_do(fr.defn_types, 100)
+    let defn_types = fr.defn_types
+    fr.defn_types := []
+    fr.final_defn_types := fr.final_defn_types ++ t.let_based_poly_do(defn_types, 100)
 
   fun record_frame_defn_type(sym, ty):
     let fr = get_current_frame()
@@ -100,7 +102,7 @@ meta:
 
   fun build_register_defn_types():
     let fr = get_current_frame()
-    let [[sym, ty], ...] = fr.final_defn_types
+    let [[sym, ty], ...] = fr.final_defn_types    
     expr_meta.pack_expr('block:
                            t_s.register_type(#'$sym,
                                              $(t.to_expression(ty)))
@@ -113,7 +115,7 @@ meta:
 
   fun register_submodule(stx):
     let fr = get_current_frame()
-    fr.submods := [stx, & fr.submods]
+    fr.submods := [syntax_meta.flip_introduce(stx), & fr.submods]
 
   fun get_submodules():
     let fr = get_current_frame()

@@ -54,7 +54,7 @@
                                                      #:datum-literals (multi)
                                                      [(multi g) #'g]
                                                      [_ sm])))
-                        (get_submodules)))])]))
+                        (map syntax-local-introduce (get_submodules))))])]))
 
 (define-syntax (shplait-top-interaction stx)
   (syntax-parse stx
