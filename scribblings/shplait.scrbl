@@ -150,8 +150,20 @@ and new types can be defined with @rhombus(type).
  takes arguments according to the @rhombus(typed_id) field declarations
  and produces a value of type @rhombus(id) or @rhombus(id(type, ...)).
 
+@examples(
+  ~eval: eval
+  ~defn:
+    type Shape
+    | circle(radius)
+    | rectangle(width, height)
+  ~repl:
+    circle(2)
+    rectangle(3, 4)
+)
+
  See the @rhombus(match) form for dispatching on variants of a type with
- pattern matching to extract field values. As an alternative,
+ pattern matching to extract field values. As an alternative, @rhombus(is_a)
+ can be used with the constructor name, and 
  @rhombus(variant_id.field_id) can be used as an accessor function,
  where @rhombus(field_id) is the identifier within a field's
  @rhombus(typed_id); the accessor takes an instance of the variant and
@@ -159,11 +171,52 @@ and new types can be defined with @rhombus(type).
  applied to value (of an expression) of type @rhombus(id) that is not an
  instance of @rhombus(variant_id).
 
+@examples(
+  ~eval: eval
+  ~defn:
+    def c = circle(2)
+  ~repl:
+    match c
+    | circle(r): 3.14*r*r
+    | rectangle(w, h): w*h
+  ~repl:
+    c is_a circle
+    circle.radius(c)
+)
+
+
  When a @rhombus(id(type, ...)) is defined, then @rhombus(id) is a
  polymorphic type constructor, and the corresponding field-accessor
  functions are also polymorphic. These are polymorphic only to the degree
  that @rhombus(type) forms in the constructor @rhombus(typed_id)s refer
  to the @rhombus(of_id) type variables in @rhombus(maybe_type_args).
+
+}
+
+@doc(
+  ~nonterminal:
+    variant_id: block id
+  expr.macro '$expr is_a $variant_id'
+){
+
+ Returns @rhombus(#true) if @rhombus(expr) produces an instance
+ constructed with @rhombus(variant_id), @rhombus(#false) otherwise. The
+ type of @rhombus(expr) must be the same as the type produced by
+ @rhombus(variant_id).
+
+@examples(
+  ~eval: eval
+  ~defn:
+    type Shape
+    | circle(radius)
+    | rectangle(width, height)
+  ~repl:
+    circle(2) is_a circle
+    circle(2) is_a rectangle
+  ~repl:
+    ~error:
+      "apple" is_a circle
+)
 
 }
 

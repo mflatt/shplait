@@ -60,16 +60,45 @@
   (syntax-parse stx
     #:datum-literals (top)
     [(_ . (top form ...))
-     (define b
-       (local-expand #'(rhombus:#%top-interaction
-                        . (top form ...))
-                     'top-level
-                     null))
-     (finish_current_frame)
-     (let loop ([b b])
-       (syntax-parse b
-         #:literals (#%expression begin)
-         [(#%expression e) (displayln (string-append "- " (interaction_type_string #'e)))]
-         [(begin b ...) (for-each loop (syntax->list #'(b ...)))]
-         [_ (void)]))
-     b]))
+     (find_type_definitions #'(block form ...))
+     ;; trampoline to deal with `begin` sequences and `local-expand`:
+     #'(begin
+         (step-top-interaction
+          #t
+          (rhombus:#%top-interaction
+           . (top form ...))))]))
+
+(define-syntax (step-top-interaction stx)
+  (syntax-parse stx
+    [(_ final? e)
+     ;; partial expansion to look for `begin`:
+     (define pre-b (local-expand #'e 'top-level (list #'begin)))
+     (syntax-parse pre-b
+       #:literals (begin)
+       [(begin e ... e0)
+        ;; trampoline, so earlier definitions ni `begin` are
+        ;; available to local-expansion of later forms in `begin`
+        #'(begin
+            (step-top-interaction #f e)
+            ...
+            (step-top-interaction final? e0))]
+       [_
+        (define b (local-expand pre-b 'top-level null))        
+        (cond
+          [(syntax-e #'final?)
+           (syntax-parse b
+             #:literals (#%expression)
+             [(#%expression e)
+              (finish_current_frame)     
+              (displayln (string-append "- " (interaction_type_string #'e)))
+              b]
+             [else      
+              #`(begin
+                  #,b
+                  (finish-top-interaction))])]
+          [else
+           b])])]))
+
+(define-syntax (finish-top-interaction stx)
+  (finish_current_frame)
+  #'(void))

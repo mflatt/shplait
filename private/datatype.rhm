@@ -77,7 +77,7 @@ decl.macro
     '«namespace ~open:
         class $id():
           nonfinal
-        class $var_id ($field.id, ...):
+        class $var_id($field.id, ...):
           extends $id
         ...
         export:
