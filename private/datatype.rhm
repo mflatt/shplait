@@ -68,7 +68,6 @@ decl.macro
 | 'type $(id :: Identifier) $(args :: MaybeArgs)
    | $(var_id :: Identifier) ($(field :: Argument), ...)
    | ...':
-    ~op_stx self
     let (dty :: t.Datatype, tvars) = f.lookup_found_type_definition(id)
     let tvar_box = Box(tvars)
     let arg_tys = dty.args

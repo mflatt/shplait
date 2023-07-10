@@ -21,14 +21,13 @@ value.macro
 | 'brackets [$_, ...]':
     '#false'
 
-expr.macro 'brackets [$(elem :: expr_meta.Parsed), ...]':
-  ~op_stx self
-  let tv = t.gen_tvar(self)
+expr.macro 'brackets $(elems && '[$(elem :: expr_meta.Parsed), ...]')':
+  let tv = t.gen_tvar(#false)
   let [elem_exp, ...] = [expr_meta.parse_more(elem), ...]
   Function.pass(t.unify_do(elem_exp, tv, t_s.lookup_type(elem_exp)),
                 ...)
-  t_s.wrap_type('#%brackets [$elem_exp, ...]',
-                t.ListOf(self, tv))
+  t_s.wrap_type('#%brackets [$elem_exp, ...]'.relocate_span([elems]),
+                t.ListOf(elems, tv))
 
 expr.macro 'first':
   ~op_stx self

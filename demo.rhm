@@ -6,8 +6,9 @@ id(1)
 id("x")
 
 def n:
-  def x = 10
-  x
+  block:
+    def x = 10
+    x
 
 def m :: Number = 11
 

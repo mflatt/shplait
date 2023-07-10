@@ -97,7 +97,6 @@ meta:
     let r:
       '«match $expr
         | []: unify ~expr $(t_s.type_to_syntax(tv)):
-                ~self: $self
                 ~body:
                   $empty_body 
         | [first, & rest]:
@@ -106,7 +105,6 @@ meta:
             statinfo.macro '$f_id': '(($t_s.type_key, $(t_s.type_to_syntax(elem_tv))))'
             statinfo.macro '$r_id': '(($t_s.type_key, $(t_s.type_to_syntax(t.ListOf(self, elem_tv)))))'
             unify ~expr $(t_s.type_to_syntax(tv)):
-              ~self: $self
               ~body:
                 $cons_body»'
     t_s.wrap_type(r, tv)
@@ -124,7 +122,6 @@ meta:
       if else_body
       | ['~else:
             unify ~expr $(t_s.type_to_syntax(tv)):
-              ~self: $self
               ~body:
                 $else_body']
       | []
@@ -134,7 +131,6 @@ meta:
             syntax_def $pat_id: $pat_cvt_tmpl $pat_depth
             ...
             unify ~expr $(t_s.type_to_syntax(tv)):
-              ~self: $self
               ~body:
                 $body
         | ...
@@ -195,7 +191,6 @@ meta:
       if else_body
       | ['~else:
             unify ~expr $(t_s.type_to_syntax(tv)):
-              ~self: $self
               ~body:
                 $else_body']
       | []
@@ -207,7 +202,6 @@ meta:
             statinfo.macro '$field': '(($t_s.type_key, $(t_s.type_to_syntax(field_tv))))'
             ...
             unify ~expr $(t_s.type_to_syntax(tv)):
-              ~self: $self
               ~body:
                 $body
         | ...

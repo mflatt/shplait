@@ -71,7 +71,6 @@ expr.macro 'function ($arg, ...) $(res_type :: MaybeType):
                                       $(t_s.type_to_syntax(arg_type))))'
          ...
          unify ~expr $(t_s.type_to_syntax(res_tv)):                   
-           ~self: $self
            ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
            ~defns:«»
            ~body:

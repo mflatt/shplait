@@ -273,13 +273,9 @@ and new types can be defined with @rhombus(type).
 @doc(
   defn.macro 'def $typed_id = $expr'
   defn.macro 'def $typed_id:
-                $defn
-                ...
                 $expr'
   defn.macro 'def values($typed_id, ...) = $expr'
   defn.macro 'def values($typed_id, ...):
-                $defn
-                ...
                 $expr'  
 ){
 
@@ -300,11 +296,34 @@ and new types can be defined with @rhombus(type).
       def s :: String = 0
   ~defn:
     def values(x3 :: Number, s2 :: String):
-      def three = 3
-      values(three, "apple")
+      values(3, "apple")
   )
 
 }
+
+@doc(
+  defn.macro 'block:
+                $defn
+                ...
+                $expr'  
+){
+
+ Expression form that allows nested definitions before a nested
+ expression. Names defined by the @rhombus(defn)s are visible only within
+ the @rhombus(block) body, and they shadow bindings of the same name
+ outside of the @rhombus(block).
+
+@examples(
+  ~eval: eval
+  def x = "outside"
+  block:
+    def x = "inside"
+    x
+  x
+)
+
+}
+
 
 
 @doc(
@@ -330,6 +349,10 @@ and new types can be defined with @rhombus(type).
  form. Each of the @rhombus(typed_id) arguments optionally declares a
  type for the argument, and if @rhombus(maybe_type) is not empty, it
  @rhombus(type) declares the function's result type.
+
+ The body of a @rhombus(fun) has an implicit @rhombus(block) in the
+ sensethat @rhombus(defn)s are allowed in the function body before the
+ @rhombus(expr) that produces the function's result.
 
  A function is called through the expression form
  @rhombus(fun_expr(arg_expr, ...)), where @rhombus(fun_expr) is typically

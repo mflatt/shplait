@@ -16,7 +16,7 @@ expr.macro 'shif $tst ...
   let '$(tst :: expr_meta.Parsed)' = '$tst ...'
   let '$(thn :: expr_meta.Parsed)' = '$thn ...'
   let '$(els :: expr_meta.Parsed)' = '$els ...'
-  let tv = t.gen_tvar(self)
+  let tv = t.gen_tvar(#false)
   t.unify_do(tst, t.Bool(self), t_s.lookup_type(tst))
   t.unify_do(tst, t_s.lookup_type(thn), tv)
   t.unify_do(tst, t_s.lookup_type(els), tv)
@@ -33,7 +33,7 @@ expr.macro
     let ['$(tst :: expr_meta.Parsed)', ...] = ['$tst ...', ...]
     let ['$(body :: expr_meta.Parsed)', ...] = [body, ...]
     let '$(els :: expr_meta.Parsed)' = els
-    let tv = t.gen_tvar(self)
+    let tv = t.gen_tvar(#false)
     Function.pass(t.unify_do(tst, t.Bool(self), t_s.lookup_type(tst)), ...)
     Function.pass(t.unify_do(tst, tv, t_s.lookup_type(body)), ...)
     t.unify_do(els, tv, t_s.lookup_type(els))

@@ -11,16 +11,12 @@ export:
 
 expr.macro
 | 'unify $mode $type:
-     ~self: $self
      ~body: $(body :: Group)':
     'unify $mode $type:
-       ~self: $self
        ~init_tvars: []
        ~defns:«»
        ~body: $(body :: Group)'
 | 'unify $mode $type:
-     ~self:
-       $self
      ~init_tvars:
        [($id, $ty_stx), ...]
      ~defns:
@@ -28,7 +24,7 @@ expr.macro
        ...
      ~body:
        $(body :: Group)':
-    let tv = t.gen_tvar(self)
+    let tv = t.gen_tvar(#false)
     let b:
       'block:
          f.relet_frame: f.Frame(~parent:
@@ -37,20 +33,20 @@ expr.macro
                                   IdMap{ '$id': $(t_s.syntax_to_type(ty_stx)), ... })
          $defn
          ...
-         unify_phase_2 $mode $type $self:
+         unify_phase_2 $mode $type:
            $body'
     t_s.wrap_type(b, tv)
 
-expr.macro 'unify_phase_2 $mode $type $self:
+expr.macro 'unify_phase_2 $mode $type:
               $(body :: Group)':
   let (expr, opaque_expr) = expr_meta.parse_all(body)
   let u_ty = t_s.syntax_to_type(type)
   let body_ty = t_s.lookup_type(expr)
   match mode
   | '~defn':
-      t.unify_defn_do(self, u_ty, body_ty)
+      t.unify_defn_do(expr, u_ty, body_ty)
   | ~else:
-      t.unify_do(self, u_ty, body_ty)
+      t.unify_do(expr, u_ty, body_ty)
       // finishing the frame relies on the fact that the expander
       // will first fully expand all of the preceding definitions
       f.finish_current_frame()

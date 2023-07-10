@@ -16,3 +16,4 @@ expr.macro 'literal $(lit :: Term)':
     | ~else:
         syntax_meta.error("literal type not known", lit)  
   t_s.wrap_type(Syntax.relocate_span('#%literal $lit', [lit]), ty)
+
