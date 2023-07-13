@@ -57,7 +57,6 @@ export:
 
 class Type(mutable src):
   nonfinal
-  opaque
   abstract clone()
 
 defn.macro 'class_c $name($fields): $body; ...':
@@ -70,7 +69,6 @@ defn.macro 'class_c $name($fields): $body; ...':
 class TVar(mutable rep, mutable non_poly :: maybe(List)):
   extends Type
   nonfinal
-  opaque
   override clone():
     if rep
     | Type.clone(rep)
@@ -818,6 +816,7 @@ fun unify_do(expr, a, b, ~is_function_call: is_function_call = #false):
     add_srcs_do(aa, a)
     add_srcs_do(ba, b)
     unify_do(expr, aa, ba)
+  println([a, b], ~pretty: #true)
   let a = simplify_do(a)
   let b = simplify_do(b)
   match a

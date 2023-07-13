@@ -2,10 +2,8 @@
 import:
   meta:
     "type.rhm" as t
-    "id_map.rhm" open
   "type_statinfo.rhm" as t_s
   "unify.rhm".unify
-  "frame.rhm" as f
 
 export:
   rename:
@@ -16,15 +14,6 @@ expr.macro 'shblock:
               ...
               $expr':
   ~op_stx self
-  for:
-    each defn: [defn, ...]
-    println(defn)
-    match defn
-    | '$(_ :: defn_meta.Group)': println("ok"); #void
-    | ~else: syntax_meta.error("not a definition; \n"
-                                 +& " only definitions are allowed before an expression at the end of a block",
-                               self,
-                               defn)                               
   let tv = t.gen_tvar(#false)
   let e:
     'unify ~expr $(t_s.type_to_syntax(tv)):

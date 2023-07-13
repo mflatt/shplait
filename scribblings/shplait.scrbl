@@ -303,21 +303,29 @@ and new types can be defined with @rhombus(type).
 
 @doc(
   defn.macro 'block:
-                $defn
+                $defn_or_expr
                 ...
-                $expr'  
+                $expr'
+
+  grammar defn_or_expr:
+    $defn
+    $expr
 ){
 
- Expression form that allows nested definitions before a nested
- expression. Names defined by the @rhombus(defn)s are visible only within
- the @rhombus(block) body, and they shadow bindings of the same name
- outside of the @rhombus(block).
+ Expression form that allows nested definitions and side-effecting
+ expression before a final expression. Names defined by the
+ @rhombus(defn)s are visible only within the @rhombus(block) body, and
+ they shadow bindings of the same name outside of the @rhombus(block).
+ Expressions among the @rhombus(defn_or_expr)s are useful only when they
+ have a side effect, since their results are ignored.
 
 @examples(
   ~eval: eval
   def x = "outside"
+  x
   block:
     def x = "inside"
+    println("hello")
     x
   x
 )
@@ -435,7 +443,7 @@ and new types can be defined with @rhombus(type).
 }
 
 @// ------------------------------------------------------------
-@section(~tag: "sec:cons"){Conditionals and Matching}
+@section(~tag: "sec:cond"){Conditionals and Matching}
 
 @doc(
   ~nonterminal:

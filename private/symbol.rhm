@@ -10,4 +10,4 @@ export:
 
 expr.macro 'symbol $(id :: Identifier)':
   ~op_stx self
-  t_s.wrap_type('#' $id', t.Sym(self))
+  t_s.wrap_type('#' $id'.relocate_span([self, id]), t.Sym('$self $id'))

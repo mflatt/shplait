@@ -16,17 +16,19 @@ expr.macro
      ~is $(right :: expr_meta.Parsed)':
     ~op_stx self
     t.unify_do(self, t_s.lookup_type(left), t_s.lookup_type(right))
-    '$('check'.relocate(self)):
-       $left
-       ~is $right'
+    t_s.wrap_type('$('check'.relocate(self)):
+                     $left
+                     ~is $right',
+                  t.Vd(self))
 | 'shcheck:
      $(left :: expr_meta.Parsed)
      ~raises $(right :: expr_meta.Parsed)':
     ~op_stx self
     t.unify_do(self, t_s.lookup_type(right), t.Str(self))
-    '$('check'.relocate(self)):
-       $left
-       ~raises $right'
+    t_s.wrap_type('$('check'.relocate(self)):
+                     $left
+                     ~raises $right',
+                  t.Vd(self))
 
 expr.macro
 | 'time: $(expr :: expr_meta.Parsed)':

@@ -14,21 +14,15 @@ module tuple:
 
 class Tuple(args :~ List):
   private implements Printable
-  private override print(op):
-    rhombus.display("values(", op)
-    for:
-      each:
-        arg: args
-        i: 0..
-      when i > 0
-      | rhombus.display(", ")
-      rhombus.print(arg, op)
-    rhombus.display(")", op)
+  private override describe(mode, recur):
+    PrintDesc.list("values(",
+                   args.map(recur),
+                   ")")
 
 expr.macro 'shvalues $(args && '($(expr :: expr_meta.Parsed), ...)')':
   ~op_stx self
   if [expr, ...].length() == 1
   | [expr, ...][0]
   | let [ty, ...] = [t_s.lookup_type(expr), ...]
-    t_s.wrap_type('Tuple([$expr, ...])',
+    t_s.wrap_type('Tuple([$expr, ...])'.relocate_span([self, args]),
                   t.TupleOf('$self $args', [ty, ...]))
