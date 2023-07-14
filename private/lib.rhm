@@ -1,8 +1,8 @@
 #lang shplait/private/core
 
-type Optionof(#'a)
+type Optionof(?a)
 | none()
-| some(val :: #'a)
+| some(val :: ?a)
 
 fun add1(n): n+1
 fun sub1(n): n+1
@@ -31,12 +31,12 @@ fun reverse(lst):
       | cons(hd, tl): accum_rev(tl, cons(hd, rev))
     accum_rev(lst, [])
 
-fun map(f :: #'a -> #'b, lst :: Listof(#'a)) :: Listof(#'b):
+fun map(f :: ?a -> ?b, lst :: Listof(?a)) :: Listof(?b):
   match lst
   | []: []
   | cons(hd, tl): cons(f(hd), map(f, tl))
 
-fun map2(f :: (#'a, #'b) -> #'c, alst :: Listof(#'a), blst :: Listof(#'b)) :: Listof(#'c):
+fun map2(f :: (?a, ?b) -> ?c, alst :: Listof(?a), blst :: Listof(?b)) :: Listof(?c):
   match alst
   | []:
       match blst

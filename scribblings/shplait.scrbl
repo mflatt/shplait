@@ -92,17 +92,17 @@ some built-in type constructors like @rhombus(->, ~at shplait/type),
 and new types can be defined with @rhombus(type).
 
 @doc(
-  type '#' $id'
+  type '? $id'
 ){
 
  A type variable, which stands for a type to be chosen later. For
- example, @rhombus(#'a -> #'a) is the type of an identity function that
+ example, @rhombus(?a -> ?a) is the type of an identity function that
  accepts any value and returns the same value.
 
 @examples(
   ~eval: eval
   ~defn:
-    fun f(x :: #'a) :: Listof(#'a):
+    fun f(x :: ?a) :: Listof(?a):
       [x]
   ~repl:
     f(1)
@@ -116,7 +116,7 @@ and new types can be defined with @rhombus(type).
 @examples(
   ~eval: eval
   ~defn:
-    fun addone(x :: #'a) :: #'b:
+    fun addone(x :: ?a) :: ?b:
       x+1
   ~repl:
     addone
@@ -136,7 +136,7 @@ and new types can be defined with @rhombus(type).
               | ...'              
   grammar maybe_type_args:
     ϵ
-    (#' $of_id, #' $of_id, ...)
+    (? $of_id, ? $of_id, ...)
 ){
 
  Defines a new type, either @rhombus(id) or or @rhombus(id(type, ...)).
@@ -157,7 +157,7 @@ and new types can be defined with @rhombus(type).
   ~repl:
     def ns :: NumList = [1, 2, 3]
   ~defn:
-    type Tagged(#'a) = (Symbol * #'a)
+    type Tagged(?a) = (Symbol * ?a)
   ~repl:
     def now :: Tagged(Number) = values(#'time, 1200)
     def who :: Tagged(String) = values(#'name, "Alice")
@@ -212,9 +212,9 @@ and new types can be defined with @rhombus(type).
 @examples(
   ~eval: eval
   ~defn:
-    type Treeof(#'a)
-    | leaf(v :: #'a)
-    | node(left :: Treeof(#'a), right :: Treeof(#'a))
+    type Treeof(?a)
+    | leaf(v :: ?a)
+    | node(left :: Treeof(?a), right :: Treeof(?a))
   ~repl:
     node
     node(leaf(1), leaf(2))
@@ -251,18 +251,18 @@ and new types can be defined with @rhombus(type).
 }
 
 @doc(
-  type 'Optionof(#'a)'
-  fun none() :: Optionof(#'a)
-  fun some(v :: #'a) :: Optionof(#'a)
+  type 'Optionof(?a)'
+  fun none() :: Optionof(?a)
+  fun some(v :: ?a) :: Optionof(?a)
 ){
 
  A type and constructors to represent ``success'' with a value and
  ``failure'' without a value, defined as
 
 @rhombusblock(
-  type Optionof(#'a)
+  type Optionof(?a)
   | none()
-  | some(val :: #'a)
+  | some(val :: ?a)
 )
 
 }
@@ -779,7 +779,7 @@ These operators have lower precedence than arithmetic operators.
 }
 
 @doc(
-  fun to_string(v :: #'a) :: String
+  fun to_string(v :: ?a) :: String
 ){
 
  Converts any value to a printed form as a string.
@@ -872,11 +872,11 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
-  fun cons(elem :: #'a, lst :: Listof(#'a)) :: #'a
-  fun first(lst :: Listof(#'a)) :: #'a
-  fun rest(lst :: Listof(#'a)) :: Listof(#'a)
-  fun is_cons(lst :: Listof(#'a)) :: Boolean
-  fun is_empty(lst :: Listof(#'a)) :: Boolean
+  fun cons(elem :: ?a, lst :: Listof(?a)) :: ?a
+  fun first(lst :: Listof(?a)) :: ?a
+  fun rest(lst :: Listof(?a)) :: Listof(?a)
+  fun is_cons(lst :: Listof(?a)) :: Boolean
+  fun is_empty(lst :: Listof(?a)) :: Boolean
 ){
 
  The @rhombus(cons) function produces a list given its first element
@@ -901,7 +901,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
-  fun length(lst :: Listof(#'a)) :: Number
+  fun length(lst :: Listof(?a)) :: Number
 ){
 
  Returns the number of elements in a list.
@@ -914,7 +914,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
-  fun append(lst1 :: Listof(#'a), lst2 :: Listof(#'a)) :: Listof(#'a)
+  fun append(lst1 :: Listof(?a), lst2 :: Listof(?a)) :: Listof(?a)
 ){
 
  Produces a list that has the items of the first given list followed by
@@ -931,7 +931,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
- fun reverse(lst :: Listof(#'a)) :: Listof(#'a)
+ fun reverse(lst :: Listof(?a)) :: Listof(?a)
 ){
 
  Returns a list that has the same elements as the given one, but in
@@ -945,7 +945,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
-  fun member(elem :: #'a, lst :: Listof(#'a)) :: Boolean
+  fun member(elem :: ?a, lst :: Listof(?a)) :: Boolean
 ){
 
  Determines whether a value is an item in a list. Items are compared using
@@ -960,7 +960,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
-  fun map(f :: #'a -> #'b, lst :: Listof(#'a)) :: Listof(#'b)
+  fun map(f :: ?a -> ?b, lst :: Listof(?a)) :: Listof(?b)
 ){
 
  Applies a function in order to each element of a list and forms a new
@@ -975,8 +975,8 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
- fun map2(f :: #'a #'b -> #'c, lst1 :: Listof(#'a), lst2 :: Listof(#'a))
-   :: Listof(#'c)
+ fun map2(f :: ?a ?b -> ?c, lst1 :: Listof(?a), lst2 :: Listof(?a))
+   :: Listof(?c)
 ){
 
  Applies a function in order to each pair of elements from two lists in
@@ -991,7 +991,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
-  fun filter(f :: #'a -> Boolean, lst :: Listof(#'a)) :: Listof(#'a)
+  fun filter(f :: ?a -> Boolean, lst :: Listof(?a)) :: Listof(?a)
 ){
 
  Returns a list containing (in order) the items of a given list for which
@@ -1006,10 +1006,10 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
- fun foldl(f :: (#'a, #'b) -> #'b, init :: #'b, lst :: Listof(#'a))
-   :: #'b
- fun foldr(f :: (#'a, #'b) -> #'b, init :: #'b, lst :: Listof(#'a))
-   :: #'b
+ fun foldl(f :: (?a, ?b) -> ?b, init :: ?b, lst :: Listof(?a))
+   :: ?b
+ fun foldr(f :: (?a, ?b) -> ?b, init :: ?b, lst :: Listof(?a))
+   :: ?b
 ){
 
  Applies a function to an accumulated value and each element of a list,

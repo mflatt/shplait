@@ -264,7 +264,7 @@ fun type_to_string(tmap :: MutableMap):
               let a = tmap.get(type, #false)
               if a
               | a
-              | let a = ("#'"
+              | let a = ("?"
                            ++ ((if type.src == #'poly | "" | "_") :~ String)
                            ++ (block:
                                  let n = tmap.length()
@@ -816,7 +816,6 @@ fun unify_do(expr, a, b, ~is_function_call: is_function_call = #false):
     add_srcs_do(aa, a)
     add_srcs_do(ba, b)
     unify_do(expr, aa, ba)
-  println([a, b], ~pretty: #true)
   let a = simplify_do(a)
   let b = simplify_do(b)
   match a

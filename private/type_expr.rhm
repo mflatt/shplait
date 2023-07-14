@@ -114,7 +114,7 @@ export:
     Syntax
     Symbol
     Void
-    #'
+    ?
     Listof
     #%parens
     ->
@@ -175,7 +175,7 @@ type_expr.macro 'Void':
   ~op_stx self
   type_expr_meta.pack(t.Bool(self))
 
-type_expr.macro '#' $(id :: Identifier)':
+type_expr.macro '? $(id :: Identifier)':
   ~op_stx self
   let tvars_box :: Box = current_tvars_box()
   let tvars :: IdMap = tvars_box.val

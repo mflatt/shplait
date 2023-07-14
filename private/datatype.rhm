@@ -130,7 +130,7 @@ meta:
     for List:
       each arg_g: [arg_g, ...]
       match arg_g
-      | '#'$(id :: Identifier)':
+      | '? $(id :: Identifier)':
           f.parse_type(arg_g, self, tvars_box)
       | ~else:
           syntax_meta.error("expected a type variable", self, arg_g)
