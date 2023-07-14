@@ -2,5 +2,9 @@
 
 export Box
 
-class Box(mutable val)
+class Box(mutable val):
+  implements Printable
+  override describe(mode, recur):
+    PrintDesc.list("box(", [recur(val)], ")")
+  
 

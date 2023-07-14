@@ -14,6 +14,7 @@ import:
   "symbol.rhm"
   "string.rhm"
   "tuple.rhm"
+  "boxval.rhm"
   "syntax.rhm"
   "exn.rhm"
   "check.rhm"
@@ -33,6 +34,7 @@ export:
   all_from(.symbol)
   all_from(.string)
   all_from(.tuple)
+  all_from(.boxval)
   all_from(.syntax)
   all_from(.exn)
   all_from(.check)

@@ -1,0 +1,10 @@
+#lang rhombus/static/and_meta
+
+export:
+  defwrap
+
+// defines a wrapper function with the right run-time name
+defn.macro 'defwrap $wrap_id $id ($arg, ...): $body':
+  'def $wrap_id:
+     fun $id($arg, ...): $body
+     $id'

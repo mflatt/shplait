@@ -1030,6 +1030,43 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @// ------------------------------------------------------------
+@subsection(~tag: "sec:box"){Boxes}
+
+A @deftech{box} is a mutable object that holds a single value.
+
+@doc(
+  type 'Boxof($type)'
+){
+
+ The type for a box that holds a @rhombus(type) value.
+
+}
+
+@doc(
+  fun box(val :: ?a) :: Boxof(?a)
+  fun unbox(bx :: Boxof(?a)) :: ?a
+  fun set_box(bx :: Boxof(?a), val :: ?a) :: Void
+){
+
+ The @rhombus(box) function a box that is distinct from all existing
+ boxes and that initially holds @rhombus(val). The @rhombus(unbox)
+ function extracts the current value of a box, and the @rhombus(set_box)
+ function changes the value that is held by a box.
+
+@examples(
+  ~eval: eval
+  def b = box(1)
+  b
+  unbox(b)
+  set_box(b, 2)
+  unbox(b)
+  ~error:
+    set_box(b, "apple")
+)
+
+}
+
+@// ------------------------------------------------------------
 @subsection(~tag: "sec:tuple"){Tuples}
 
 A @deftech{tuple} is similar to a list, but its type reflects a fixed
