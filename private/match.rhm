@@ -117,7 +117,7 @@ meta:
     let '$(expr :: expr_meta.Parsed)' = expr_in
     t.unify_do(expr_in, t_s.lookup_type(expr), t.Shrub(self))
     let tv = t.gen_tvar(self)
-    let [[pat_cvt, [[pat_id, pat_cvt_tmpl, pat_depth], ...]], ...]: [convert_pat(pat), ...]
+    let [[pat_cvt, [[pat_id, pat_cvt_tmpl, pat_depth], ...]], ...]: [convert_pat(pat, #true), ...]
     let [else, ...]:
       if else_body
       | ['~else:

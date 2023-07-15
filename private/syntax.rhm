@@ -20,11 +20,12 @@ module convert:
   export:
     meta:
       convert_pat
+      convert_tmpl
     syntax_def
 
 expr.macro '«shquotes $(quoted_tmpl && '«'$tmpl'»')»':
   ~op_stx self
-  let [tmpl_cvt, [[id, tmp_id, depth], ...]] = convert_tmpl(tmpl)
+  let [tmpl_cvt, [[id, tmp_id, depth], ...]] = convert_tmpl(tmpl, #true)
   t_s.wrap_type('«block:
                     def $(nest_rep(tmp_id, depth)) = reference_syntax_pattern_var($id, $depth)
                     ...
@@ -32,7 +33,7 @@ expr.macro '«shquotes $(quoted_tmpl && '«'$tmpl'»')»':
                 t.Shrub(quoted_tmpl))
 
 meta:
-  fun convert(pat, handle_id, handle_escape):
+  fun convert(pat, handle_id, handle_escape, use_temps):
     fun group(pat, depth, is_before_dots):
       fun dots(hd, tl):
         let [tm_pat_cvt, tm_ids] = group(hd, depth+1, #true)
@@ -55,7 +56,7 @@ meta:
           | syntax_meta.error("expected an identifier after `$` at ellipsis depth " +& depth,
                               id)
           let [pat_cvt, ids] = group('$tail ...', depth, is_before_dots)
-          let tmpl = Syntax.make_temp_id(id)
+          let tmpl = if use_temps | Syntax.make_temp_id(id) | id
           ['$(Syntax.relocate('$', op)) $(handle_id(tmpl, is_before_dots)) $pat_cvt',
            [[id, tmpl, depth], &ids]]
       | '$(op && '$') $_ ...':
@@ -80,22 +81,27 @@ meta:
           let [m_pat_cvt, m_ids] = multi('$tail; ...', depth)
           ['$g_pat_cvt; $m_pat_cvt', [&g_ids, &m_ids]]      
     fun term(pat, depth):
+      fun rebind(new):
+        // need to preserve binding of tag
+        let [tag, c, ...] = Syntax.unwrap(new)
+        let [orig_tag, orig_c, ...] = Syntax.unwrap(pat)
+        Syntax.make([orig_tag, c, ...])
       match pat
       | '($m)':
           let [m_pat_cvt, m_ids] = multi(m, depth)
-          ['($m_pat_cvt)', m_ids]
+          [rebind('($m_pat_cvt)'), m_ids]
       | '[$m]':
           let [m_pat_cvt, m_ids] = multi(m, depth)
-          ['[$m_pat_cvt]', m_ids]
+          [rebind('[$m_pat_cvt]'), m_ids]
       | '{$m}':
           let [m_pat_cvt, m_ids] = multi(m, depth)
-          ['{$m_pat_cvt}', m_ids]
+          [rebind('{$m_pat_cvt}'), m_ids]
       | '«'$m'»':
           let [m_pat_cvt, m_ids] = multi(m, depth)
-          ['«'$m_pat_cvt'»', m_ids]
+          [rebind('«'$m_pat_cvt'»'), m_ids]
       | ': $m':
           let [m_pat_cvt, m_ids] = multi(m, depth)
-          [': $m_pat_cvt', m_ids]
+          [rebind(': $m_pat_cvt'), m_ids]
       | '| $m
          | ...':
           let [[m_pat_cvt, m_ids], ...] = [multi(m, depth), ...]
@@ -108,20 +114,27 @@ meta:
     | '...': [pat, []]
     | '$': [pat, []]
     | ~else multi(pat, 0)
-  fun convert_pat(pat):
+  fun convert_pat(pat, use_temps):
     convert(pat,
             fun (id, is_before_dots):
               if is_before_dots
               | id
               | '($id :: Sequence)',
-            #false)
-  fun convert_tmpl(pat):
+            #false,
+            use_temps)
+  fun convert_tmpl(pat, use_temps):
     convert(pat,
             fun (id, is_before_dots): id,
-            fun (expr): '(reference_syntax($expr))')
+            if use_temps | (fun (expr): '(reference_syntax($expr))') | (fun (expr): expr),
+            use_temps)
 
 syntax_class Sequence
 | '$(_ :: Term) $(_ :: Term) ...'
+
+// for using the result of `convert_pat` in `macro`
+meta:
+  syntax_class Sequence
+  | '$(_ :: Term) $(_ :: Term) ...'
 
 expr.macro 'reference_syntax($(arg :: expr_meta.Parsed))':
   t.unify_do(arg, t_s.lookup_type(arg), t.Shrub(arg))

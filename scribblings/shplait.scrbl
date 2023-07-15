@@ -302,7 +302,7 @@ and new types can be defined with @rhombus(type).
 }
 
 @doc(
-  defn.macro 'block:
+  expr.macro 'block:
                 $defn_or_expr
                 ...
                 $expr'
@@ -312,8 +312,8 @@ and new types can be defined with @rhombus(type).
     $expr
 ){
 
- Expression form that allows nested definitions and side-effecting
- expression before a final expression. Names defined by the
+ Expression form that allows nested definitions and side-effect
+ expressions before a final expression. Names defined by the
  @rhombus(defn)s are visible only within the @rhombus(block) body, and
  they shadow bindings of the same name outside of the @rhombus(block).
  Expressions among the @rhombus(defn_or_expr)s are useful only when they
@@ -595,7 +595,7 @@ and new types can be defined with @rhombus(type).
  In the syntax-pattern form of @rhombus(match), @rhombus(target_expr)
  must produce a @tech{syntax object}, and it is compared to the quoted
  @rhombus(pattern)s until a match is found. A pattern can include an
- escape with @rhombus($) followed by an identifier, in which case it
+ escape with @rhombus($, ~datum) followed by an identifier, in which case it
  binds the identifier to one part of the input syntax or as a
  @tech{repetition} for multiple parts. See @secref("sec:stxobj") for
  examples.
@@ -1132,13 +1132,13 @@ implicitly use @rhombus(#%brackets).
 )
 
 @elemtag("stxpat"){Syntax} patterns in @rhombus(match) are also written
-with quotes, and @rhombus($) acts as an escape in syntax patterns as
+with quotes, and @rhombus($, ~datum) acts as an escape in syntax patterns as
 well as in syntax-object expressions, which are also known as
 @deftech{templates}:
 
 @itemlist(
 
-@item{When @rhombus($) appears in a pattern, then it must be followed by
+@item{When @rhombus($, ~datum) appears in a pattern, then it must be followed by
  an identifier. In the simple case that the pattern has no ellipses
  (written as @litchar{..}), then the identifier is bound to a non-empty
  sequence of terms from the corresponding part of the input syntax
@@ -1152,7 +1152,7 @@ well as in syntax-object expressions, which are also known as
 
  When an ellipsis appears in a pattern, then it matches 0 or more
  repetitions of the preceding pattern element. If the preceding element
- contains a @rhombus($) escape, then the escaped identifier is not bound
+ contains a @rhombus($, ~datum) escape, then the escaped identifier is not bound
  to a single syntax object, but it is instead bound as a
  @deftech{repetition} that holds each matched term. A repetition can only
  be referenced through a corresponding escape in a @tech{template}.
@@ -1201,13 +1201,13 @@ well as in syntax-object expressions, which are also known as
  )
 }
 
-@item{When @rhombus($) appears in a template, then it must be followed
+@item{When @rhombus($, ~datum) appears in a template, then it must be followed
  by an identifier or an expression that is written as a single term
  (e.g., a parenthesized expression).
 
  If an identifier is provided, then it can refer to a @tech{repetition}
  that is bound by a syntax-pattern match, as long as the
- @rhombus($)-escaped identifier in the template is under a number of
+ @rhombus($, ~datum)-escaped identifier in the template is under a number of
  ellipses that match the repetition binding. Each element of the
  repetition is put in the result syntax object in place of the escape.
 
@@ -1240,7 +1240,7 @@ well as in syntax-object expressions, which are also known as
  of treating them as subexpressions. Usually, @rhombus(#%quotes) is
  omitted, since it is implied by using quotes as an expression form.
 
- See @elemref("stxpat"){above} for informaTion about @rhombus($)
+ See @elemref("stxpat"){above} for informaTion about @rhombus($, ~datum)
  escapes within the quotes for a syntax object.
 
 }
@@ -1307,6 +1307,40 @@ well as in syntax-object expressions, which are also known as
   ~eval: eval
   number_to_syntax(9)
   list_to_syntax(['w', 'x y', 'z'])
+)
+
+}
+
+@// ------------------------------------------------------------
+
+@section(~tag: "sec:macro"){Macros}
+
+@doc(
+  defn.macro '«macro '$id $pattern':
+                 '$template'»'
+){
+
+ Defines @rhombus(id) as a macro that matches uses of @rhombus(id)
+ followed by matches to @rhombus(pattern), expanding to
+ @rhombus(template). The @rhombus(pattern) and @rhombus(template) can
+ included uses of @rhombus($, ~datum) to bind and reference pattern
+ variables. In a template, @rhombus($, ~datum) can only be followed by a pattern
+ variable.
+
+@examples(
+  ~eval: eval
+  ~defn:
+    macro 'let $id = $rhs:
+             $body':
+      'block:
+         def tmp = $rhs
+         block:
+           def $id = tmp
+           $body'
+  ~repl:
+    let x = 1:
+      let x = x + 2:
+        x
 )
 
 }

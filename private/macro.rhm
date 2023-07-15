@@ -1,0 +1,16 @@
+#lang rhombus/static/and_meta
+
+import:
+  "syntax.rhm"!convert.convert_pat
+  "syntax.rhm"!convert.convert_tmpl
+
+export:
+  rename:
+    shmacro as macro
+
+defn.macro '«shmacro '$(id :: Identifier) $pat':
+               '$tmpl'»':
+  def [c_pat, _] = convert_pat('$pat', #false)
+  def [c_tmpl, _] = convert_tmpl(tmpl, #false)
+  '«macro '$id $c_pat':
+      '$c_tmpl'»'
