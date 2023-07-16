@@ -179,6 +179,12 @@ class TypeConstructor(base,
   override clone():
     error("shouldn't clone type constructor")  
 
+// Helps println debugging by hiding types as srcs
+class Hide(v):
+  implements Printable
+  override describe(mode, recur):
+    "Hide"
+
 fun get_defn_tvars(t :: Type) :: Set:
   match t
   | t :: Defn: t.tvars
@@ -334,7 +340,7 @@ fun non_poly_do(t :: Type, poly_context :: List):
     | t :: TVar:
         if t.rep
         | loop(t.rep)
-        | let pc = t.non_poly
+        | let pc = t.non_poly          
           match pc
           | #false: t.non_poly := poly_context
           | pc :: List:
@@ -348,7 +354,7 @@ fun non_poly_do(t :: Type, poly_context :: List):
                 | lnew .= lold:
                     if poly_context == pc
                     | t.non_poly := (if synth
-                                     | [Symbol.gen(), & poly_context]
+                                     | [Symbol.gen("non"), & poly_context]
                                      | poly_context)
                     | loop(lnew - 1, lold - 1,
                            List.rest(poly_context), List.rest(pc),
@@ -383,7 +389,7 @@ fun non_poly_do(t :: Type, poly_context :: List):
           loop(a)
     | t :: Poly:
         loop(t.type)
-    | ~else: t
+    | ~else: #void
 
 fun as_non_poly(t :: Type, poly_context, tvars):
   non_poly_do(t, poly_context)
@@ -429,7 +435,7 @@ fun poly_instance(t :: Type):
           // We only have a skeleton...
           let inst = poly_instance(t.base)
           // Remember this instance to check the type later:
-          t.insts := [Pair(#false, inst), & t.insts]
+          t.insts := [inst, & t.insts]
           inst
   | t :: NonPolyDefn:
       poly_instance(t.base)
@@ -516,6 +522,8 @@ fun extract_srcs_do(r, ht :: MutableMap):
       extract_srcs_do(r.src, ht)
   | r :: List:
       r.for_each(fun (i): extract_srcs_do(i, ht))
+  | r :: Hide:
+      extract_srcs_do(r.v, ht)
 
 fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
                           reason = #false,
@@ -587,7 +595,8 @@ fun lookup(id :: Identifier, env, ~default: default = #'fail):
             | loop(env, #true) || (!is_symbolic && val)
         | ~else loop(env, is_symbolic)
           
-fun add_srcs_do(r :: Type, a :: Type):
+fun add_srcs_do(r :: Type, a_in :: Type):
+  def a = Hide(a_in)
   match r.src
   | #false: r.src := a
   | srcs :: List:
@@ -655,7 +664,7 @@ fun simplify_all_do(t):
       simplify_all_do.map(t.base)
   | ~else t
 
-fun resolve_defn_types(env :: List) :~ List:
+fun resolve_defn_types(env :: List, is_final) :~ List:
   for List:
     each [id, t]: env
     match t
@@ -664,18 +673,19 @@ fun resolve_defn_types(env :: List) :~ List:
           || (block:
                 let b = simplify_all_do(t.proto_rhs)
                 let poly = poly_ize_wrt(b, t.poly_context, t.base_tvars)
-                t.insts.for_each(fun (Pair(a, d)):
-                                   unify_do(a, d, poly_instance(poly)))
-                t.rhs := poly
+                t.insts.for_each(fun (d):
+                                   unify_do(#false, d, poly_instance(poly)))
+                when is_final
+                | t.rhs := poly
                 poly)
     | ~else #false
 
 fun let_based_poly_do(env :~ List.of(Pair), fuel):
   let defn_types :: List:
     // Find fixpoint of defn-type polymorphism:
-    recur loop (defn_types :~ List = resolve_defn_types(env),
+    recur loop (defn_types :~ List = resolve_defn_types(env, #false),
                 fuel = fuel):
-      let new_defn_types = resolve_defn_types(env)
+      let new_defn_types = resolve_defn_types(env, #false)
       cond
       | (for all:
            each:
@@ -697,6 +707,7 @@ fun let_based_poly_do(env :~ List.of(Pair), fuel):
                                        "possible cycle in type constraints; increase #:fuel to try more")):
           new_defn_types
       | ~else loop(new_defn_types, fuel-1)
+  resolve_defn_types(env, #true)
   for List:
     each:
       [id, t]: env
@@ -794,6 +805,8 @@ fun extract_tvars(t, poly_context :: List, base_tvars :: Set):
           loop(t.key) ++ loop(t.val)
       | t :: ParameterOf:
           loop(t.element)
+      | t :: TupleOf:
+          Set.append(& t.args.map(loop))
       | t :: Datatype:
           Set.append(& t.args.map(loop))
       | t :: Poly:
@@ -805,7 +818,7 @@ fun unify_defn_do(expr, a, b):
   match a
   | a :: Defn:
       let pi = poly_instance(a.base)
-      non_poly_do(b, [Symbol.gen(), & a.poly_context])
+      non_poly_do(b, [Symbol.gen("defn"), & a.poly_context])
       unify_do(expr, pi, b)
       unless a.rhs
       | a.proto_rhs := b

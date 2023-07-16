@@ -94,7 +94,11 @@ meta:
     let fr = get_current_frame()
     let defn_types = fr.defn_types
     fr.defn_types := []
-    fr.final_defn_types := fr.final_defn_types ++ t.let_based_poly_do(defn_types, 100)
+    match fr.parent
+    | parent :: Frame:
+        parent.defn_types := defn_types ++ parent.defn_types
+    | ~else:
+        fr.final_defn_types := fr.final_defn_types ++ t.let_based_poly_do(defn_types, 100)
 
   fun record_frame_defn_type(sym, ty):
     let fr = get_current_frame()

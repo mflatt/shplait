@@ -21,36 +21,47 @@ meta:
     let tvar_box = Box(IdMap{})
     let poly_context = f.get_current_frame().poly_context
     let base_tvars = f.get_current_frame().all_tvars()
-    let (mode, [ty, ...]):
+    let [ty, ...]:
       parameterize { current_value_tvar_box: tvar_box }:
-        fun default():
-          values('', [t.as_non_poly(f.parse_type(type_seq, id, tvar_box),
-                                    poly_context,
-                                    base_tvars),
-                      ...])
-        match [type_seq, ...]
-        | ['']:
-            match rhs
-            | '$(v :: value_meta.Parsed)' when v.unwrap():
-                values('~defn',
-                       [t.create_defn(t_s.syntax_to_type(v),
-                                      poly_context,
-                                      base_tvars,
-                                      IdMap.val_set(tvar_box.val))])
-            | ~else default()
-        | ~else default()
+        let (ok_poly, val_ty):
+          match rhs
+          | '$(v :: value_meta.Parsed)' when v.unwrap():
+              // the type `v` might be a function type to help
+              // with specific mismatch messages
+              values(#true, t_s.syntax_to_type(v))
+          | '$(id :: Identifier)':              
+              values(#true, #false)
+          | ~else:
+              values(#false, #false)
+        cond
+        | ok_poly:
+            let [ty, ...]:
+              match val_ty && [type_seq, ...]
+              | ['']: [val_ty]
+              | ~else: [f.parse_type(type_seq, id, tvar_box), ...]
+            [t.create_defn(ty,
+                           poly_context,
+                           base_tvars,
+                           IdMap.val_set(tvar_box.val)),
+             ...]
+        | ~else:
+            // non-value on rhs => disallow polymorphism
+            [t.as_non_poly(f.parse_type(type_seq, id, tvar_box),
+                           poly_context,
+                           base_tvars),
+             ...]
     let [ty_sym, ...] = [t_s.type_to_syntax(ty), ...]
     Function.pass(f.record_frame_defn_type(ty_sym, ty), ...)
     let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.val)
-    let (tuple_lhs, tuple_ty):
-      match [[id, ...], [ty, ...]]:
-      | [[id], [ty]]: values(id, ty)
-      | _: values('tu.Tuple([$id, ...])', t.TupleOf(self, [ty, ...]))
+    let tuple_lhs:
+      match [id, ...]:
+      | [id]: id
+      | _: 'tu.Tuple([$id, ...])'
     '«statinfo.macro '$id': '(($t_s.type_key,
                                $ty_sym))'
       ...
       def $tuple_lhs:
-        dynamic(unify ~defn $(t_s.type_to_syntax(tuple_ty)):
+        dynamic(unify ~defn ($ty_sym, ...):
                   ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
                   ~defns:«»
                   ~body:

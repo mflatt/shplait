@@ -68,3 +68,11 @@ fun foldr(f, init, lst):
   match lst
   | []: init
   | cons(hd, tl): f(hd, foldr(f, init, tl))
+
+fun fst(tup):
+  def values(f, s) = tup
+  f
+
+fun snd(tup):
+  def values(f, s) = tup
+  s

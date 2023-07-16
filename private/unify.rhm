@@ -37,17 +37,27 @@ expr.macro
            $body'
     t_s.wrap_type(b, tv)
 
-expr.macro 'unify_phase_2 $mode $type:
+expr.macro 'unify_phase_2 $mode $types:
               $(body :: Group)':
   let (expr, opaque_expr) = expr_meta.parse_all(body)
-  let u_ty = t_s.syntax_to_type(type)
   let body_ty = t_s.lookup_type(expr)
   match mode
   | '~defn':
-      t.unify_defn_do(expr, u_ty, body_ty)
+      match types
+      | '($(type :: Term))':
+          let u_ty = t_s.syntax_to_type(type)
+          t.unify_defn_do(expr, u_ty, body_ty)
+      | '($type, ...)':
+          let [u_ty, ...] = [t_s.syntax_to_type(type), ...]
+          let [tv, ...]: for List:
+                           each u_tv: [u_ty, ...]
+                           t.gen_tvar(#false)
+          t.unify_do(expr, t.TupleOf(#false, [tv, ...]), body_ty)
+          Function.pass(t.unify_defn_do(expr, u_ty, tv), ...)
   | ~else:
+      let u_ty = t_s.syntax_to_type(types)
       t.unify_do(expr, u_ty, body_ty)
-      // finishing the frame relies on the fact that the expander
-      // will first fully expand all of the preceding definitions
-      f.finish_current_frame()
+  // finishing the frame relies on the fact that the expander
+  // will first expand all of the preceding definitions
+  f.finish_current_frame()
   opaque_expr

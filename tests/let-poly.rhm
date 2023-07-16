@@ -1,0 +1,53 @@
+#lang shplait
+
+// basic poly inference for a function
+
+fun top_identity(x):
+  x
+check:
+  values(top_identity(1), top_identity("apple"))
+  ~is values(1, "apple")
+
+// nested in a block, too
+
+block:
+  fun identity(x):
+    x
+  check:
+    values(identity(1), identity("apple"))
+    ~is values(1, "apple")
+
+// check that polymorphism works through `def id = id`
+
+block:
+  fun identity(x): x
+  def also_identity = identity
+
+  check:
+    values(identity(1), identity("apple"))
+    ~is values(1, "apple")
+
+  check:
+    values(also_identity(1), also_identity("apple"))
+    ~is values(1, "apple")
+
+// check that `def id = id` works for an argument
+// of a function to be inferred as polymorphic
+
+fun top_identity2(x):
+  def v = x
+  v
+check:
+  values(top_identity2(1), top_identity2("apple"))
+  ~is values(1, "apple")
+
+// nested in a block, too
+
+block:
+  fun identity(x):
+    def v = x
+    v
+  check:
+    values(identity(1), identity("apple"))
+    ~is values(1, "apple")
+
