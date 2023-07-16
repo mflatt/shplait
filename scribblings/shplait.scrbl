@@ -1104,6 +1104,16 @@ types. A tuple of one element is equivalent to just the element.
 
 }
 
+@doc(
+  fun fst(tup :: ?a * ?b) :: ?a
+  fun snd(tup :: ?a * ?b) :: ?b
+){
+
+ Convenience functions for 2-element tuples to extract the first or
+ second component, respectively.
+
+}
+
 @// ------------------------------------------------------------
 @subsection(~tag: "sec:stxobj"){Syntax Objects}
 
