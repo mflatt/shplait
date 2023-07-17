@@ -76,3 +76,6 @@ fun fst(tup):
 fun snd(tup):
   def values(f, s) = tup
   s
+
+fun map_get(map, k):
+  map_get_k(map, k, some, none)

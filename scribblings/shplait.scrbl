@@ -1115,6 +1115,139 @@ types. A tuple of one element is equivalent to just the element.
 }
 
 @// ------------------------------------------------------------
+@subsection(~tag: "sec:map"){Maps}
+
+A @deftech{map} (not to be confused with the @rhombus(map) function on
+lists), also known as a @deftech{dictionary}, is a mapping from keys to
+values. All keys must have the same type, and all values must have the
+same type.
+
+A map is written with curly braces @litchar{{}} around comma-separated
+key--value pairs, where the key and value are separated by a colon
+@litchar{:}, as in @rhombus({ "a": 1, "b": 2 }). Using curly braces
+implicitly uses the @rhombus(#%braces) form, but @rhombus(#%braces) is
+normally not written.
+
+
+@doc(
+  ~nonterminal:
+    key_type: block type
+    val_type: block type
+  type 'Mapof($key_type, $val_type)'
+){
+
+
+ The type of a @tech{map} whose keys are of type @rhombus(key_type) and
+ values (that keys map to) are of type @rhombus(val_type).
+
+}
+
+@doc(
+  expr.macro '#%braces { $key_expr: $val_expr, ... }'  
+){
+
+ Produces an immutable @tech{map} whose keys are the values produced by
+ the @rhombus(key_expr)s mapping each of them to the value produced by
+ the corresponding @rhombus(val_expr). All of the @rhombus(key_expr)s
+ must have the same type, and all of the @rhombus(val_expr)s must have
+ the same type. Normally, @rhombus(#%braces) is omitted, since it's
+ implied when using square brackets as an expression form.
+
+ Since the result map is immutable, it works with @rhombus(map_update),
+ but not @rhombus(map_set).
+
+@examples(
+  ~eval: eval
+  { "a": 1, "b": 2 }
+)
+
+}
+
+
+@doc(
+  expr.macro 'MutableMap{ $key_expr: $val_expr, ... }'  
+){
+
+ Produces a mutable @tech{map} whose keys and values are initially the
+ same as the map produced by the same expression without
+ @rhombus(MutableMap).
+
+ Since the result map is mutable, it works with @rhombus(map_set), but not
+ @rhombus(map_update).
+
+@examples(
+  ~eval: eval
+  MutableMap{ "a": 1, "b": 2 }
+)
+
+}
+
+@doc(
+  fun map_get(map :: Mapof(?a, ?b), key :: ?a) :: Optionof(?b)
+  fun map_get_k(map :: Mapof(?a, ?b), key :: ?a,
+                success_k :: ?a -> ?c,
+                fail_k :: () -> ?c) :: ?c
+){
+
+ Functions to look up a key in a @tech{map}. Since the key might not be
+ mapped to a value, the value cannote be returned directly. Instead,
+ @rhombus(map_get) returns @rhombus(some(@rhombus(val, ~var))) if
+ @rhombus(key) is mapped to @rhombus(val, ~var) and @rhombus(none()) if
+ @rhombus(key) is not mapped to a value.
+
+ The @rhombus(map_get_k) function calls either @rhombus(success_k) or
+ @rhombus(fail_k) and returns the result, depending on whether
+ @rhombus(key) is mapped. The call @rhombus(map_get(map, key)) is
+ equivalent to @rhombus(map_get_k(map, key, some, none)).
+
+@examples(
+  ~eval: eval
+  def m = { "a": 1, "b": 2 }
+  map_get(m, "a")
+  map_get(m, "c")
+  map_get_k(m, "a", fun(v): v, fun(): 0)
+  map_get_k(m, "c", fun(v): v, fun(): 0)
+)
+
+}
+
+
+@doc(
+  fun map_update(map :: Mapof(?a, ?b), key :: ?a, val :: ?b) :: Mapof(?a, ?b)
+){
+
+ Produces a new map that is like @rhombus(map), but with @rhombus(key)
+ mapped to @rhombus(val). The given @rhombus(map) must be immutable.
+
+@examples(
+  ~eval: eval
+  def m = { "a": 1, "b": 2 }
+  map_update(m, "a", 100)
+  map_update(m, "c", 3)
+  m
+)
+
+}
+
+@doc(
+  fun map_set(map :: Mapof(?a, ?b), key :: ?a, val :: ?b) :: Void
+){
+
+ Changes @rhombus(map) so that @rhombus(key) is mapped to @rhombus(val).
+ The given @rhombus(map) must be mutable.
+
+@examples(
+  ~eval: eval
+  def m = MutableMap{ "a": 1, "b": 2 }
+  map_set(m, "a", 100)
+  map_set(m, "c", 3)
+  m
+)
+
+}
+
+
+@// ------------------------------------------------------------
 @subsection(~tag: "sec:stxobj"){Syntax Objects}
 
 A @deftech{syntax object} is a representation of source code. It is

@@ -117,6 +117,7 @@ export:
     ?
     Listof
     Boxof
+    Mapof
     #%parens
     ->
     *
@@ -196,6 +197,10 @@ type_expr.macro 'Listof ($(elem :: ParsedType))':
 type_expr.macro 'Boxof ($(elem :: ParsedType))':
   ~op_stx self
   type_expr_meta.pack(t.BoxOf(self, elem.type))
+
+type_expr.macro 'Mapof ($(key :: ParsedType), $(val :: ParsedType))':
+  ~op_stx self
+  type_expr_meta.pack(t.MapOf(self, key.type, val.type))
 
 type_expr.macro
 | '#%parens ($(elem :: ParsedType))':

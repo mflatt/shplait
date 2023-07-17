@@ -15,17 +15,19 @@ export:
   cons
   length
 
+module for_map:
+  export:
+    meta:
+      extract_common_type
+
 value.macro
 | 'brackets []':
     ~op_stx self
     let tv = t.gen_tvar(self)  
     t_s.type_to_syntax(t.Poly(self, tv, t.ListOf(self, tv)))
 | 'brackets [$(v :: value_meta.Parsed), ...]':
-    def v0 = [v, ...][0]
-    if (v0.unwrap()
-          && (for all:
-                each v: [v, ...]
-                v.unwrap() == v0.unwrap()))
+    def v0 = extract_common_type([v, ...])
+    if v0
     | t_s.type_to_syntax(t.ListOf(#false, t_s.syntax_to_type(v0)))
     | '#false'
 | 'brackets [$_, ...]':
@@ -33,10 +35,9 @@ value.macro
 
 expr.macro 'brackets $(elems && '[$(elem :: expr_meta.Parsed), ...]')':
   let tv = t.gen_tvar(#false)
-  let [elem_exp, ...] = [expr_meta.parse_more(elem), ...]
-  Function.pass(t.unify_do(elem_exp, tv, t_s.lookup_type(elem_exp)),
+  Function.pass(t.unify_do(elem, tv, t_s.lookup_type(elem)),
                 ...)
-  t_s.wrap_type('#%brackets [$elem_exp, ...]'.relocate_span([elems]),
+  t_s.wrap_type('#%brackets [$elem, ...]'.relocate_span([elems]),
                 t.ListOf(elems, tv))
 
 defwrap wrap_first first(l): List.first(l)
@@ -66,3 +67,12 @@ expr.macro 'length':
   let tv = t.gen_tvar(self)
   let ty = t.ListOf(self, tv)
   t_s.wrap_type('wrap_length', t.Poly(self, tv, t.Arrow(self, [ty], t.Num(self))))
+
+meta:
+  fun extract_common_type([v :~ Syntax, ...]):    
+    def v0 = [v, ...][0]
+    v0.unwrap()
+      && (for all:
+            each v: [v, ...]
+            v.unwrap() == v0.unwrap())
+      &&  v0

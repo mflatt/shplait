@@ -11,6 +11,7 @@ import:
   "match.rhm"
   "arithmetic.rhm"
   "list.rhm"
+  "map.rhm"
   "symbol.rhm"
   "string.rhm"
   "tuple.rhm"
@@ -33,6 +34,7 @@ export:
   all_from(.match)
   all_from(.arithmetic)
   all_from(.list)
+  all_from(.map)  
   all_from(.symbol)
   all_from(.string)
   all_from(.tuple)

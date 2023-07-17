@@ -1,0 +1,101 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+  "value.rhm".value
+  "value.rhm".value_meta
+  "wrap.rhm" open
+  "list.rhm"!for_map as lfm
+  "tuple.rhm"!tuple as tu
+
+export:
+  rename:
+    braces as #%braces
+    shMutableMap as MutableMap
+  map_get_k
+  map_update
+  map_set
+
+value.macro
+| 'braces { $key_term ... :  $(val :: value_meta.Parsed), ... }':
+    let '($(key :: value_meta.Parsed), ...)' = '($key_term ..., ...)'
+    def key0 = lfm.extract_common_type([key, ...])
+    def val0 = lfm.extract_common_type([val, ...])
+    if key0 && val0
+    | t_s.type_to_syntax(t.ListOf(#false, t.MapOf(#false,
+                                                  t_s.syntax_to_type(key0),
+                                                  t_s.syntax_to_type(val0))))
+    | '#false'
+| 'braces {$_, ...}':
+    '#false'
+
+meta:
+  fun construct_map(elems, make):
+    def '{ $key_term ...: $(val :: expr_meta.Parsed), ... }' = elems
+    let '($(key :: expr_meta.Parsed), ...)' = '($key_term ..., ...)'    
+    let key_tv = t.gen_tvar(#false)
+    let val_tv = t.gen_tvar(#false)
+    Function.pass(t.unify_do(key, key_tv, t_s.lookup_type(key)), ...)
+    Function.pass(t.unify_do(val, val_tv, t_s.lookup_type(val)), ...)
+    t_s.wrap_type('$make { $key : $val, ... }'.relocate_span([elems]),
+                  t.MapOf(elems, key_tv, val_tv))
+
+expr.macro 'braces $(elems && '{ $key_term ...: $(val :: expr_meta.Parsed), ... }')':  
+  construct_map(elems, 'Map')
+
+expr.macro 'shMutableMap $(elems && '{ $key_term ...: $(val :: expr_meta.Parsed), ... }')':  
+  construct_map(elems, 'MutableMap')
+
+def fail_key = Symbol.gen()
+
+defwrap wrap_map_get_k map_get_k(map :~ Map, key, success, fail):
+  def v = map.get(key, fail_key)
+  if v === fail_key
+  | fail()
+  | success(v)
+defwrap wrap_map_update map_update(map :~ Map, key, val):
+  map ++ { key: val } 
+defwrap wrap_map_set map_set(map :~ MutableMap, key, val):
+  map[key] := val
+
+expr.macro 'map_get_k':
+  ~op_stx self
+  let key_tv = t.gen_tvar(self)
+  let val_tv = t.gen_tvar(self)
+  let res_tv = t.gen_tvar(self)
+  t_s.wrap_type('wrap_map_get_k'.relocate(self),
+                t.Poly(self, key_tv,
+                       t.Poly(self, val_tv,
+                              t.Arrow(self,
+                                      [t.MapOf(self, key_tv, val_tv),
+                                       key_tv,
+                                       t.Arrow(self, [val_tv], res_tv),
+                                       t.Arrow(self, [], res_tv)],
+                                      res_tv))))
+
+expr.macro 'map_update':
+  ~op_stx self
+  let key_tv = t.gen_tvar(self)
+  let val_tv = t.gen_tvar(self)
+  t_s.wrap_type('wrap_map_update'.relocate(self),
+                t.Poly(self, key_tv,
+                       t.Poly(self, val_tv,
+                              t.Arrow(self,
+                                      [t.MapOf(self, key_tv, val_tv),
+                                       key_tv,
+                                       val_tv],
+                                      t.MapOf(self, key_tv, val_tv)))))
+  
+expr.macro 'map_set':
+  ~op_stx self
+  let key_tv = t.gen_tvar(self)
+  let val_tv = t.gen_tvar(self)
+  t_s.wrap_type('wrap_map_set'.relocate(self),
+                t.Poly(self, key_tv,
+                       t.Poly(self, val_tv,
+                              t.Arrow(self,
+                                      [t.MapOf(self, key_tv, val_tv),
+                                       key_tv,
+                                       val_tv],
+                                      t.Vd(self)))))
