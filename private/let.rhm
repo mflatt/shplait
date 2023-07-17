@@ -1,0 +1,26 @@
+#lang rhombus/static/and_meta
+import:
+  "def.rhm" as d
+  "block.rhm" as b
+
+export:
+  rename:
+    shlet as let
+  letrec
+
+expr.macro 'shlet $(id :: Identifier) = $rhs ...:
+              $(body :: Group)':
+  def tmp = syntax_meta.flip_introduce(id)
+  'b.block:
+     d.def tmp = $rhs ...
+     b.block:
+      d.def $id = tmp
+      $body'
+
+
+expr.macro 'letrec $(id :: Identifier) = $rhs ...:
+              $(body :: Group)':
+  'b.block:
+     d.def $id = $rhs ...
+     $body'
+

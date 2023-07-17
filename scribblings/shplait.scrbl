@@ -332,8 +332,6 @@ and new types can be defined with @rhombus(type).
 
 }
 
-
-
 @doc(
   ~nonterminal:
     fun_expr: block expr
@@ -441,6 +439,36 @@ and new types can be defined with @rhombus(type).
 )
 
 }
+
+@doc(
+  expr.macro 'let $id = $rhs_expr:
+                $expr'
+  expr.macro 'letrec $id = $rhs_expr:
+                $expr'
+){
+
+ Shorthands for a @rhombus(block) containing a definition of
+ @rhombus(id) to @rhombus(rhs_expr) followed by @rhombus(expr), except
+ that in the case of @rhombus(let), @rhombus(id) is not visible to the
+ @rhombus(rhs_expr).
+
+ See @rhombus(macro, ~defn) for the definition of @rhombus(let) in terms
+ of @rhombus(block) and @rhombus(def).
+
+@examples(
+  ~eval: eval
+  let x = 1:
+    let x = x + 2:
+      x
+  letrec sum = (fun(lst):
+                  match lst
+                  | []: 0
+                  | cons(n, lst): n + sum(lst)):
+    sum([1, 2, 3])
+)
+
+}
+
 
 @// ------------------------------------------------------------
 @section(~tag: "sec:cond"){Conditionals and Matching}
