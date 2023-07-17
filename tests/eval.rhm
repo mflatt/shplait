@@ -1,0 +1,15 @@
+#lang rhombus/static/and_meta
+
+export:
+  check_eval
+
+fun make_shplait_evaluator():
+  def e = Evaluator.make_rhombus_empty()
+  parameterize { Evaluator.current: e }:
+    Evaluator.import(ModulePath 'shplait')
+  e
+
+expr.macro 'check_eval: $body':
+  'check:
+     ~eval: make_shplait_evaluator()
+     $body'

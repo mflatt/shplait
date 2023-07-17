@@ -3,6 +3,7 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "value.rhm".value
 
 export:
   rename:
@@ -11,3 +12,8 @@ export:
 expr.macro 'symbol $(id :: Identifier)':
   ~op_stx self
   t_s.wrap_type('#' $id'.relocate_span([self, id]), t.Sym('$self $id'))
+
+value.macro 'symbol $(id :: Identifier)':
+  ~op_stx self
+  t_s.type_to_syntax(t.Sym(self))
+  

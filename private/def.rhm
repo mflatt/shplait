@@ -29,8 +29,6 @@ meta:
               // the type `v` might be a function type to help
               // with specific mismatch messages
               values(#true, t_s.syntax_to_type(v))
-          | '$(id :: Identifier)':              
-              values(#true, #false)
           | ~else:
               values(#false, #false)
         cond

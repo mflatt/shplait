@@ -1,0 +1,7 @@
+#lang rhombus/static/and_meta
+
+export:
+  import
+  only_space impo:
+    lib file names: / ! #%literal
+    open

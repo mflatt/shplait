@@ -1,4 +1,8 @@
 #lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
 
 export:
   value
@@ -10,7 +14,17 @@ space.transform value:
   space_path shplait/value
   macro_definer macro
   meta_namespace value_meta:
-    parse_syntax_class Parsed
+    parse_syntax_class _Parsed
+    export Parsed
+
+meta:
+  syntax_class Parsed:
+    kind: ~group
+    root_swap: parsed group
+  | '$(x :: value_meta._Parsed)':
+      field parsed = x
+  | '$(id :: Identifier)':
+      field parsed = t_s.type_to_syntax(t.gen_tvar(id))
 
 meta:
   def current_value_tvar_box = Parameter.make(#false)

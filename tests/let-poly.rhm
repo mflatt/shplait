@@ -1,4 +1,6 @@
 #lang shplait
+import:
+  open: "eval.rhm"
 
 // basic poly inference for a function
 
@@ -51,3 +53,54 @@ block:
     values(identity(1), identity("apple"))
     ~is values(1, "apple")
 
+// list expressions can be values
+block:
+  def list_of_identity = [fun (x): x]
+  def list_of_top_identity = [top_identity]
+  check: first(list_of_identity)(1)
+         ~is 1
+  check: first(list_of_identity)("a")
+         ~is "a"
+  check: first(list_of_top_identity)(1)
+         ~is 1
+  check: first(list_of_top_identity)("a")
+         ~is "a"
+
+// tuple expressions can be values
+block:
+  def tuple_of_identity = values(fun (x): x, fun (x): [x])
+  check: fst(tuple_of_identity)(1)
+         ~is 1
+  check: fst(tuple_of_identity)("a")
+         ~is "a"
+  check: snd(tuple_of_identity)(1)
+         ~is [1]
+  check: snd(tuple_of_identity)("a")
+         ~is ["a"]
+
+  // literals are values
+  def big_tuple = values(#'sym, fun (x): x, 10, "apple", #true)
+  fun extract(tup):
+    def values(sym, func, num, str, bool) = tup
+    func
+  check: extract(big_tuple)(1)
+         ~is 1
+  check: extract(big_tuple)("a")
+         ~is "a"  
+
+// box expressions are not values
+check_eval:
+  def box_of_identity = box(fun (x): x)
+  values(unbox(box_of_identity)(1),
+         unbox(box_of_identity)("a"))
+  ~raises "typecheck failed"
+
+// constructor applications can be values
+type ImmutableBox(?a)
+| immutable_box(val :: ?a)
+block:  
+  def ibox_of_identity = immutable_box(fun (x): x) 
+  check: immutable_box.val(ibox_of_identity)(1)
+         ~is 1
+  check: immutable_box.val(ibox_of_identity)("a")
+         ~is "a"

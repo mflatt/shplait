@@ -13,7 +13,9 @@ import:
   "type_defn.rhm".type_defn  
   "type_defn.rhm".type_defn_meta
   "pattern.rhm".pattern
-  "pattern.rhm".pattern_meta  
+  "pattern.rhm".pattern_meta
+  "value.rhm".value
+  "value.rhm".value_meta
 
 export:
   type
@@ -121,6 +123,9 @@ decl.macro
                             $var_tmp_id,
                             $var_ty_sym)')
       ...
+      value.macro '$var_id ($'$'arg, $'...')':
+        parse_constructor_app_value('$dty_sym', [arg, $'...'])
+      ...
       »'
 
 meta:
@@ -147,3 +152,15 @@ meta:
     t.instantiate_at(t_s.syntax_to_type(ty_sym),
                      [f.parse_type(arg_g, arg_g, tvars_box),
                       ...])
+
+  fun parse_constructor_app_value(dty_sym, [arg, ...]):
+    let dty :: t.Datatype = t_s.syntax_to_type(dty_sym)
+    cond
+    | dty.args.length() != [arg, ...].length():
+        '#false'
+    | ~else:
+        match '($arg, ...)':
+        | '($(v :: value_meta.Parsed), ...)':
+            dty_sym
+        | ~else:
+            '#false'

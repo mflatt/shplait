@@ -20,6 +20,7 @@ import:
   "check.rhm"
   "module.rhm"
   "macro.rhm"
+  "import.rhm"
 
 export:
   all_from(.type_expr)
@@ -41,4 +42,5 @@ export:
   all_from(.check)
   all_from(.module)
   all_from(.macro)
+  all_from(.import)
   #%parens

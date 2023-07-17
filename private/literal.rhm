@@ -3,17 +3,22 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "value.rhm".value
 
 export:
   rename literal as #%literal
 
-expr.macro 'literal $(lit :: Term)':
-  let ty:
+meta:
+  fun type_of_literal(lit :: Syntax):
     match lit.unwrap()
     | (_ :: Boolean): t.Bool(lit)
     | (_ :: String): t.Str(lit)
     | (_ :: Number): t.Num(lit)
     | ~else:
         syntax_meta.error("literal type not known", lit)  
-  t_s.wrap_type(Syntax.relocate_span('#%literal $lit', [lit]), ty)
 
+expr.macro 'literal $(lit :: Term)':
+  t_s.wrap_type(Syntax.relocate_span('#%literal $lit', [lit]), type_of_literal(lit))
+
+value.macro 'literal $(lit :: Term)':
+  t_s.type_to_syntax(type_of_literal(lit))

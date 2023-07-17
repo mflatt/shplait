@@ -17,7 +17,7 @@
 
 Shplait is a language for implementing interpreters.
 
-@docmodule(~lang, shplait)
+@docmodule(~lang, ~use_sources: shplait, shplait)
 
 @table_of_contents()
 

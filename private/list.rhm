@@ -4,6 +4,7 @@ import:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
   "value.rhm".value
+  "value.rhm".value_meta
   "wrap.rhm" open
 
 export:
@@ -19,6 +20,14 @@ value.macro
     ~op_stx self
     let tv = t.gen_tvar(self)  
     t_s.type_to_syntax(t.Poly(self, tv, t.ListOf(self, tv)))
+| 'brackets [$(v :: value_meta.Parsed), ...]':
+    def v0 = [v, ...][0]
+    if (v0.unwrap()
+          && (for all:
+                each v: [v, ...]
+                v.unwrap() == v0.unwrap()))
+    | t_s.type_to_syntax(t.ListOf(#false, t_s.syntax_to_type(v0)))
+    | '#false'
 | 'brackets [$_, ...]':
     '#false'
 

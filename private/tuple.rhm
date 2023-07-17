@@ -4,6 +4,8 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "value.rhm".value
+  "value.rhm".value_meta
 
 export:
   rename:
@@ -26,3 +28,9 @@ expr.macro 'shvalues $(args && '($(expr :: expr_meta.Parsed), ...)')':
   | let [ty, ...] = [t_s.lookup_type(expr), ...]
     t_s.wrap_type('Tuple([$expr, ...])'.relocate_span([self, args]),
                   t.TupleOf('$self $args', [ty, ...]))
+
+value.macro
+| 'shvalues ($(v :: value_meta.Parsed), ...)':
+    t_s.type_to_syntax(t.TupleOf(#false, [t_s.syntax_to_type(v), ...]))
+| 'shvalues ($_, ...)':
+    '#false'
