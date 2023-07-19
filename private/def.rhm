@@ -17,20 +17,24 @@ export:
     define as def
 
 meta:
-  fun build_def(self, [id, ...], [type_seq, ...], rhs):
+  fun build_def(self, mutable_tag, [id, ...], [type_seq, ...], rhs):
     let tvar_box = Box(IdMap{})
     let poly_context = f.get_current_frame().poly_context
     let base_tvars = f.get_current_frame().all_tvars()
     let [ty, ...]:
       parameterize { current_value_tvar_box: tvar_box }:
         let (ok_poly, val_ty):
-          match rhs
-          | '$(v :: value_meta.Parsed)' when v.unwrap():
-              // the type `v` might be a function type to help
-              // with specific mismatch messages
-              values(#true, t_s.syntax_to_type(v))
+          match mutable_tag
+          | '':
+              match rhs
+              | '$(v :: value_meta.Parsed)' when v.unwrap():
+                  // the type `v` might be a function type to help
+                  // with specific mismatch messages
+                  values(#true, t_s.syntax_to_type(v))
+              | ~else:
+                  values(#false, #false)
           | ~else:
-              values(#false, #false)
+                  values(#false, #false)
         cond
         | ok_poly:
             let [ty, ...]:
@@ -55,32 +59,49 @@ meta:
       match [id, ...]:
       | [id]: id
       | _: 'tu.Tuple([$id, ...])'
-    '«statinfo.macro '$id': '(($t_s.type_key,
-                               $ty_sym))'
-      ...
-      def $tuple_lhs:
-        dynamic(unify ~defn ($ty_sym, ...):
-                  ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
-                  ~defns:«»
-                  ~body:
-                    $rhs)»'
+    let def_rhs:
+      'dynamic(unify ~defn ($ty_sym, ...):
+                 ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
+                 ~defns:«»
+                 ~body:
+                   $rhs)'
+    match mutable_tag
+    | '':
+        '«statinfo.macro '$id': '(($t_s.type_key, $ty_sym))'
+          ...
+          def $mutable_tag $tuple_lhs: $def_rhs»'
+    | ~else:
+        let [tmp, ...] = [syntax_meta.flip_introduce(id), ...]
+        '«expr.macro '$id':
+            statinfo_meta.wrap(t_s.wrap_type('$tmp', t_s.syntax_to_type('$ty_sym')),
+                               '((#%assignable, #true))')
+          ...
+          def $mutable_tag $tmp: $def_rhs
+          ...»'
 
 meta:
   syntax_class LHS:
     fields:
       [id, ...]
       [type_seq, ...]
+      mutable_tag
   | 'values ($(one_arg ::Argument), ...)':
       field [id, ...] = [one_arg.id, ...]
       field [type_seq, ...] = [one_arg.type_seq, ...]
+      field mutable_tag = ''
   | '$(arg ::Argument)':
       field [id, ...] = [arg.id]
       field [type_seq, ...] = [arg.type_seq]
+      field mutable_tag = ''
+  | '$(tag && 'mutable') $(arg ::Argument)':
+      field [id, ...] = [arg.id]
+      field [type_seq, ...] = [arg.type_seq]
+      field mutable_tag = 'mutable'.relocate(tag)
 
 defn.macro
 | 'define $(lhs :: LHS) $(eql && '=') $rhs':
     ~op_stx self
-    build_def(self, [lhs.id, ...], [lhs.type_seq, ...], rhs)
+    build_def(self, lhs.mutable_tag, [lhs.id, ...], [lhs.type_seq, ...], rhs)
 | 'define $(lhs :: LHS): $(rhs :: Group)':
     ~op_stx self
-    build_def(self, [lhs.id, ...], [lhs.type_seq, ...], rhs)
+    build_def(self, lhs.mutable_tag, [lhs.id, ...], [lhs.type_seq, ...], rhs)

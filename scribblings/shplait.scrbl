@@ -277,11 +277,15 @@ and new types can be defined with @rhombus(type).
   defn.macro 'def values($typed_id, ...) = $expr'
   defn.macro 'def values($typed_id, ...):
                 $expr'  
+  defn.macro 'def mutable $typed_id = $expr'
+  defn.macro 'def mutable $typed_id:
+                $expr'
 ){
 
  A definition of one @rhombus(typed_id) to the result of @rhombus(expr),
  or to multiple @rhombus(typed_id)s to the components of the @tech{tuple} result
- of @rhombus(expr).
+ of @rhombus(expr). When @rhombus(mutable) is specified, then the defined
+ identifier's value can be changed using @rhombus(:=).
 
 @examples(
   ~eval: eval
@@ -297,6 +301,12 @@ and new types can be defined with @rhombus(type).
   ~defn:
     def values(x3 :: Number, s2 :: String):
       values(3, "apple")
+  ~defn:
+    def mutable count = 0
+  ~repl:
+    count
+    count := count + 1
+    count
   )
 
 }
@@ -469,6 +479,24 @@ and new types can be defined with @rhombus(type).
 
 }
 
+@doc(
+  expr.macro '$id := $expr'
+){
+
+ Changes the value of @rhombus(id) to the result of @rhombus(expr). The
+ @rhombus(id) must have been defined using @rhombus(def mutable). The
+ type of @rhombus(id) and the typ eof @rhombus(expr) ust be the same.
+
+ No result is produced by the assignment expression. That is, the type
+ of the @rhombus(:=) expression is @rhombus(Void, ~at shplait/type).
+
+@examples(
+  def mutable x = 1
+  x := 2
+  x
+)
+
+}
 
 @// ------------------------------------------------------------
 @section(~tag: "sec:cond"){Conditionals and Matching}
@@ -792,6 +820,19 @@ These operators have lower precedence than arithmetic operators.
     1 == 1  &&  2 == 2
     1 == 2  ||  2 != 2
 )
+
+}
+
+@// ------------------------------------------------------------
+@subsection(~tag: "sec:void"){Void}
+
+@doc(
+  type 'Void'
+){
+
+ The type of an expression that has a side effect and does not produce a
+ value. For example, the result type of @rhombus(println) is
+ @rhombus(Void, ~at shplait/type).
 
 }
 

@@ -1,0 +1,20 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+
+export:
+  rename:
+    assign as :=
+
+expr.macro '$left assign $right':
+  ~op_stx self
+  ~weaker_than: ~other
+  cond
+  | statinfo_meta.lookup(left, '#%assignable'):
+      t.unify_do(left, t_s.lookup_type(left), t_s.lookup_type(right))
+      let op = ':='.relocate(self)
+      t_s.wrap_type('$left $op $right', t.Vd(self))
+  | ~else:
+      syntax_meta.error("not a variable that is assignable", self, left)

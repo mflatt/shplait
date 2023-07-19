@@ -10,6 +10,7 @@ import:
   "let.rhm"
   "if.rhm"
   "match.rhm"
+  "assign.rhm"
   "arithmetic.rhm"
   "list.rhm"
   "map.rhm"
@@ -34,6 +35,7 @@ export:
   all_from(.let)
   all_from(.if)
   all_from(.match)
+  all_from(.assign)
   all_from(.arithmetic)
   all_from(.list)
   all_from(.map)  

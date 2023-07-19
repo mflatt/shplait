@@ -1,0 +1,30 @@
+#lang shplait
+import:
+  open:
+    "eval.rhm"
+
+block:
+  def mutable x = 1
+  x := 2
+  check: x
+         ~is 2
+
+check_eval:
+  def x = 1
+  x := 2
+  ~raises "not a variable that is assignable"
+
+check_eval:
+  1 := 2
+  ~raises "not a variable that is assignable"
+
+check_eval:
+  type Shape
+  | circle(r)
+  circle.r := 2
+  ~raises "not a variable that is assignable"
+
+check_eval:
+  def mutable x = 1
+  x := "a"
+  ~raises "typecheck failed"
