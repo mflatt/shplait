@@ -14,7 +14,7 @@ decl.macro 'def_binary $name $op $type_constr: $option; ...':
       ...
       t.unify_do(left, t_s.lookup_type(left), t.Num(self))
       t.unify_do(right, t_s.lookup_type(right), t.Num(self))
-      t_s.wrap_type('force($('$')left) $op force($('$')right)',
+      t_s.wrap_type('force($('$')left) $('$')('$op'.relocate(self)) force($('$')right)',
                     t. $type_constr ('$('$')left $('$')self $('$')right'))»'
 
 def_binary shplus + Num:

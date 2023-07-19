@@ -99,4 +99,4 @@ expr.macro '$fn call ($(arg :: expr_meta.Parsed), ...)':
              t.Arrow(fn,
                      [t_s.lookup_type(arg), ...],
                      res_tv))
-  t_s.wrap_type('force($fn) (delay($arg), ...)', res_tv)
+  t_s.wrap_type('force($fn) (maybe_delay($arg.group, $arg), ...)', res_tv)

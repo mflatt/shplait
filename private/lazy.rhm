@@ -4,6 +4,7 @@ export:
   meta:
     set_is_lazy
   delay
+  maybe_delay
   force
   force_all
   dynamic_force
@@ -34,14 +35,20 @@ expr.macro 'delay($e)':
   | 'Lazy(fun (): $e, #false)'
   | e
 
+expr.macro
+| 'maybe_delay($(_ :: Identifier), $e)':
+    e // helps avoid an excessive coverage requirement for tests
+| 'maybe_delay($_, $e)':
+    'delay($e)'
+
 expr.macro 'force($e)':  
   if is_accomodating
-  | 'dynamic_force($e)'
+  | 'dynamic_force($e)'.relocate_span([e])
   | e
 
 expr.macro 'force_all($e)':
   if is_accomodating
-  | 'dynamic_force_all($e)'
+  | 'dynamic_force_all($e)'.relocate_span([e])
   | e
 
 // for direct use in primitives that need to work in both

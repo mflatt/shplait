@@ -56,8 +56,6 @@ fun parse(s :: Syntax) :: Exp:
       | syntax_is_symbol(t): idE(syntax_to_symbol(s))
       | ~else:
           error(#'parse, "invalid input")
-  | ~else:
-      error(#'parse, "invalid input")
 
 module test:
   check:
@@ -171,6 +169,7 @@ module test:
            mt_env)
     ~raises "free variable"
 
+  #//
   time:
     interp(parse('let x2 = (fun (n): n + n):
                     let x4 = (fun (n): x2(x2(n))):
