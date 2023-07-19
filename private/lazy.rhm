@@ -1,0 +1,83 @@
+#lang rhombus/static/and_meta
+
+export:
+  meta:
+    set_is_lazy
+  delay
+  force
+  force_all
+  dynamic_force
+  dynamic_force_all
+  Forceable
+
+module representation:
+  export:
+    Lazy
+
+meta:
+  def mutable is_lazy = #false
+  def mutable is_accomodating = #false
+  fun set_is_lazy(is_lz, is_acc):
+    is_lazy := is_lz
+    is_accomodating := is_lz || is_acc
+
+class Lazy(mutable v, mutable is_forced):
+  implements Printable
+  override describe(mode, recur):
+    recur(dynamic_force(this))
+
+interface Forceable:
+  method force_all()
+
+expr.macro 'delay($e)':
+  if is_lazy
+  | 'Lazy(fun (): $e, #false)'
+  | e
+
+expr.macro 'force($e)':  
+  if is_accomodating
+  | 'dynamic_force($e)'
+  | e
+
+expr.macro 'force_all($e)':
+  if is_accomodating
+  | 'dynamic_force_all($e)'
+  | e
+
+// for direct use in primitives that need to work in both
+// eager and lazy modes:
+fun dynamic_force(maybe_lazy):
+  match maybe_lazy
+  | lz :: Lazy:
+      cond
+      | lz.is_forced:
+          lz.v
+      | ~else:
+          let thunk = lz.v
+          if lz.v == #'in_progress
+          | error("cannot force cyclic lazy value")
+          | lz.v := #'in_progress
+            let v = dynamic_force(thunk())
+            lz.v := v
+            lz.is_forced := #true
+            v
+  | v: v      
+
+fun dynamic_force_all(v):
+  match dynamic_force(v)
+  | List.cons(a, d): List.cons(dynamic_force_all(a), dynamic_force_all(d))
+  | v :: Forceable: v.force_all()
+  | v: v
+
+// laziness for the right-hand side of a definition
+// is the responsibility of the definition, but we might
+// wrap `delay` around definitions as well as expressions
+// with a `block` form
+defn.macro 'delay($e)':
+  if is_lazy
+  | match e
+    | '$(d :: defn_meta.Group)':
+        e
+    | ~else:
+        '(delay($e))'
+  | e

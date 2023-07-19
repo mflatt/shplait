@@ -3,18 +3,34 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "wrap.rhm" open
+  "lazy.rhm" open
 
 export:
   rename:
     sherror as error
+    shprint as print
     shprintln as println
+
+defwrap wrap_error error(sym, str): error(dynamic_force(sym),
+                                          dynamic_force(str))
+// `print` and `println` don't need forcing wrappers of lazy thunks,
+// because printing already does that
 
 expr.macro 'sherror':
   ~op_stx self
   let tv = t.gen_tvar(self)
-  t_s.wrap_type('error', t.Poly(self, tv, t.Arrow(self, [t.Sym(self), t.Str(self)], tv)))
+  t_s.wrap_type('wrap_error'.relocate(self),
+                t.Poly(self, tv, t.Arrow(self, [t.Sym(self), t.Str(self)], tv)))
+
+expr.macro 'shprint':
+  ~op_stx self
+  let tv = t.gen_tvar(self)
+  t_s.wrap_type('print'.relocate(self),
+                t.Poly(self, tv, t.Arrow(self, [tv], t.Vd(self))))
 
 expr.macro 'shprintln':
   ~op_stx self
   let tv = t.gen_tvar(self)
-  t_s.wrap_type('println', t.Poly(self, tv, t.Arrow(self, [tv], t.Vd(self))))
+  t_s.wrap_type('println'.relocate(self),
+                t.Poly(self, tv, t.Arrow(self, [tv], t.Vd(self))))

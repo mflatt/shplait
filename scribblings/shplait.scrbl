@@ -1556,3 +1556,36 @@ well as in syntax-object expressions, which are also known as
 )
 
 }
+
+@// ------------------------------------------------------------
+
+@section(~tag: "sec:option"){Untyped, Lazy, and Fuel Modes}
+
+Use @rhombus(~untyped) on a line immediately after
+@rhombus(#,(hash_lang()) #,(@rhombuslangname(shplait))) to disable type
+checking. The syntax of a @rhombuslangname(shplait) module is the same
+with and without @rhombus(~untyped), but types are ignored when
+@rhombus(~untyped) is specified. An untyped Shplait module can
+interoperate with a typed Shplait module, but soundness guarantees
+normally provided by Shplait are not preserved.
+
+Use @rhombus(~lazy) on a line immediately after
+@rhombus(#,(hash_lang()) #,(@rhombuslangname(shplait))) to switch to
+lazy evaluation mode. The syntax and type system are unchanged, but
+argument expressions for function calls are evaluated only when forced
+(by a test or by printing, ultimately). A lazy Shplait module will not
+interoperate well with an eager module in general, but use Use
+@rhombus(~accomodating) in place of @rhombus(~lazy) to define a Shplait
+module that uses eager evaluation and can interoperate with a lazy
+Shplait module.
+
+Use @rhombus(~fuel #,(@rhombus(amount, ~var))) on a line immediately
+after @rhombus(#,(hash_lang()) #,(@rhombuslangname(shplait))) to
+specify how much effort should be spent resolving potentially cyclic
+dependencies due to inference of polymorphic recursion. The default fuel
+amount is 100.
+
+The @rhombus(~untyped), @rhombus(~lazy) or @rhombus(~accomodating), and
+@rhombus(~fuel) modifiers can be combined within a module, each on its
+own line, and the combination can be declared in any order. Only one of
+@rhombus(~lazy) and @rhombus(~accomodating) can be used.

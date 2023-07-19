@@ -16,6 +16,7 @@ import:
   "pattern.rhm".pattern_meta
   "value.rhm".value
   "value.rhm".value_meta
+  "lazy.rhm" open
 
 export:
   type
@@ -83,9 +84,12 @@ decl.macro
     let [[var_field_ty, ...], ...] = [[t.poly_ize(t.Arrow(field.id, [dty], field_ty), arg_tys), ...], ...]
     let [[var_field_ty_sym, ...], ...] = [[t_s.type_to_syntax(var_field_ty), ...], ...]
     Function.pass(f.record_frame_defn_type(var_field_ty_sym, var_field_ty), ..., ...)
-    let [[var_tmp_id_x, ...], ...]: // workaround nested `...` mismatch
+    let ([[var_tmp_id_x, ...], ...], // workaround nested `...` mismatch
+         [[var_id_x, ...], ...]):
       fun dup(v, ls :~ List): ls.map(fun (_): v)
-      [dup(var_tmp_id, [field.id, ...]), ...]
+      values([dup(var_tmp_id, [field.id, ...]), ...],
+             [dup(var_id, [field.id, ...]), ...])
+    let [[field_id_accessor, ...], ...] = [[Syntax.make_id(var_id_x +& "." +& field.id), ...], ...]
     let len = [var_id, ...].length()
     let dt_arg_len = arg_tys.length()
     '«namespace ~open:
@@ -93,6 +97,9 @@ decl.macro
           nonfinal
         class $var_id($field.id, ...):
           extends $id
+          implements Forceable
+          override force_all():
+            $var_id(dynamic_force_all($field.id), ...)
         ...
         export:
           rename: $var_id as $var_tmp_id
@@ -111,8 +118,11 @@ decl.macro
         export:
           $field.id
           ...
+        fun $field_id_accessor(v):
+          $(var_tmp_id_x) . $(field.id) (force(v))
+        ...
         expr.macro '$field.id':
-          t_s.wrap_type('$(var_tmp_id_x) . $(field.id)',
+          t_s.wrap_type('$field_id_accessor',
                         t_s.syntax_to_type('$var_field_ty_sym'))
         ...
       ...

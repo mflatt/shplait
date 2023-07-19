@@ -3,13 +3,18 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "wrap.rhm" open
+  "lazy.rhm" open
 
 export:
   rename:
     shto_string as to_string
 
+// `to_string` doesn't need to force lazy thunks,
+// because printing already does that
+
 expr.macro 'shto_string':
   ~op_stx self
   let tv = t.gen_tvar(self)
-  t_s.wrap_type('to_string', t.Poly(self, tv, t.Arrow(self, [tv], t.Str(self))))
-  
+  t_s.wrap_type('to_string'.relocate(self),
+                t.Poly(self, tv, t.Arrow(self, [tv], t.Str(self))))

@@ -14,6 +14,8 @@ meta:
     | (_ :: Boolean): t.Bool(lit)
     | (_ :: String): t.Str(lit)
     | (_ :: Number): t.Num(lit)
+    | (_ :: Keyword):
+        syntax_meta.error("keyword is not allowed as an expression", lit)  
     | ~else:
         syntax_meta.error("literal type not known", lit)  
 

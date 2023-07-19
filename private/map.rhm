@@ -8,6 +8,7 @@ import:
   "wrap.rhm" open
   "list.rhm"!for_map as lfm
   "tuple.rhm"!tuple as tu
+  "lazy.rhm" open
 
 export:
   rename:
@@ -38,7 +39,7 @@ meta:
     let val_tv = t.gen_tvar(#false)
     Function.pass(t.unify_do(key, key_tv, t_s.lookup_type(key)), ...)
     Function.pass(t.unify_do(val, val_tv, t_s.lookup_type(val)), ...)
-    t_s.wrap_type('$make { $key : $val, ... }'.relocate_span([elems]),
+    t_s.wrap_type('$make { $key : delay($val), ... }'.relocate_span([elems]),
                   t.MapOf(elems, key_tv, val_tv))
 
 expr.macro 'braces $(elems && '{ $key_term ...: $(val :: expr_meta.Parsed), ... }')':  
@@ -50,14 +51,14 @@ expr.macro 'shMutableMap $(elems && '{ $key_term ...: $(val :: expr_meta.Parsed)
 def fail_key = Symbol.gen()
 
 defwrap wrap_map_get_k map_get_k(map :~ Map, key, success, fail):
-  def v = map.get(key, fail_key)
+  def v = map.get(dynamic_force(key), fail_key)
   if v === fail_key
   | fail()
   | success(v)
-defwrap wrap_map_update map_update(map :~ Map, key, val):
-  map ++ { key: val } 
-defwrap wrap_map_set map_set(map :~ MutableMap, key, val):
-  map[key] := val
+defwrap wrap_map_update map_update(map, key, val):
+  (dynamic_force(map) :~ Map) ++ { dynamic_force(key): dynamic_force(val) } 
+defwrap wrap_map_set map_set(map, key, val):
+  (dynamic_force(map) :~ MutableMap)[dynamic_force(key)] := val
 
 expr.macro 'map_get_k':
   ~op_stx self

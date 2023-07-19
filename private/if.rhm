@@ -3,6 +3,7 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "lazy.rhm" open
 
 export:
   rename:
@@ -20,7 +21,7 @@ expr.macro 'shif $tst ...
   t.unify_do(tst, t.Bool(self), t_s.lookup_type(tst))
   t.unify_do(tst, t_s.lookup_type(thn), tv)
   t.unify_do(tst, t_s.lookup_type(els), tv)
-  t_s.wrap_type('if $tst | $thn | $els', tv)
+  t_s.wrap_type('if force($tst) | $thn | $els', tv)
 
 expr.macro
 | 'shcond
@@ -38,7 +39,7 @@ expr.macro
     Function.pass(t.unify_do(tst, tv, t_s.lookup_type(body)), ...)
     t.unify_do(els, tv, t_s.lookup_type(els))
     t_s.wrap_type('$('cond'.relocate(self))
-                   | $tst: $body
+                   | force($tst): $body
                    | ...
                    | ~else: $els',
                   tv)
@@ -53,6 +54,6 @@ expr.macro
     Function.pass(t.unify_do(tst, t.Bool(self), t_s.lookup_type(tst)), ...)
     Function.pass(t.unify_do(tst, tv, t_s.lookup_type(body)), ...)
     t_s.wrap_type('$('cond'.relocate(self))
-                   | $tst: $body
+                   | force($tst): $body
                    | ...',
                   tv)

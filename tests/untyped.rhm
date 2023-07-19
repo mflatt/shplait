@@ -1,0 +1,32 @@
+#lang shplait
+~untyped
+
+import:
+  lib("racket/base.rkt")
+
+check:
+  first([1, base.cons])
+  ~is 1
+
+check:
+  cons(1, base.cons(2, []))
+  ~is [1, 2]
+
+fun f(x :: Number):
+  if x
+  | 1 + "a"
+  | "ok"
+
+check:
+  f(#false)
+  ~is "ok"
+
+// submodule should also be untyped
+module test:
+  fun f2(x :: Number):
+    if x
+    | 1 + "a"
+    | "ok"
+  check:
+    f2(#false)
+    ~is "ok"

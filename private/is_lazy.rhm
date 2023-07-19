@@ -1,0 +1,18 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+  "lazy.rhm"!representation.Lazy
+
+export:
+  is_lazy
+
+// for use in implementing "lib.rhm" sometimes redirecting
+// to "lazy_lib.rhm": check whether `left` produces a
+// thunk without implicitly forcing it; when a procedure
+// argument is lazy, we take that as a sign that a lazy
+// version of a libary function
+expr.macro '$left is_lazy':
+  ~op_stx self
+  t_s.wrap_type('$left is_a Lazy', t.Bool(self))

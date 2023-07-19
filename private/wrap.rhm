@@ -6,5 +6,7 @@ export:
 // defines a wrapper function with the right run-time name
 defn.macro 'defwrap $wrap_id $id ($arg, ...): $body':
   'def $wrap_id:
-     fun $id($arg, ...): $body
-     $id'
+     fun go($arg, ...): $body
+     block:
+       fun $id($arg, ...): go($arg, ...)
+       $id'

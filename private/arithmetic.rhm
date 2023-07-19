@@ -4,6 +4,7 @@ import:
     "type.rhm" as t
   "frame.rhm" as f
   "type_statinfo.rhm" as t_s
+  "lazy.rhm" open
 
 decl.macro 'def_binary $name $op $type_constr: $option; ...':
   '«export: rename: $name as $op
@@ -13,7 +14,7 @@ decl.macro 'def_binary $name $op $type_constr: $option; ...':
       ...
       t.unify_do(left, t_s.lookup_type(left), t.Num(self))
       t.unify_do(right, t_s.lookup_type(right), t.Num(self))
-      t_s.wrap_type('$('$')left $op $('$')right',
+      t_s.wrap_type('force($('$')left) $op force($('$')right)',
                     t. $type_constr ('$('$')left $('$')self $('$')right'))»'
 
 def_binary shplus + Num:
@@ -39,7 +40,7 @@ export: rename: _not as !
 expr.macro '_not $right':
   ~op_stx self
   t.unify_do(right, t_s.lookup_type(right), t.Bool(self))
-  t_s.wrap_type('! $right', t.Bool('$self $right'))
+  t_s.wrap_type('! force($right)', t.Bool('$self $right'))
 
 decl.macro 'def_equality $op $type_constr':
   '«export: rename: equals as $op
@@ -49,7 +50,7 @@ decl.macro 'def_equality $op $type_constr':
       let tv = t.gen_tvar(self)
       t.unify_do(left, t_s.lookup_type(left), tv)
       t.unify_do(right, t_s.lookup_type(right), tv)
-      t_s.wrap_type('$('$')left == $('$')right', t.Bool(self))»'
+      t_s.wrap_type('force_all($('$')left) == force_all($('$')right)', t.Bool(self))»'
 
 def_equality ==
 def_equality !=
@@ -64,7 +65,7 @@ meta:
     let bool = t.Bool(self)
     t.unify_do(self, t_s.lookup_type(left), bool)
     t.unify_do(self, t_s.lookup_type(right), bool)
-    t_s.wrap_type('$left $op $right', bool)
+    t_s.wrap_type('force($left) $op force($right)', bool)
 
 expr.macro '$left shand $right':
   ~op_stx self

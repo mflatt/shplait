@@ -6,6 +6,7 @@ import:
   "value.rhm".value
   "value.rhm".value_meta
   "wrap.rhm" open
+  "lazy.rhm" open
 
 export:
   rename:
@@ -13,7 +14,6 @@ export:
   first
   rest
   cons
-  length
 
 module for_map:
   export:
@@ -37,36 +37,32 @@ expr.macro 'brackets $(elems && '[$(elem :: expr_meta.Parsed), ...]')':
   let tv = t.gen_tvar(#false)
   Function.pass(t.unify_do(elem, tv, t_s.lookup_type(elem)),
                 ...)
-  t_s.wrap_type('#%brackets [$elem, ...]'.relocate_span([elems]),
+  t_s.wrap_type('#%brackets [delay($elem), ...]'.relocate_span([elems]),
                 t.ListOf(elems, tv))
 
-defwrap wrap_first first(l): List.first(l)
-defwrap wrap_rest rest(l): List.rest(l)
-defwrap wrap_cons cons(a, l): List.cons(a, l)
-defwrap wrap_length length(l): List.length(l)
+defwrap wrap_first first(l): Pair.first(dynamic_force(l))
+defwrap wrap_rest rest(l): Pair.rest(dynamic_force(l))
+defwrap wrap_cons cons(a, l): Pair.cons(a, l)
 
 expr.macro 'first':
   ~op_stx self
   let tv = t.gen_tvar(self)
-  t_s.wrap_type('wrap_first', t.Poly(self, tv, t.Arrow(self, [t.ListOf(self, tv)], tv)))
+  t_s.wrap_type('wrap_first'.relocate(self),
+                t.Poly(self, tv, t.Arrow(self, [t.ListOf(self, tv)], tv)))
 
 expr.macro 'rest':
   ~op_stx self
   let tv = t.gen_tvar(self)
   let ty = t.ListOf(self, tv)
-  t_s.wrap_type('wrap_rest', t.Poly(self, tv, t.Arrow(self, [ty], ty)))
+  t_s.wrap_type('wrap_rest'.relocate(self),
+                t.Poly(self, tv, t.Arrow(self, [ty], ty)))
 
 expr.macro 'cons':
   ~op_stx self
   let tv = t.gen_tvar(self)
   let ty = t.ListOf(self, tv)
-  t_s.wrap_type('wrap_cons', t.Poly(self, tv, t.Arrow(self, [tv, ty], ty)))
-
-expr.macro 'length':
-  ~op_stx self
-  let tv = t.gen_tvar(self)
-  let ty = t.ListOf(self, tv)
-  t_s.wrap_type('wrap_length', t.Poly(self, tv, t.Arrow(self, [ty], t.Num(self))))
+  t_s.wrap_type('wrap_cons'.relocate(self),
+                t.Poly(self, tv, t.Arrow(self, [tv, ty], ty)))
 
 meta:
   fun extract_common_type([v :~ Syntax, ...]):    

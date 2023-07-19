@@ -3,6 +3,7 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "lazy.rhm" open
 
 // Wrap Rhombus's syntax patterns and templates to check
 // types, which means our own layer of repetition binding.
@@ -138,7 +139,7 @@ meta:
 
 expr.macro 'reference_syntax($(arg :: expr_meta.Parsed))':
   t.unify_do(arg, t_s.lookup_type(arg), t.Shrub(arg))
-  'check_single_term($arg)'
+  'check_single_term(force($arg))'
 
 fun check_single_term(stx :: Syntax):
   unless stx is_a Term
@@ -195,16 +196,19 @@ decl.nestable_macro 'extractor $is_x ($unwrap_x, $post_unwrap) ($wrap_x, $pre_wr
   '«
      export: $is_x $unwrap_x $wrap_x
      def stx_is_x:
-       fun $is_x(stx :~ Syntax):
+       fun $is_x(stx_in):
+         let stx :~ Syntax = dynamic_force(stx_in)
          (stx is_a Term) && (stx.unwrap() is_a $Ann)
        $is_x
      def stx_unwrap_x:
-       fun $unwrap_x(stx :~ Syntax):
+       fun $unwrap_x(stx_in):
+         let stx :~ Syntax = dynamic_force(stx_in)
          let v = if stx is_a Term | stx.unwrap() | #'~no
          if v is_a $Ann | $post_unwrap(v) | oops(#'$unwrap_x, stx, $what)
        $unwrap_x
      def stx_wrap_x:
-       fun $wrap_x(v):
+       fun $wrap_x(v_in):
+         let v :~ Syntax = dynamic_force_all(v_in)
          Syntax.make($pre_wrap(v))
        $wrap_x
      expr.macro '$is_x':

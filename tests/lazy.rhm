@@ -1,0 +1,47 @@
+#lang shplait
+~lazy
+
+type Shape
+| circle(r)
+
+check:
+  first([1, 1/0])
+  ~is 1
+
+check:
+  fst(values(1, 1/0))
+  ~is 1
+
+check:
+  first(rest([1, 1/0]))
+  ~raises "division by zero"
+
+check:
+  [circle(1)] == [circle(1)]
+  ~is #true
+
+check:
+  [circle(1)] == [circle(2)]
+  ~is #false
+
+check:
+  first(map(fun (x): [x],
+            [-2, 1, 1/0]))
+  ~is [-2]
+
+check:
+  first(map2(fun (x, y): x + y,
+             [-2, 1, 1/0],
+             [1, 2, 3]))
+  ~is -1
+
+check:
+  first(filter(fun (x): x > 0,
+               [-2, 1, 1/0]))
+  ~is 1
+
+// submodule should also be lazy
+module test:
+  check:
+    first([1, 1/0])
+    ~is 1

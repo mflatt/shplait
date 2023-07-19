@@ -21,6 +21,8 @@ export:
   let_based_poly_do
   lookup
   type_to_string
+  configure_typing
+  configured_as_checked
 
 /*
  The `non_poly` field of TVar controls the layer where a type variable can
@@ -54,6 +56,16 @@ export:
  polymorphism of `f` to propagate to uses of `g` without losing the connection
  between `x` and `y` in the earlier example.
 */
+
+def mutable as_checked = #true
+def mutable type_checking_fuel = 100
+
+fun configure_typing(off, fuel):
+  as_checked := !off
+  type_checking_fuel := fuel
+
+fun configured_as_checked():
+  as_checked
 
 class Type(mutable src):
   nonfinal
@@ -680,11 +692,11 @@ fun resolve_defn_types(env :: List, is_final) :~ List:
                 poly)
     | ~else #false
 
-fun let_based_poly_do(env :~ List.of(Pair), fuel):
+fun let_based_poly_do(env :~ List.of(Pair)):
   let defn_types :: List:
     // Find fixpoint of defn-type polymorphism:
     recur loop (defn_types :~ List = resolve_defn_types(env, #false),
-                fuel = fuel):
+                fuel = type_checking_fuel):
       let new_defn_types = resolve_defn_types(env, #false)
       cond
       | (for all:
@@ -825,125 +837,126 @@ fun unify_defn_do(expr, a, b):
   | ~else unify_do(expr, a, b)
 
 fun unify_do(expr, a, b, ~is_function_call: is_function_call = #false):
-  fun sub_unify_do(a, b, expr, aa, ba):
-    add_srcs_do(aa, a)
-    add_srcs_do(ba, b)
-    unify_do(expr, aa, ba)
-  let a = simplify_do(a)
-  let b = simplify_do(b)
-  match a
-  | _ when (b is_a TVar) && !(a is_a TVar):
-      unify_do(expr, b, a)
-  | _ when a === b:
-      #void
-  | a :: TVar:
-      when occurs(a, b)
-      | raise_typecheck_error(expr, a, b, "cycle in type constraints")
-      match b
-      | b :: TVar:
-          match b
-          | b :: ArrowTVar:
-              when a.non_poly
-              | non_poly_do(b, a.non_poly)
-              a.rep := b
-              add_srcs_do(b, a)
-          | ~else:
-              when b.non_poly
-              | non_poly_do(a, b.non_poly)
-              b.rep := a
-              add_srcs_do(a, b)
-      | ~else:
-          when (a is_a ArrowTVar) && !(b is_a Arrow)
-          | raise_typecheck_error(expr, a, b, "tracing requires a procedure")
-          let b = Type.clone(b)
-          when a.non_poly
-          | non_poly_do(b, a.non_poly)
-          a.rep := b
-          add_srcs_do(b, a)
-  | _ when (is_function_call
-               && is_poly_arrow(b)
-               && !is_poly_arrow(a)):
-      unify_do(expr, b, a, ~is_function_call: #true)
-  | _ :: Bool:
-      unless b is_a Bool
-      | raise_typecheck_error(expr, a, b)
-  | _ :: Num:
-      unless b is_a Num
-      | raise_typecheck_error(expr, a, b)
-  | _ :: Sym:
-      unless b is_a Sym
-      | raise_typecheck_error(expr, a, b)
-  | _ :: Shrub:
-      unless b is_a Shrub
-      | raise_typecheck_error(expr, a, b)
-  | _ :: Vd:
-      unless b is_a Vd
-      | raise_typecheck_error(expr, a, b)
-  | _ :: Str:
-      unless b is_a Str
-      | raise_typecheck_error(expr, a, b)
-  | _ :: Chr:
-      unless b is_a Chr
-      | raise_typecheck_error(expr, a, b)
-  | a :: Arrow:
-      match b
-      | b :: Arrow when a.args.length() == b.args.length():
-          for:
-            each:
-              aa: a.args
-              ba: b.args
-            sub_unify_do(a, b, expr, aa, ba)
-          sub_unify_do(a, b, expr, a.result, b.result)
-      | ~else raise_typecheck_error(expr, a, b, ~is_function_call: is_function_call)
-  | a :: ListOf:
-      match b
-      | b :: ListOf:
-          sub_unify_do(a, b, expr, a.element, b.element)
-      | ~else raise_typecheck_error(expr, a, b)
-  | a :: BoxOf:
-      match b
-      | b :: BoxOf:
-          sub_unify_do(a, b, expr, a.element, b.element)
-      | ~else raise_typecheck_error(expr, a, b)
-  | a :: ArrayOf:
-      match b
-      | b :: ArrayOf:
-          sub_unify_do(a, b, expr, a.element, b.element)
-      | ~else raise_typecheck_error(expr, a, b)
-  | a :: MapOf:
-      match b
-      | b :: MapOf:
-          sub_unify_do(a, b, expr, a.key, b.key)
-          sub_unify_do(a, b, expr, a.val, b.val)
-      | ~else raise_typecheck_error(expr, a, b)
-  | a :: TupleOf:
-      match b
-      | b :: TupleOf when a.args.length() == b.args.length():
-          for:
-            each:
-              aa: a.args
-              ba: b.args
-            sub_unify_do(a, b, expr, aa, ba)
-      | ~else raise_typecheck_error(expr, a, b)
-  | a :: ParameterOf:
-      match b
-      | b :: ParameterOf:
-          sub_unify_do(a, b, expr, a.element, b.element)
-      | ~else raise_typecheck_error(expr, a, b)
-  | a :: Datatype:
-      match b
-      | b :: Datatype when syntax_meta.equal_binding(a.id, b.id):
-          for:
-            each:
-              aa: a.args
-              ba: b.args
-            sub_unify_do(a, b, expr, aa, ba)
-      | ~else raise_typecheck_error(expr, a, b)
-  | a :: Poly:
-      // This should only happen when we try to redefine a polymorphic function
-      raise_typecheck_error(expr, a, b)
-  | ~else:
-      raise_typecheck_error(expr, a, b, "unrecognized type " +& a)
+  when as_checked
+  |  fun sub_unify_do(a, b, expr, aa, ba):
+       add_srcs_do(aa, a)
+       add_srcs_do(ba, b)
+       unify_do(expr, aa, ba)
+     let a = simplify_do(a)
+     let b = simplify_do(b)
+     match a
+     | _ when (b is_a TVar) && !(a is_a TVar):
+         unify_do(expr, b, a)
+     | _ when a === b:
+         #void
+     | a :: TVar:
+         when occurs(a, b)
+         | raise_typecheck_error(expr, a, b, "cycle in type constraints")
+         match b
+         | b :: TVar:
+             match b
+             | b :: ArrowTVar:
+                 when a.non_poly
+                 | non_poly_do(b, a.non_poly)
+                 a.rep := b
+                 add_srcs_do(b, a)
+             | ~else:
+                 when b.non_poly
+                 | non_poly_do(a, b.non_poly)
+                 b.rep := a
+                 add_srcs_do(a, b)
+         | ~else:
+             when (a is_a ArrowTVar) && !(b is_a Arrow)
+             | raise_typecheck_error(expr, a, b, "tracing requires a procedure")
+             let b = Type.clone(b)
+             when a.non_poly
+             | non_poly_do(b, a.non_poly)
+             a.rep := b
+             add_srcs_do(b, a)
+     | _ when (is_function_call
+                  && is_poly_arrow(b)
+                  && !is_poly_arrow(a)):
+         unify_do(expr, b, a, ~is_function_call: #true)
+     | _ :: Bool:
+         unless b is_a Bool
+         | raise_typecheck_error(expr, a, b)
+     | _ :: Num:
+         unless b is_a Num
+         | raise_typecheck_error(expr, a, b)
+     | _ :: Sym:
+         unless b is_a Sym
+         | raise_typecheck_error(expr, a, b)
+     | _ :: Shrub:
+         unless b is_a Shrub
+         | raise_typecheck_error(expr, a, b)
+     | _ :: Vd:
+         unless b is_a Vd
+         | raise_typecheck_error(expr, a, b)
+     | _ :: Str:
+         unless b is_a Str
+         | raise_typecheck_error(expr, a, b)
+     | _ :: Chr:
+         unless b is_a Chr
+         | raise_typecheck_error(expr, a, b)
+     | a :: Arrow:
+         match b
+         | b :: Arrow when a.args.length() == b.args.length():
+             for:
+               each:
+                 aa: a.args
+                 ba: b.args
+               sub_unify_do(a, b, expr, aa, ba)
+             sub_unify_do(a, b, expr, a.result, b.result)
+         | ~else raise_typecheck_error(expr, a, b, ~is_function_call: is_function_call)
+     | a :: ListOf:
+         match b
+         | b :: ListOf:
+             sub_unify_do(a, b, expr, a.element, b.element)
+         | ~else raise_typecheck_error(expr, a, b)
+     | a :: BoxOf:
+         match b
+         | b :: BoxOf:
+             sub_unify_do(a, b, expr, a.element, b.element)
+         | ~else raise_typecheck_error(expr, a, b)
+     | a :: ArrayOf:
+         match b
+         | b :: ArrayOf:
+             sub_unify_do(a, b, expr, a.element, b.element)
+         | ~else raise_typecheck_error(expr, a, b)
+     | a :: MapOf:
+         match b
+         | b :: MapOf:
+             sub_unify_do(a, b, expr, a.key, b.key)
+             sub_unify_do(a, b, expr, a.val, b.val)
+         | ~else raise_typecheck_error(expr, a, b)
+     | a :: TupleOf:
+         match b
+         | b :: TupleOf when a.args.length() == b.args.length():
+             for:
+               each:
+                 aa: a.args
+                 ba: b.args
+               sub_unify_do(a, b, expr, aa, ba)
+         | ~else raise_typecheck_error(expr, a, b)
+     | a :: ParameterOf:
+         match b
+         | b :: ParameterOf:
+             sub_unify_do(a, b, expr, a.element, b.element)
+         | ~else raise_typecheck_error(expr, a, b)
+     | a :: Datatype:
+         match b
+         | b :: Datatype when syntax_meta.equal_binding(a.id, b.id):
+             for:
+               each:
+                 aa: a.args
+                 ba: b.args
+               sub_unify_do(a, b, expr, aa, ba)
+         | ~else raise_typecheck_error(expr, a, b)
+     | a :: Poly:
+         // This should only happen when we try to redefine a polymorphic function
+         raise_typecheck_error(expr, a, b)
+     | ~else:
+         raise_typecheck_error(expr, a, b, "unrecognized type " +& a)
 
 fun is_poly_arrow(a):
   match a

@@ -6,6 +6,7 @@ import:
   "type_statinfo.rhm" as t_s
   "value.rhm".value
   "value.rhm".value_meta
+  "lazy.rhm" open
 
 export:
   rename:
@@ -20,13 +21,16 @@ class Tuple(args :~ List):
     PrintDesc.list("values(",
                    args.map(recur),
                    ")")
+  private implements Forceable
+  private override force_all():
+    Tuple(args.map(dynamic_force_all))
 
 expr.macro 'shvalues $(args && '($(expr :: expr_meta.Parsed), ...)')':
   ~op_stx self
   if [expr, ...].length() == 1
   | [expr, ...][0]
   | let [ty, ...] = [t_s.lookup_type(expr), ...]
-    t_s.wrap_type('Tuple([$expr, ...])'.relocate_span([self, args]),
+    t_s.wrap_type('Tuple([delay($expr), ...])'.relocate_span([self, args]),
                   t.TupleOf('$self $args', [ty, ...]))
 
 value.macro

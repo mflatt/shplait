@@ -4,6 +4,7 @@ import:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
   "unify.rhm".unify
+  "lazy.rhm" open
 
 export:
   rename:
@@ -19,7 +20,7 @@ expr.macro 'shblock:
     'unify ~expr $(t_s.type_to_syntax(tv)):
        ~init_tvars: []
        ~defns:
-         $defn
+         delay($defn)
          ...           
        ~body: $expr'
   t_s.wrap_type(e, tv)

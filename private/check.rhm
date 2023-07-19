@@ -4,6 +4,7 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "lazy.rhm" open
 
 export:
   rename:
@@ -17,8 +18,8 @@ expr.macro
     ~op_stx self
     t.unify_do(self, t_s.lookup_type(left), t_s.lookup_type(right))
     t_s.wrap_type('$('check'.relocate(self)):
-                     $left
-                     ~is $right',
+                     force_all($left)
+                     ~is force_all($right)',
                   t.Vd(self))
 | 'shcheck:
      $(left :: expr_meta.Parsed)
@@ -26,7 +27,7 @@ expr.macro
     ~op_stx self
     t.unify_do(self, t_s.lookup_type(right), t.Str(self))
     t_s.wrap_type('$('check'.relocate(self)):
-                     $left
+                     force_all($left)
                      ~raises $right',
                   t.Vd(self))
 

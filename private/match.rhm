@@ -9,6 +9,7 @@ import:
   "list.rhm".cons
   "syntax.rhm"!convert.convert_pat
   "syntax.rhm"!convert.syntax_def
+  "lazy.rhm" open
 
 export:
   rename:
@@ -95,11 +96,11 @@ meta:
     t.unify_do(expr_in, t_s.lookup_type(expr), t.ListOf(self, elem_tv))
     let tv = t.gen_tvar(self)
     let r:
-      '«match $expr
+      '«match force($expr)
         | []: unify ~expr $(t_s.type_to_syntax(tv)):
                 ~body:
                   $empty_body 
-        | [first, & rest]:
+        | Pair.cons(first, rest):
             def $f_id = first
             def $r_id = rest
             statinfo.macro '$f_id': '(($t_s.type_key, $(t_s.type_to_syntax(elem_tv))))'
@@ -126,7 +127,7 @@ meta:
                 $else_body']
       | []
     let r:
-      '«match $expr
+      '«match force($expr)
         | '$pat_cvt':
             syntax_def $pat_id: $pat_cvt_tmpl $pat_depth
             ...
@@ -195,7 +196,7 @@ meta:
                 $else_body']
       | []
     let r:
-      '«match $expr
+      '«match force($expr)
         | $pat_id($arg_id, ...):
             def $field = $arg_id
             ...
@@ -222,5 +223,5 @@ expr.macro '$left shis_a $(ctr :: Identifier)':
         t.gen_tvar(left)
   let dt_ty = t.Datatype(self, dt_id, dt_args)
   t.unify_do(self, t_s.lookup_type(left), dt_ty)
-  t_s.wrap_type('$left is_a $pat_id',
+  t_s.wrap_type('force($left) is_a $pat_id',
                 t.Bool(self))

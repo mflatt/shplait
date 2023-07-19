@@ -3,6 +3,7 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "lazy.rhm" open
 
 export:
   rename:
@@ -15,6 +16,6 @@ expr.macro '$left assign $right':
   | statinfo_meta.lookup(left, '#%assignable'):
       t.unify_do(left, t_s.lookup_type(left), t_s.lookup_type(right))
       let op = ':='.relocate(self)
-      t_s.wrap_type('$left $op $right', t.Vd(self))
+      t_s.wrap_type('$left $op delay($right)', t.Vd(self))
   | ~else:
       syntax_meta.error("not a variable that is assignable", self, left)

@@ -1,4 +1,12 @@
 #lang shplait/private/core
+~accomodating
+// when a library function has different behavior
+// as lazy versus eager (e.g., `map`), then use `is_lazy`
+// here and put a copy of the function in "lazy_lib.rhm"
+
+import:
+  open: "is_lazy.rhm"
+  "lazy_lib.rhm"
 
 type Optionof(?a)
 | none()
@@ -18,6 +26,11 @@ fun is_cons(l):
 fun is_empty(l):
   !is_cons(l)
 
+fun length(lst):
+  match lst
+  | []: 0
+  | cons(hd, tl): 1+length(tl)
+
 fun append(lst, lst2):
   match lst
   | []: lst2
@@ -32,20 +45,24 @@ fun reverse(lst):
     accum_rev(lst, [])
 
 fun map(f :: ?a -> ?b, lst :: Listof(?a)) :: Listof(?b):
-  match lst
-  | []: []
-  | cons(hd, tl): cons(f(hd), map(f, tl))
+  if f is_lazy
+  | lazy_lib.map(f, lst)
+  | match lst
+    | []: []
+    | cons(hd, tl): cons(f(hd), map(f, tl))
 
 fun map2(f :: (?a, ?b) -> ?c, alst :: Listof(?a), blst :: Listof(?b)) :: Listof(?c):
-  match alst
-  | []:
-      match blst
-      | []: []
-      | ~else: error(#'map2, "too many elements in second list")
-  | cons(ahd, atl):
-      match blst
-      | cons(bhd, btl): cons(f(ahd, bhd), map2(f, atl, btl))
-      | ~else: error(#'map2, "not enough elements in second list")
+  if f is_lazy
+  | lazy_lib.map2(f, alst, blst)
+  | match alst
+    | []:
+        match blst
+        | []: []
+        | ~else: error(#'map2, "too many elements in second list")
+    | cons(ahd, atl):
+        match blst
+        | cons(bhd, btl): cons(f(ahd, bhd), map2(f, atl, btl))
+        | ~else: error(#'map2, "not enough elements in second list")
 
 fun member(elem, lst):
   match lst
@@ -53,21 +70,27 @@ fun member(elem, lst):
   | cons(hd, tl): elem == hd || member(elem, tl)
 
 fun filter(pred, lst):
-  match lst
-  | []: []
-  | cons(hd, tl): if pred(hd)
-                  | cons(hd, filter(pred, tl))
-                  | filter(pred, tl)
+  if pred is_lazy
+  | lazy_lib.filter(pred, lst)
+  | match lst
+    | []: []
+    | cons(hd, tl): if pred(hd)
+                    | cons(hd, filter(pred, tl))
+                    | filter(pred, tl)
 
 fun foldl(f, accum, lst):
-  match lst
-  | []: accum
-  | cons(hd, tl): foldl(f, f(hd, accum), tl)
+  if f is_lazy
+  | lazy_lib.foldl(f, accum, lst)
+  | match lst
+    | []: accum
+    | cons(hd, tl): foldl(f, f(hd, accum), tl)
 
 fun foldr(f, init, lst):
-  match lst
-  | []: init
-  | cons(hd, tl): f(hd, foldr(f, init, tl))
+  if f is_lazy
+  | lazy_lib.foldr(f, init, lst)
+  | match lst
+    | []: init
+    | cons(hd, tl): f(hd, foldr(f, init, tl))
 
 fun fst(tup):
   def values(f, s) = tup
