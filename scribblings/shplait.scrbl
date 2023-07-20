@@ -3,9 +3,7 @@
     "typeset.rkt" open
     meta_label:
       shplait open
-    lib("racket/base.rkt") as racket
-    lib("racket/sandbox.rkt").#{call-in-sandbox-context})
-
+    "eval.rhm".eval)
 
 @(nonterminal:
     id: block
@@ -13,12 +11,6 @@
     typed_id: block
     expr: block
     defn: block)
-
-@(def eval: make_rhombus_eval(~lang: #'shplait))
-@(#{call-in-sandbox-context}(eval,
-                             fun ():
-                               racket.#{error-print-context-length}(0)
-                               racket.#{error-print-source-location}(#false)))
 
 @title{Shplait}
 
@@ -811,6 +803,26 @@ and new types can be defined with @rhombus(type).
 )
 
 }
+
+@doc(
+  fun min(n :: Number, m :: Number) :: Number
+  fun max(n :: Number, m :: Number) :: Number
+  fun floor(n :: Number) :: Number
+  fun ceiling(n :: Number) :: Number
+){
+
+ Functions that compare and select or round.
+
+@examples(
+  ~eval: eval
+  min(1, 2)
+  max(1, 2)
+  floor(1.5)
+  ceiling(1.5)
+)
+
+}
+
 
 
 @doc(

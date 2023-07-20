@@ -56,21 +56,25 @@ meta:
     let [ty_sym, ...] = [t_s.type_to_syntax(ty), ...]
     Function.pass(f.record_frame_defn_type(ty_sym, ty), ...)
     let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.val)
-    let (tuple_lhs, rhs_delay):
+    let (tuple_lhs, rhs_delay, infer_id):
       match [id, ...]:
-      | [id]: values(id, 'delay')
+      | [id]: values(id, 'delay', id)
       | _: values('tu.Tuple([$id, ...])',
                   // force tuple, while tuple construction delays values; this is
                   // not as lazy as it could be, because we could delay the unpacking
                   // of tuples until a variable is used, instead of treating the
                   // definition form as implicitly matching
-                  'force')
+                  'force',
+                  'val')
     let def_rhs:
-      '$rhs_delay(dynamic(unify ~defn ($ty_sym, ...):
-                            ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
-                            ~defns:«»
-                            ~body:
-                              $rhs))'
+      '$rhs_delay(dynamic(block:
+                            let $infer_id:
+                              unify ~defn ($ty_sym, ...):
+                                ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
+                                ~defns:«»
+                                ~body:
+                                  $rhs
+                            $infer_id))'
     match mutable_tag
     | '':
         '«statinfo.macro '$id': '(($t_s.type_key, $ty_sym))'

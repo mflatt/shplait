@@ -5,6 +5,7 @@ import:
   "frame.rhm" as f
   "type_statinfo.rhm" as t_s
   "lazy.rhm" open
+  "wrap.rhm" open
 
 decl.macro 'def_binary $name $op $type_constr: $option; ...':
   '«export: rename: $name as $op
@@ -86,3 +87,28 @@ expr.macro '$left concat $right':
   ~op_stx self
   t_s.wrap_type('force($left) $('+&'.relocate(self)) force($right)',
                 t.Str(self))
+
+export:
+  rename:
+    shmin as min
+    shmax as max
+    shfloor as floor
+    shceiling as ceiling
+
+defwrap wrap_min min(a, b): math.min(dynamic_force(a), dynamic_force(b))
+defwrap wrap_max max(a, b): math.max(dynamic_force(a), dynamic_force(b))
+defwrap wrap_floor floor(a): math.floor(dynamic_force(a))
+defwrap wrap_ceiling ceiling(a): math.ceiling(dynamic_force(a))
+
+expr.macro 'shmin':
+  ~op_stx self
+  t_s.wrap_type('wrap_min', t.Arrow(self, [t.Num(self), t.Num(self)], t.Num(self)))
+expr.macro 'shmax':
+  ~op_stx self
+  t_s.wrap_type('wrap_max', t.Arrow(self, [t.Num(self), t.Num(self)], t.Num(self)))
+expr.macro 'shfloor':
+  ~op_stx self
+  t_s.wrap_type('wrap_floor', t.Arrow(self, [t.Num(self)], t.Num(self)))
+expr.macro 'shceiling':
+  ~op_stx self
+  t_s.wrap_type('wrap_ceiling', t.Arrow(self, [t.Num(self)], t.Num(self)))
