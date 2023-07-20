@@ -1,0 +1,112 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "frame.rhm" as f
+
+export:
+  meta:
+    parse_and_apply_configure
+    configure_from_saved
+    get_configured_submodules
+
+meta:
+  // returns a configuration representation to pass to submodules
+  // and a list of remaining forms
+  fun parse_and_apply_configure(forms :: List.of(Syntax)):
+    recur loop(forms = forms,
+               ~eager: eager = #false,
+               ~lazy: lazy = #false,
+               ~accomodating: accomodating = #false,
+               ~untyped: untyped = #false,
+               ~fuel: fuel = #false):
+      fun done():
+        let fuel = fuel || 100
+        f.configure_language(lazy, accomodating)
+        t.configure_typing(untyped, fuel)
+        add_save_config('[$lazy, $accomodating, $untyped, $fuel]',
+                        add_export_all(forms))
+      fun no_tail(tail):
+        match tail
+        | '': #void
+        | ~else:
+            syntax_meta.error("extra terms not allowed after option keyword",
+                              List.first(forms))
+      match forms
+      | []: done()
+      | [form, & forms]:
+          match form
+          | '$(bound_as expr_meta.space: 'declare_configure') $config': // generated for submodules
+              let '[$lazy,  $accomodating, $untyped, $fuel]' = config
+              f.configure_language(lazy.unwrap(), accomodating.unwrap())
+              t.configure_typing(untyped.unwrap(), fuel.unwrap())
+              add_save_config(config, add_export_all(forms))
+          | '$(kw && '~lazy') $tail ...':
+              when eager || lazy || accomodating
+              | syntax_meta.error("duplicate eagerness option", kw)
+              no_tail('$tail ...')
+              loop(forms, ~lazy: #true)
+          | '$(kw && '~accomodating') $tail ...':
+              when eager || lazy || accomodating
+              | syntax_meta.error("duplicate eagerness option", kw)
+              no_tail('$tail ...')
+              loop(forms, ~accomodating: #true)
+          | '$(kw && '~untyped') $tail ...':
+              when untyped
+              | syntax_meta.error("duplicate typedness option", kw)
+              no_tail('$tail ...')
+              loop(forms, ~untyped: #true)
+          | '$(kw && '~fuel') $amount $tail ...':
+              when untyped
+              | syntax_meta.error("duplicate fuel option", kw)
+              let n = amount.unwrap()
+              unless n is_a NonnegInt
+              | syntax_meta.error("fuel must be a non-negative integer", amount)
+              no_tail('$tail ...')
+              loop(forms, ~fuel: n)
+
+          | ~else: done()
+
+  fun add_export_all(forms):
+    match forms
+    | []: []
+    | ['$ctx $_ ...', & rest_forms]:        
+        [&forms, 'export: all_defined ~scope_like $(Syntax.make(#'ctx, ctx))']
+
+  fun add_save_config(config, forms):
+    let [g, ...] = forms
+    [config, 'meta: save_configuration($config)
+              $g
+              ...']
+
+  def mutable saved_lazy = #false
+  def mutable saved_accomodating = #false
+  def mutable saved_untyped = #false
+  def mutable saved_fuel = 100
+
+  // This approach to recording a configuration for interactions is not
+  // ideal, because it means the most recently run module wins.
+  fun save_configuration([lazy, accomodating, untyped, fuel]):
+    saved_lazy := lazy
+    saved_accomodating := accomodating
+    saved_untyped := untyped
+    saved_fuel := fuel
+
+  fun configure_from_saved():
+    f.configure_language(saved_lazy, saved_accomodating)
+    t.configure_typing(saved_untyped, saved_fuel)
+
+  fun get_configured_submodules(config):
+    let mods :~ List = f.get_submodules()
+    for List:
+      each mod: mods
+      match mod
+      | '$module $name:
+           $body':
+          '$module $name:
+             declare_configure $config
+             $body'
+
+// ignore extra `declare_configure` forms inserted for submodules
+expr.macro 'declare_configure $_ ...':
+  '#void'

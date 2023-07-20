@@ -1,8 +1,0 @@
-#lang rhombus/static/and_meta
-
-export:
-  declare_configure
-
-// ignore extra `declare_configure` forms inserted for submodules
-expr.macro 'declare_configure $_ ...':
-  '#void'
