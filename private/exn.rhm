@@ -5,12 +5,46 @@ import:
   "type_statinfo.rhm" as t_s
   "wrap.rhm" open
   "lazy.rhm" open
+  "unify.rhm" open
 
 export:
   rename:
+    shtry as try
     sherror as error
     shprint as print
     shprintln as println
+  let_cc
+
+expr.macro 'shtry:
+              $body
+              ~catch:
+                $(handler :: Group)':
+  let tv = t.gen_tvar(#false)
+  t_s.wrap_type('try:
+                   unify ~expr $(t_s.type_to_syntax(tv)):
+                     ~body:
+                       $body
+                   ~catch _ :: Exn.Fail:
+                     unify ~expr $(t_s.type_to_syntax(tv)):
+                       ~body:
+                         $handler',
+                tv)
+
+expr.macro 'let_cc $(id :: Identifier):
+              $body':
+  let tv = t.gen_tvar(#false)
+  let any_tv = t.gen_tvar(#false)
+  let k_ty = t.Poly(#false, any_tv, t.Arrow(id, [tv], any_tv))
+  let tmp = Syntax.make_temp_id(id)
+  t_s.wrap_type('«Continuation.capture $tmp:
+                    def $id = dynamic(fun (v):
+                                        Continuation.escape(fun (): $tmp(v)))
+                    statinfo.macro '$id':
+                      '(($t_s.type_key, $(t_s.type_to_syntax(k_ty))))'                      
+                    unify ~expr $(t_s.type_to_syntax(tv)):
+                      ~body:
+                        $body»',
+                tv)
 
 defwrap wrap_error error(sym, str): error(dynamic_force(sym),
                                           dynamic_force(str))

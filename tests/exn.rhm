@@ -1,0 +1,46 @@
+#lang shplait
+
+check:
+  try:
+    4/2
+    ~catch:
+      0
+  ~is 2
+
+check:
+  try:
+    4/0
+    ~catch:
+      0
+  ~is 0
+
+check:
+  try:
+    try:
+      4/0
+      ~catch:
+        1/0
+    ~catch:
+      -1
+  ~is -1
+
+check:
+  let_cc k:
+    1
+  ~is 1
+
+check:
+  let_cc k:
+    k(2)
+  ~is 2
+
+check:
+  let_cc k:
+    1 + k(2)
+  ~is 2
+
+check:
+  10 + (let_cc k:
+          1 + k(2))
+  ~is 12
+

@@ -2,7 +2,10 @@
 @(import:
     "typeset.rkt" open
     meta_label:
-      shplait open)
+      shplait open
+    lib("racket/base.rkt") as racket
+    lib("racket/sandbox.rkt").#{call-in-sandbox-context})
+
 
 @(nonterminal:
     id: block
@@ -12,6 +15,10 @@
     defn: block)
 
 @(def eval: make_rhombus_eval(~lang: #'shplait))
+@(#{call-in-sandbox-context}(eval,
+                             fun ():
+                               racket.#{error-print-context-length}(0)
+                               racket.#{error-print-source-location}(#false)))
 
 @title{Shplait}
 
@@ -659,6 +666,99 @@ and new types can be defined with @rhombus(type).
 }
 
 @// ------------------------------------------------------------
+@section(~tag: "sec:expr"){Other Expression Forms}
+
+@doc(
+  expr.macro 'check:
+                $expr
+                ~is $expected_expr'
+  expr.macro 'check:
+                $expr
+                ~raises $string_expr'
+){
+
+ Checks that @rhombus(expr) produces the same result as
+ @rhombus(expected_expr) or raises an exception with an error message
+ that contains the string produced by @rhombus($string_expr). Expressions
+ @rhombus(expr) and @rhombus(expected_expr) must have the same type,
+ while @rhombus($string_expr) must have the type
+ @rhombus(String, ~at shplait/type). The result of a @rhombus(check) form
+ is @rhombus(#void).
+
+ When the result does not match the expected result, then an error is
+ printed, but evaluation continues.
+
+@examples(
+  ~eval: eval
+  check:
+    1+2
+    ~is 3
+  check:
+    1/0
+    ~raises "division by zero"
+  check:
+    1+2
+    ~is 4
+)
+
+}
+
+@doc(
+  ~nonterminal:
+    handle_expr: block expr
+  expr.macro 'try:
+                $expr
+                ~catch:
+                  $handle_expr'
+){
+
+ Returns the same result as @rhombus(expr), unless an exception is
+ raised during @rhombus(expr), in which case @rhombus(handle_expr) is
+ evaluated and its result is returned. The type of @rhombus(expr) and the
+ type of @rhombus(handle_expr) must be the same.
+
+@examples(
+  ~eval: eval
+  try:
+    1+2
+    ~catch:
+      0
+  try:
+    1/0
+    ~catch:
+      0
+  try:
+    error(#'example, "oops")
+    ~catch:
+      ["was", "an", "error"]
+)
+
+}
+
+@doc(
+  ~nonterminal:
+    handle_expr: block expr
+  expr.macro 'let_cc $id:
+                $expr'
+){
+
+ Returns the same result as @rhombus(expr), but binds @rhombus(id) to a
+ function that represents the @deftech{contination} of @rhombus(let_cc)
+ expression. If @rhombus(id) is called, whether before or after
+ @rhombus(expr) is returned, the continuation of the call is discarded
+ and replaced with the continuation represented by @rhombus(id).
+
+@examples(
+  ~eval: eval
+  let_cc k:
+    1 + k(2)
+  10 + (let_cc k:
+          1 + k(2))  
+)
+
+}
+
+@// ------------------------------------------------------------
 @section(~tag: "sec:builtin"){Predefined Types and Functions}
 
 @local_table_of_contents()
@@ -830,8 +930,8 @@ These operators have lower precedence than arithmetic operators.
   type 'Void'
 ){
 
- The type of an expression that has a side effect and does not produce a
- value. For example, the result type of @rhombus(println) is
+ The type of an expression that has a side effect and produces the value
+ @rhombus(#:void). For example, the result type of @rhombus(println) is
  @rhombus(Void, ~at shplait/type).
 
 }
