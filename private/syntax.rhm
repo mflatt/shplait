@@ -4,6 +4,7 @@ import:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
   "lazy.rhm" open
+  "wrap.rhm" open
 
 // Wrap Rhombus's syntax patterns and templates to check
 // types, which means our own layer of repetition binding.
@@ -15,22 +16,37 @@ export:
     shquotes as #%quotes
   only_space expr:
     $
-// more exports macro-generated for `syntax_is_number`, etc.
+  syntax_split
+  syntax_join
+  // more exports macro-generated for `syntax_is_number`, etc.
 
+class SyntaxWrap(raw :: Syntax):
+  private implements Printable
+  private override describe(mode, recur):
+    recur(raw, mode)
+  private implements Equatable
+  private override equals(other :~ SyntaxWrap, recur):
+    recur(raw.unwrap_all(), other.raw.unwrap_all())
+  private override hash_code(recur):
+    recur(raw.unwrap_all())  
+  
 module convert:
   export:
     meta:
       convert_pat
       convert_tmpl
     syntax_def
+    syntax_unwrap
 
 expr.macro '«shquotes $(quoted_tmpl && '«'$tmpl'»')»':
   ~op_stx self
   let [tmpl_cvt, [[id, tmp_id, depth], ...]] = convert_tmpl(tmpl, #true)
-  t_s.wrap_type('«block:
-                    def $(nest_rep(tmp_id, depth)) = reference_syntax_pattern_var($id, $depth)
-                    ...
-                    #%quotes '$tmpl_cvt'»'.relocate_span([quoted_tmpl]),
+  t_s.wrap_type('«SyntaxWrap(
+                    block:
+                      def $(nest_rep(tmp_id, depth)) = reference_syntax_pattern_var($id, $depth)
+                      ...
+                      #%quotes '$tmpl_cvt'
+                    )»'.relocate_span([quoted_tmpl]),
                 t.Shrub(quoted_tmpl))
 
 meta:
@@ -141,7 +157,8 @@ expr.macro 'reference_syntax($(arg :: expr_meta.Parsed))':
   t.unify_do(arg, t_s.lookup_type(arg), t.Shrub(arg))
   'check_single_term(force($arg))'
 
-fun check_single_term(stx :: Syntax):
+fun check_single_term(stx_in):
+  let stx = SyntaxWrap.raw(stx_in)
   unless stx is_a Term
   | error("syntax object does not have a single term\n"
             +& "  syntax object: " +& stx) // FIXME: print syntax object as value
@@ -157,12 +174,15 @@ meta:
   fun misuse_of_pattern_variable(id):
     syntax_meta.error("misuse of syntax variable (outside of quotes)", id)
 
+fun syntax_unwrap(stx):
+  SyntaxWrap.raw(stx)
+
 defn.macro 'syntax_def $id: $pat_id $depth':
   '«
      expr.macro '$id':
        ~op_stx self
        $(if depth.unwrap() == 0
-         | 't_s.wrap_type('$pat_id', t.Shrub(self))'
+         | 't_s.wrap_type('SyntaxWrap($pat_id)', t.Shrub(self))'
          | 'misuse_of_pattern_variable(self)')
      syntax_var.macro '$id':
        '($pat_id, $depth)'
@@ -192,25 +212,44 @@ fun oops(who, stx, what):
   error(who, "syntax object does not wrap a " +& what +& "\n"
                +& "  syntax object: " +& stx)
 
+defwrap wrap_syntax_split syntax_split(s):
+  let s = SyntaxWrap.raw(dynamic_force(s))
+  if s is_a Group
+  | Syntax.unwrap_group(s).map(SyntaxWrap)
+  | Syntax.unwrap_sequence(s).map(SyntaxWrap)
+
+defwrap wrap_syntax_join syntax_join(lst):
+  let [s :: Syntax, ...] = List.map(dynamic_force_all(lst), SyntaxWrap.raw)
+  cond
+  | (for all:
+       each s: [s, ...]
+       s is_a Term):
+      SyntaxWrap(Syntax.make_group([s, ...]))
+  | ~else:
+      SyntaxWrap(Syntax.make_sequence(List.append(&[s.unwrap_sequence(), ...])))
+  
+
+expr.macro 'syntax_split':
+   ~op_stx self
+   t_s.wrap_type('wrap_syntax_split', t.Arrow(self, [t.Shrub(self)], t.ListOf(self, t.Shrub(self))))
+
+expr.macro 'syntax_join':
+   ~op_stx self
+   t_s.wrap_type('wrap_syntax_join', t.Arrow(self, [t.ListOf(self, t.Shrub(self))], t.Shrub(self)))
+
 decl.nestable_macro 'extractor $is_x ($unwrap_x, $post_unwrap) ($wrap_x, $pre_wrap) $Ty $Ann $what':
   '«
      export: $is_x $unwrap_x $wrap_x
-     def stx_is_x:
-       fun $is_x(stx_in):
-         let stx :~ Syntax = dynamic_force(stx_in)
-         (stx is_a Term) && (stx.unwrap() is_a $Ann)
-       $is_x
-     def stx_unwrap_x:
-       fun $unwrap_x(stx_in):
-         let stx :~ Syntax = dynamic_force(stx_in)
-         let v = if stx is_a Term | stx.unwrap() | #'~no
-         if v is_a $Ann | $post_unwrap(v) | oops(#'$unwrap_x, stx, $what)
-       $unwrap_x
-     def stx_wrap_x:
-       fun $wrap_x(v_in):
-         let v :~ Syntax = dynamic_force_all(v_in)
-         Syntax.make($pre_wrap(v))
-       $wrap_x
+     defwrap stx_is_x $is_x(stx_in):
+       let stx = SyntaxWrap.raw(dynamic_force(stx_in))
+       (stx is_a Term) && (stx.unwrap() is_a $Ann)
+     defwrap stx_unwrap_x $unwrap_x(stx_in):
+       let stx = SyntaxWrap.raw(dynamic_force(stx_in))
+       let v = if stx is_a Term | stx.unwrap() | #'~no
+       if v is_a $Ann | $post_unwrap(v) | oops(#'$unwrap_x, stx, $what)
+     defwrap stx_wrap_x $wrap_x(v_in):
+       let v = dynamic_force_all(v_in)
+       SyntaxWrap(Syntax.make($pre_wrap(v)))
      expr.macro '$is_x':
        ~op_stx self
        t_s.wrap_type('stx_is_x', t.Arrow(self, [t.Shrub(self)], t.Bool(self)))
@@ -224,8 +263,11 @@ decl.nestable_macro 'extractor $is_x ($unwrap_x, $post_unwrap) ($wrap_x, $pre_wr
 extractor syntax_is_number (syntax_to_number, values) (number_to_syntax, values) Num Number "number"
 extractor syntax_is_boolean (syntax_to_boolean, values) (boolean_to_syntax, values) Bool Boolean "boolean"  
 extractor syntax_is_symbol (syntax_to_symbol, values) (symbol_to_syntax, values) Sym Symbol "symbol"
-extractor syntax_is_list (syntax_to_list, List.rest) (list_to_syntax, add_brackets) ListOfShrub ListShaped "list"
+extractor syntax_is_list (syntax_to_list, list_post) (list_to_syntax, add_brackets) ListOfShrub ListShaped "list"
+
+fun list_post(los):
+  List.rest(los).map(SyntaxWrap)
 
 annot.macro 'ListShaped':
   'matching(['brackets', _, $'...'])'
-fun add_brackets(lst): ['brackets', &lst]
+fun add_brackets(lst :~ List): [#'brackets, & lst.map(fun (elem): SyntaxWrap.raw(elem))]

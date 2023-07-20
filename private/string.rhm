@@ -10,10 +10,12 @@ export:
   rename:
     shto_string as to_string
     shstring_append as string_append
+  string_length
   string_get
 
 defwrap wrap_string_append string_append(a, b): (dynamic_force(a) :: String) ++ dynamic_force(b)
 defwrap wrap_string_get string_get(a :: String, i): (dynamic_force(a) :: String)[dynamic_force(i)]
+defwrap wrap_string_length string_get(a :: String): String.length(dynamic_force(a))
 
 // `to_string` doesn't need to force lazy thunks,
 // because printing already does that
@@ -29,6 +31,11 @@ expr.macro 'shstring_append':
   let str_ty = t.Str(self)
   t_s.wrap_type('wrap_string_append'.relocate(self),
                 t.Arrow(self, [str_ty, str_ty], str_ty))
+
+expr.macro 'string_length':
+  ~op_stx self
+  t_s.wrap_type('wrap_string_length'.relocate(self),
+                t.Arrow(self, [t.Str(self)], t.Num(self)))
 
 expr.macro 'string_get':
   ~op_stx self

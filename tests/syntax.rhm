@@ -1,0 +1,103 @@
+#lang shplait
+
+check:
+  '1 + 2'
+  ~is '1 + 2'
+
+
+check:
+  syntax_split('1 2 3')
+  ~is ['1', '2', '3']
+
+check:
+  syntax_split('1 2 3
+                4 5')
+  ~is ['1 2 3', '4 5']
+
+check:
+  syntax_split('(1 2 3)')
+  ~is ['(1 2 3)']
+
+check:
+  syntax_join(['1', '2', '3'])
+  ~is '1 2 3'
+
+check:
+  syntax_join(['1', '2', '3'])
+  ~is '1 2 3'
+
+check:
+  syntax_join(['1', '2 4', '3'])
+  ~is '1; 2 4; 3'
+
+check:
+  syntax_join(['1', '2; 4', '3 5'])
+  ~is '1; 2; 4; 3 5'
+
+
+check:
+  syntax_is_symbol('x')
+  ~is #true
+
+check:
+  syntax_is_symbol('1')
+  ~is #false
+
+check:
+  syntax_to_symbol('x')
+  ~is #'x
+
+check:
+  symbol_to_syntax(#'x)
+  ~is 'x'
+
+
+check:
+  syntax_is_number('1')
+  ~is #true
+
+check:
+  syntax_is_number('#true')
+  ~is #false
+
+check:
+  syntax_to_number('1')
+  ~is 1
+
+check:
+  number_to_syntax(1)
+  ~is '1'
+
+
+check:
+  syntax_is_boolean('#false')
+  ~is #true
+
+check:
+  syntax_is_boolean('1')
+  ~is #false
+
+check:
+  syntax_to_boolean('#false')
+  ~is #false
+
+check:
+  boolean_to_syntax(#false)
+  ~is '#false'
+
+
+check:
+  syntax_is_list('1 2 3')
+  ~is #false
+
+check:
+  syntax_is_list('[1, 2 3, a]')
+  ~is #true
+
+check:
+  syntax_to_list('[1, 2 3, a]')
+  ~is ['1', '2 3', 'a']
+
+check:
+  list_to_syntax(['1', '2 3', 'a'])
+  ~is '[1, 2 3, a]'

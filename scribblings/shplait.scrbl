@@ -971,6 +971,14 @@ These operators have lower precedence than arithmetic operators.
 
 }
 
+@doc(
+  fun string_length(str :: String) :: Number
+){
+
+ Returns the length of @rhombus(str) in characters.
+
+}
+
 
 @doc(
   fun to_string(v :: ?a) :: String
@@ -1719,7 +1727,6 @@ well as in syntax-object expressions, which are also known as
 
 }
 
-
 @doc(
   fun syntax_is_number(stx :: Syntax) :: Boolean
   fun syntax_is_boolean(stx :: Syntax) :: Boolean
@@ -1784,6 +1791,42 @@ well as in syntax-object expressions, which are also known as
 )
 
 }
+
+
+@doc(
+  fun syntax_split(stx :: Syntax) :: Listof(Syntax)
+  fun syntax_join(stx :: Syntax) :: Listof(Syntax)
+){
+
+ Functions for simple splitting and joins tasks. For more general and
+ precise tasks, use @rhombus(match) and template construction with
+ @rhombus(#%quotes), potentially converting to and from form that
+ @rhombus(list_to_syntax) and @rhombus(syntax_to_list) can handle.
+
+ The @rhombus(syntax_split) function takes a single-group syntax oibject
+ and splits it into a list of term syntax objects, or it takes a
+ multi-group syntax object and splits it into a list of group syntax
+ objects.
+
+ The @rhombus(syntax_join) function combines a list of term syntax
+ objects into one group syntax object, and it splices a list of
+ multi-group syntax objects into a multi-group syntax object.
+
+@examples(
+  ~eval: eval
+  syntax_split('1 2 3')
+  syntax_split('1 2 3
+                4 5')
+  syntax_join(['1', '2', '3'])
+  syntax_join(['1', '2 3', '4'])
+  syntax_join(['1', '2 3', '4
+                            5'])
+)
+
+}
+
+
+
 
 @// ------------------------------------------------------------
 

@@ -7,7 +7,8 @@
     "eval.rhm".eval
     lib("scribble/core.rkt") as s_core
     lib("scribble/html-properties.rkt") as html_prop
-    "tutorial_url.rhm" open)
+    "tutorial_url.rhm" open
+    lib("scribble/manual.rkt").racketresultfont)
 
 @(def defterm = italic)
 
@@ -885,81 +886,89 @@ to catch any variants that are not already covered.
 When you use @rhombus(~else), however, the type checker is less helpful
 for making sure that you've considered all cases.
 
-@(block:
-    #void
-
-/*
-@; ----------------------------------------
+@// ----------------------------------------
 @section(~tag: "testing-tutorial"){Testing and Debugging}
 
 Shplait includes built-in support for testing your programs. The
-@rhombus(test) form takes two expressions and makes sure that they
-produce the same value. Typically, the first expression is a function
-call, and the second expression is the expected result of the
-function. The @rhombus(test) form prints output that starts ``good'' if
-the test passes or ``bad'' if it fails.
+@rhombus(check) form takes two expressions and makes sure that they
+produce the same value, where the second expression is prefixed with
+@rhombus(~is). Typically, the first expression is a function call, and
+the second expression is the expected result of the call. The
+@rhombus(check) form is silent if a test passes, but it prints an error
+message (and continues) if the test fails.
 
-@interaction[
-(define (taste s)
-  (cond
-    [(equal? s "milk") 'good]
-    [else not-as-good]))
-(test (taste "milk") good)
-(test (taste "brussel sprouts") 'not-as-good)
-(test (taste "beets") bad)
-]
+@interaction(
+  ~defn:
+    fun taste(s):
+      cond
+      | s == "milk": #'good
+      | ~else: #'not_as_good
+  ~defn:
+    check:
+      taste("milk")
+      ~is #'good
+    check:
+      taste("brussel sprouts")
+      ~is #'not_as_good
+    check:
+      taste("beets")
+      ~is #'bad
 
-They say that no news is good news. To suppress the output for passing
-tests, so that only failing test strigger output, use
-@rhombus((print-only-errors #true)).
-
-@interaction[
-(print-only-errors #true)
-(test (taste "kale") 'not-as-good)
-(test (taste "anchovies") 'bad)
-]
+)
 
 To test that an expression reports an expected error, use
-@rhombus(test/exn). The @rhombus(test/exn) form's section expression
-should produce a string, and @rhombus(test/exn) checks that an error is
-reported where the string occurs in the error message. You can only
-test for errors that your program specifically reports using the
-@rhombus(error) function.
+@rhombus(~raises) in place of @rhombus(~is), and then supply
+an expression that produces a string after @rhombus(~raises).
+The test checks that the exception's error message contains the
+string.
 
-@interaction[
-(define (always-fail [n : Number]) : Number
-  (error 'always-fail "we're not actually returning a number"))
-(test/exn (always-fail 42) "not actually")
-(test/exn (always-fail 42) "should not get called")
-]
+@interaction(
+  ~defn:
+    fun always_fail(n :: Number) :: Number:
+      error(#'always_fail, "we're not actually returning a number")
+  ~defn:
+    check:
+      always_fail(42)
+      ~raises "not actually"
+    check:
+      always_fail(42)
+      ~raises "should not get called"
+)
 
 When you write a program (in the definitions area of DrRacket), the
 order of function definitions generally does not matter, even if the
 functions call each other. A test at the top level of a program,
 however, must appear after all functions that the test may end up
-calling. To relax this constraint, wrap tests in a @rhombus((module+
-test ....)) form. A @rhombus((module+ test ....)) wrapper effectively
-moves its content to the end of the program.
+calling. To relax this constraint, wrap tests in a
+@rhombus(module test: ....) form. A @rhombus(module test: ....))
+wrapper effectively moves its content to the end of the program.
 
-@racketblock[
-(module+ test
-  (test (retaste "milk") '(still good)))
-code:blank
-(define (retaste s)
-  (list 'still (taste s)))
-]
+@rhombusblock(
+  module test:
+    check:
+      retaste("milk")
+      ~is [#'still, #'good]
+
+  fun retaste(s):
+    [#'still, taste(s)]
+)
 
 A good set of tests will cause all expressions in a program to be
 evaluated at least once. DrRacket can help you check that your program
 has good test coverage. In DrRacket's @onscreen{Language} menu, select
-@onscreen{Choose Language}, click @onscreen{Show Details}, click
-@onscreen{Submodules to run}, and then select the @onscreen{Syntactic
-test suite coverage} option. After selecting that option, when you
-@onscreen{Run} a program, it will stay its normal color if all is
-well. If some expression has not been covered, however, the program
-text will go mostly black, and any expression that has not been
-evaluated will turn orange with a black background. Resolve the
-problem and restore your program text's color by adding more tests.
+@onscreen{Choose Language}, click @onscreen{Show Details}, and then
+select the @onscreen{Syntactic test suite coverage} option. After
+selecting that option, when you @onscreen{Run} a program, it will stay
+its normal color if all is well. If some expression has not been
+covered, however, the program text will go mostly black, and any
+expression that has not been evaluated will turn orange with a black
+background. Resolve the problem and restore your program text's color by
+adding more tests.
+
+@(block:
+    #void
+
+/*
 
 When you're debugging a program, it may be helpful to see the
 arguments that are passed to a particular function and the results
@@ -1005,128 +1014,159 @@ during evaluation.
 (eval:error (got-milk? '("cheese")))
 ]
 
-@; ----------------------------------------
+*/
+   )
+
+@// ----------------------------------------
 @section(~tag: "lambda-tutorial"){Anonymous Functions}
 
 After we define a function, the name of the function can be used as a
 value without calling it. If you just evaluate the function name, then
-Shplait will print something like @nonbreaking{@racketresultfont{#<procedure>}}.
+Shplait will print something like @nonbreaking{@racketresultfont{#<function>}}.
 
-@interaction[
-(define (plus-five _n)
-  (+ _n 5))
-plus-five
-]
+@interaction(
+  ~defn:
+    fun plus_five(n):
+      n + 5
+  ~repl:
+    plus_five
+)
 
 More usefully, you might pass the function to another function that
 calls it. For example, the @rhombus(map) function takes a function and a
 list, and it applies the function to each element of the list to
 produce a new list.
 
-@interaction[
-(map plus-five
-     '(1 2 3))
-]
+@interaction(
+  map(plus_five,
+      [1, 2, 3])
+)
 
 Sometimes, and especially with @rhombus(map), you need a one-off
 function that doesn't need to be defined for everyone else to see, and
 it doesn't even need a name. You can make an @defterm{anonymous function}
-by using @rhombus(lambda):
+by using @rhombus(fun) without a name before the arguments:
 
-@interaction[
-(map (lambda (_n)
-       (+ _n 6))
-     '(1 2 3))
-]
+@interaction(
+  map(fun (n):
+        n + 6,
+      [1, 2, 3])  
+)
 
-The form @rhombus((lambda (_n) (+ _n 6))) means ``the function that
-takes an argument @rhombus(_n) and returns @rhombus((+ _n 6)).'' You can
-evaluate a @rhombus(lambda) form without passing it anywhere, although
+The form @rhombus(fun (n): n + 6) means ``the function that
+takes an argument @rhombus(n) and returns @rhombus(n + 6).'' You can
+evaluate a @rhombus(fun) form without passing it anywhere, although
 that isn't particularly useful:
 
-@interaction[
-(lambda (_n)
-  (+ _n 7))
-]
+@interaction(
+  fun (n):
+    n + 7
+)
 
 Notice that the result has a function type: it's a function that takes
 a @rhombus(Number) and returns a @rhombus(Number).
 
-An anonymous function created with @rhombus(lambda) doesn't have to
-@emph{stay} anonymous. Since you can use a @rhombus(lambda) form
-anywhere that an expression is allowed, you can use in
-@rhombus(define):
+An anonymous function created with @rhombus(fun) doesn't have to
+@emph{stay} anonymous. Since you can use a @rhombus(fun) form anywhere
+that an expression is allowed, you can use in @rhombus(def):
 
-@interaction[
-#:no-prompt
-(define plus-eight : (Number -> Number)
-  (lambda (_n)
-    (+ _n 8)))
-]
+@interaction(
+  ~defn:
+    def plus_eight = (fun (n):
+                        n + 8)
+)
 
 This definition is completely equivalent to the function-definition
 shorthand:
 
-@interaction[
-#:no-prompt
-(define (plus-eight [_n : Number]) : Number
-  (+ _n 8))
-]
+@interaction(
+  ~defn:
+    fun plus_eight(n):
+      n + 8
+)
 
-Another interesting property of @rhombus(lambda) functions is that,
-just like any local function, the body of a @rhombus(lambda) can see any
-surrounding variable binding. For example, the @rhombus(lambda) body in
-the following @rhombus(add-to-each) function can see the @rhombus(_m)
-that is passed to @rhombus(add-to-each):
+Another interesting property of anonymous functions is that,
+just like any local function, the body of a @rhombus(fun) can see any
+surrounding variable binding. For example, the @rhombus(fun) body in
+the following @rhombus(add_to_each) function can see the @rhombus(m)
+that is passed to @rhombus(add_to_each):
 
-@interaction[
-(define (add-to-each _m _items)
-  (map (lambda (_n)
-         (+ _n _m))
-       _items))
-(add-to-each 7 '(1 2 3))
-(add-to-each 70 '(1 2 3))
-]
+@interaction(
+  ~defn:
+    fun add_to_each(m, items):
+      map(fun (n):
+            n + m,
+          items)
+  ~repl:
+    add_to_each(7, [1, 2, 3])
+    add_to_each(70, [1, 2, 3])
+)
 
-You can declare types for @rhombus(lambda) arguments and results
-similar to declaring them with @rhombus(define) in the
-function-definition shorthand:
+You can declare types for @rhombus(fun) arguments and results similar to
+declaring them with the function-definition shorthand:
 
-@interaction[
-#:no-prompt
-(lambda ([_s : String]) : Boolean
-  (> (string-length _s) 10))
-]
+@interaction(
+  ~defn:
+    fun (s :: String) :: Boolean:
+      string_length(s) > 10
+)
 
+@// ----------------------------------------
+@section(~tag: "syntax-object"){Syntax Objects}
 
-@; ----------------------------------------
-@section(~tag: "s-exp-tutorial"){S-Expressions}
+If we write @rhombus(pi + pi), then given our
+@seclink("definitions-tutorial"){earlier definition} of @rhombus(pi),
+the result is as you'd expect, even if we include a lot of extra space
+around the @rhombus(+):
 
-If we write @rhombus((+ pi pi)), then given our
-@seclink["definitions-tutorial"]{earlier definition} of @rhombus(pi),
-the result is as you'd expect:
+@interaction(
+  pi    +  pi
+)
 
-@interaction[
-(+ pi pi)
-]
+We could add string quotes around the expression and get a
+completely different result:
 
-We could add a @litchar{'} to the front of that expression and get a
-completely different result---a list of symbols:
+@interaction(
+  "pi    +  pi"
+)
 
-@interaction[
-'(+ pi pi)
-]
+If you're studying programming languages and building interpreters, then
+a string representation of program text is potentially useful. Still,
+parsing the @rhombus(pi) identifiers and @rhombus(+) operator out of
+that string, including ignoring the unimportant whitespace, is a lot of
+work.
 
-If you're studying programming languages and building interpreters,
-this looks like a handy coincidence. You can represent an expression
-as a list! Unfortunately, this trick does not always work:
+Shplait offers a different kind of quoting via single-quote marks:
 
-@interaction[
-(eval:error '(+ 1 2))
-]
+@interaction(
+  'pi    +  pi'
+)
 
-A list cannot contain a mixture of numbers and symbols, so it cannot
-directly represent the expression @rhombus((+ 1 2)).
+Supreficially, this interaction is similar to the one with a string, but
+notice two things: the type was reported as @rhombus(Syntax), and the
+whitespace has been normalized. With a string, only individual
+characters can be extracted, but with a @tech{syntax object}, structured
+syntax components can be extracted. For example, @rhombus(syntax_split)
+extracts the terms of a single-group (roughly: single-line) syntax
+object.
+
+@interaction(
+  syntax_split('pi    +  pi')
+)
+
+Parenthesized terms and blocks formed with @litchar{:} count as
+individual terms for @rhombus(syntax_split), although they also have
+nested structure.
+
+@interaction(
+  syntax_split('1 + (3 + 4)')
+  syntax_split('block: 1')
+)
+
+@(block:
+    #void
+
+/*
 
 If you've had some experience programming in Java, you might think
 that the solution is a list of @tt{Object}s, because anything can be
@@ -1139,16 +1179,16 @@ type works with a convenient @litchar{'}-like shortcut. The
 @rhombus(S-Exp) shortcut is @litchar{`} (usually pronounced
 ``backquote'') instead of @litchar{'}:
 
-@interaction[
-`(+ 1 2)
-]
+@interaction(
+  '1 + 2'
+)
 
 When an S-expression is list-like, then you can corece the
 S-expression to a list using @rhombus(s-exp->list). The result is a
 list of @rhombus(S-Exp)s:
 
-@interaction[
-(s-exp->list `(+ 1 2))
+@interaction(
+  syntax_to_list('[1, 2, 3]')
 ]
 
 If an S-expression isn't list-like, the coercion fails. Other

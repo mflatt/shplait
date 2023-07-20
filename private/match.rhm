@@ -9,6 +9,7 @@ import:
   "list.rhm".cons
   "syntax.rhm"!convert.convert_pat
   "syntax.rhm"!convert.syntax_def
+  "syntax.rhm"!convert.syntax_unwrap
   "lazy.rhm" open
 
 export:
@@ -127,7 +128,7 @@ meta:
                 $else_body']
       | []
     let r:
-      '«match force($expr)
+      '«match syntax_unwrap(force($expr))
         | '$pat_cvt':
             syntax_def $pat_id: $pat_cvt_tmpl $pat_depth
             ...
