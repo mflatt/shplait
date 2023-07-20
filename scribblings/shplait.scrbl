@@ -948,6 +948,20 @@ These operators have lower precedence than arithmetic operators.
 }
 
 @doc(
+  fun string_append(str1 :: String, str2 :: String) :: String
+){
+
+ Appends two strings.
+
+@examples(
+  ~eval: eval
+  string_append("apple", "banana")
+)
+
+}
+
+
+@doc(
   fun to_string(v :: ?a) :: String
 ){
 
@@ -963,6 +977,52 @@ These operators have lower precedence than arithmetic operators.
 )
 
 }
+
+
+@doc(
+  expr.macro '$expr +& $expr'
+){
+
+ Converts the result of each @rhombus(expr) to a string like
+ @rhombus(to_string), then appends the strings like
+ @rhombus(string_append).
+
+@examples(
+  ~eval: eval
+  "a" +& "b"
+  "a" +& 1
+  1 +& "a"
+  "choices are " +& [1, 2, 3]
+
+)
+
+}
+
+
+@doc(
+  type 'Char'
+){
+
+ The type for a character within a string.
+
+}
+
+
+@doc(
+  fun string_get(str :: String, i :: Number) :: Char
+){
+
+ Returns the @rhombus(i)th character of a string, counting from
+ @rhombus(0).
+
+@examples(
+  ~eval: eval
+  string_get("apple", 0)
+)
+
+}
+
+
 
 @// ------------------------------------------------------------
 @subsection(~tag: "sec:symbol"){Symbols}
@@ -1081,6 +1141,21 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 )
 
 }
+
+@doc(
+  fun list_get(lst :: Listof(?a), i :: Number) :: ?a
+){
+
+ Returns the @rhombus(i)th element of a list, counting from
+ @rhombus(0).
+
+@examples(
+  ~eval: eval
+  list_get(["apple", "banana"], 1)
+)
+
+}
+
 
 @doc(
   fun append(lst1 :: Listof(?a), lst2 :: Listof(?a)) :: Listof(?a)

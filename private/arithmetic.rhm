@@ -50,10 +50,12 @@ decl.macro 'def_equality $op $type_constr':
       let tv = t.gen_tvar(self)
       t.unify_do(left, t_s.lookup_type(left), tv)
       t.unify_do(right, t_s.lookup_type(right), tv)
-      t_s.wrap_type('force_all($('$')left) == force_all($('$')right)', t.Bool(self))»'
+      t_s.wrap_type('force_all($('$')left) $('$')('$op'.relocate(self)) force_all($('$')right)',
+                    t.Bool(self))»'
 
 def_equality ==
 def_equality !=
+def_equality ===
 
 export:
   rename:
@@ -61,11 +63,12 @@ export:
     shor as ||
 
 meta:
-  fun parse_bool(left, right, self, op):
+  fun parse_bool(left, right, self, op :: Syntax):
     let bool = t.Bool(self)
     t.unify_do(self, t_s.lookup_type(left), bool)
     t.unify_do(self, t_s.lookup_type(right), bool)
-    t_s.wrap_type('force($left) $op force($right)', bool)
+    t_s.wrap_type('force($left) $(op.relocate(self)) force($right)',
+                  bool)
 
 expr.macro '$left shand $right':
   ~op_stx self
@@ -77,3 +80,9 @@ expr.macro '$left shor $right':
   ~op_stx self
   ~weaker_than: ~other
   parse_bool(left, right, self, '||')
+
+export: rename: concat as +&
+expr.macro '$left concat $right':
+  ~op_stx self
+  t_s.wrap_type('force($left) $('+&'.relocate(self)) force($right)',
+                t.Str(self))

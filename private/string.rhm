@@ -9,6 +9,11 @@ import:
 export:
   rename:
     shto_string as to_string
+    shstring_append as string_append
+  string_get
+
+defwrap wrap_string_append string_append(a, b): (dynamic_force(a) :: String) ++ dynamic_force(b)
+defwrap wrap_string_get string_get(a :: String, i): (dynamic_force(a) :: String)[dynamic_force(i)]
 
 // `to_string` doesn't need to force lazy thunks,
 // because printing already does that
@@ -18,3 +23,14 @@ expr.macro 'shto_string':
   let tv = t.gen_tvar(self)
   t_s.wrap_type('to_string'.relocate(self),
                 t.Poly(self, tv, t.Arrow(self, [tv], t.Str(self))))
+
+expr.macro 'shstring_append':
+  ~op_stx self
+  let str_ty = t.Str(self)
+  t_s.wrap_type('wrap_string_append'.relocate(self),
+                t.Arrow(self, [str_ty, str_ty], str_ty))
+
+expr.macro 'string_get':
+  ~op_stx self
+  t_s.wrap_type('wrap_string_get'.relocate(self),
+                t.Arrow(self, [t.Str(self), t.Num(self)], t.Chr(self)))

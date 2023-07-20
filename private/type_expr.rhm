@@ -110,6 +110,7 @@ export:
   only_space type_expr:
     Number
     String
+    Char
     Boolean
     Syntax
     Symbol
@@ -160,6 +161,10 @@ type_expr.macro 'Number':
 type_expr.macro 'String':
   ~op_stx self
   type_expr_meta.pack(t.Str(self))
+
+type_expr.macro 'Char':
+  ~op_stx self
+  type_expr_meta.pack(t.Chr(self))
 
 type_expr.macro 'Boolean':
   ~op_stx self
