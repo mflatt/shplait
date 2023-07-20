@@ -6,7 +6,8 @@
       shplait open
     "eval.rhm".eval
     lib("scribble/core.rkt") as s_core
-    lib("scribble/html-properties.rkt") as html_prop)
+    lib("scribble/html-properties.rkt") as html_prop
+    "tutorial_url.rhm" open)
 
 @(def defterm = italic)
 
@@ -19,9 +20,6 @@
 @(runtime_path.def demo_rhm: "demo.rhm")
 @(def demo_link:
     @elem(~style: s_core.style(#false, [html_prop.#{link-resource}(demo_rhm)])){@filepath{demo.rhm}})
-
-@(def tutorial_video_url:
-    "https://www.youtube.com/playlist?list=PLbdXd8eufjyUT8rza1qDcS0RUnRTr9A1f")
 
 @(macro 'interaction($term, ...)': 'examples(~eval: eval, $term, ...)')
 
