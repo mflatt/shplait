@@ -117,6 +117,7 @@ export:
     Void
     ?
     Listof
+    Arrayof
     Boxof
     Mapof
     #%parens
@@ -198,6 +199,10 @@ type_expr.macro '? $(id :: Identifier)':
 type_expr.macro 'Listof ($(elem :: ParsedType))':
   ~op_stx self
   type_expr_meta.pack(t.ListOf(self, elem.type))
+
+type_expr.macro 'Arrayof ($(elem :: ParsedType))':
+  ~op_stx self
+  type_expr_meta.pack(t.ArrayOf(self, elem.type))
 
 type_expr.macro 'Boxof ($(elem :: ParsedType))':
   ~op_stx self

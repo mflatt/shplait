@@ -13,6 +13,7 @@ import:
   "assign.rhm"
   "arithmetic.rhm"
   "list.rhm"
+  "array.rhm"
   "map.rhm"
   "symbol.rhm"
   "string.rhm"
@@ -38,7 +39,8 @@ export:
   all_from(.assign)
   all_from(.arithmetic)
   all_from(.list)
-  all_from(.map)  
+  all_from(.array)
+  all_from(.map)
   all_from(.symbol)
   all_from(.string)
   all_from(.tuple)

@@ -1066,7 +1066,7 @@ string @rhombus("apple").
 @// ------------------------------------------------------------
 @subsection(~tag: "sec:list"){Lists}
 
-A list has elements of a uniform type. That is, the elements of a list
+A @deftech{list} has a sequence of elements of a uniform type. That is, the elements of a list
 can have any type, but they must all have the same type for a given
 list. See also @tech{tuples}.
 
@@ -1272,6 +1272,82 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 )
 
 }
+
+@// ------------------------------------------------------------
+@subsection(~tag: "sec:array"){Arrays}
+
+Like a @tech{list}, an @deftech{array} has a sequence of elements of a
+uniform type. Unlike a list, any element of the array can be accessed in
+constant time using square-bracket indexing, as in @rhombus(a[0]).
+Further unlike a list, an array is mutable, and an array element can be
+changed by commbining square brackets with @rhombus(:=) for assignment,
+as in @rhombus(a[0] = 1).
+
+An array is created with @rhombus(Array), such as
+@rhombus(Array(1, 2, 3)), or with @rhombus(make_array). Using square
+brackets implicitly uses the @rhombus(#%index) form, but
+@rhombus(#%index) is normally not written.
+
+@doc(
+  type 'Arrayof($type)'
+){
+
+ The type of an array whose elements have type @rhombus(type).
+
+}
+
+@doc(
+  expr.macro 'Array($expr, ...)'
+){
+
+ Produces an array whose elements in order as the values produced by the
+ @rhombus(expr)s. All of the @rhombus(expr)s must have the same type.
+
+@examples(
+  ~eval: eval
+  Array(1, 2, 3 + 4)
+)
+
+}
+
+@doc(
+  ~nonterminal:
+    array_expr: block expr
+    index_expr: block expr
+    val_expr: block expr
+  expr.macro '$array_expr #%index [$index_expr, ...]'
+  expr.macro '$array_expr #%index [$index_expr, ...] := $val_expr'
+){
+
+ Accesses of updates an array element. Normally, @rhombus(#%index) is
+ omitted, since it's implied when using square brackets as an
+ array-access form.
+
+@examples(
+  ~eval: eval
+  def a = Array("a", "b", "c")
+  a[0]
+  a[0] := "z"
+  a[0]
+  a
+)
+
+}
+
+
+@doc(
+  fun make_array(n :: Number, val :: ?a) :: Arrayof(?a)
+){
+
+ Creates an array with @rhombus(n) elements, all initially @rhombus(val).
+
+@examples(
+  ~eval: eval
+  make_array(3, "a")
+)
+
+}
+
 
 @// ------------------------------------------------------------
 @subsection(~tag: "sec:box"){Boxes}

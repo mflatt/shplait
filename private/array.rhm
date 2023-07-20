@@ -1,0 +1,47 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+  "value.rhm".value
+  "value.rhm".value_meta
+  "wrap.rhm" open
+  "lazy.rhm" open
+
+export:
+  rename:
+    shArray as Array
+    shindex as #%index
+  make_array
+
+expr.macro 'shArray $(elems && '($(elem :: expr_meta.Parsed), ...)')':
+  let tv = t.gen_tvar(#false)
+  Function.pass(t.unify_do(elem, tv, t_s.lookup_type(elem)),
+                ...)
+  t_s.wrap_type('Array(delay($elem), ...)'.relocate_span([elems]),
+                t.ArrayOf(elems, tv))
+
+expr.macro
+| '$left shindex $(brackets && '[$(index :: expr_meta.Parsed)]') $(assign && ':=') $rhs_term ...':
+    let '$(rhs :: expr_meta.Parsed)' = '$rhs_term ...'
+    let tv = t.gen_tvar(#false)
+    t.unify_do(#false, t.ArrayOf(brackets, tv), t_s.lookup_type(left))
+    t.unify_do(#false, t.Num(brackets), t_s.lookup_type(index))
+    t.unify_do(#false, tv, t_s.lookup_type(rhs))    
+    t_s.wrap_type('(force($left) :~ Array)[force($index)] := delay($rhs)'.relocate_span([left, rhs]),
+                  t.Vd(assign))
+| '$left shindex $(brackets && '[$(index :: expr_meta.Parsed)]') $tail ...':
+    let tv = t.gen_tvar(#false)
+    t.unify_do(#false, t.ArrayOf(brackets, tv), t_s.lookup_type(left))
+    t.unify_do(#false, t.Num(brackets), t_s.lookup_type(index))
+    values(t_s.wrap_type('(force($left) :~ Array)[force($index)]'.relocate_span([left, brackets]),
+                         tv),
+           '$tail ...')
+
+defwrap wrap_make_array make_array(n, init_val): Array.make(dynamic_force(n), init_val)
+
+expr.macro 'make_array':
+  ~op_stx self
+  let tv = t.gen_tvar(self)
+  t_s.wrap_type('wrap_make_array'.relocate(self),
+                t.Poly(self, tv, t.Arrow(self, [t.Num(self), tv], t.ArrayOf(self, tv))))
