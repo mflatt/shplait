@@ -98,12 +98,14 @@ fun foldr(f, init, lst):
     | cons(hd, tl): f(hd, foldr(f, init, tl))
 
 fun fst(tup):
-  def values(f, s) = tup
-  f
+  block:
+    def values(f, s) = tup
+    f
 
 fun snd(tup):
-  def values(f, s) = tup
-  s
+  block:
+    def values(f, s) = tup
+    s
 
 fun map_get(map, k):
   map_get_k(map, k, some, none)

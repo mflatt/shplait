@@ -37,8 +37,9 @@ block:
 // of a function to be inferred as polymorphic
 
 fun top_identity2(x):
-  def v = x
-  v
+  block:
+    def v = x
+    v
 check:
   values(top_identity2(1), top_identity2("apple"))
   ~is values(1, "apple")
@@ -47,8 +48,9 @@ check:
 
 block:
   fun identity(x):
-    def v = x
-    v
+    block:
+      def v = x
+      v
   check:
     values(identity(1), identity("apple"))
     ~is values(1, "apple")
@@ -81,8 +83,9 @@ block:
   // literals are values
   def big_tuple = values(#'sym, fun (x): x, 10, "apple", #true)
   fun extract(tup):
-    def values(sym, func, num, str, bool) = tup
-    func
+    block:
+      def values(sym, func, num, str, bool) = tup
+      func
   check: extract(big_tuple)(1)
          ~is 1
   check: extract(big_tuple)("a")

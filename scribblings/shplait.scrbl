@@ -354,12 +354,8 @@ and new types can be defined with @rhombus(type).
     fun_expr: block expr
     arg_expr: block expr  
   defn.macro 'fun $id ($typed_id, ...) $maybe_type:
-                $defn
-                ...
                 $expr'
   expr.macro 'fun ($typed_id, ...) $maybe_type:
-                $defn
-                ...
                 $expr'
 
   grammar maybe_type:
@@ -372,10 +368,6 @@ and new types can be defined with @rhombus(type).
  form. Each of the @rhombus(typed_id) arguments optionally declares a
  type for the argument, and if @rhombus(maybe_type) is not empty, it
  @rhombus(type) declares the function's result type.
-
- The body of a @rhombus(fun) has an implicit @rhombus(block) in the
- sensethat @rhombus(defn)s are allowed in the function body before the
- @rhombus(expr) that produces the function's result.
 
  A function is called through the expression form
  @rhombus(fun_expr(arg_expr, ...)), where @rhombus(fun_expr) is typically

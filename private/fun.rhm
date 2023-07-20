@@ -11,7 +11,6 @@ import:
   "value.rhm".value
   "value.rhm".current_value_tvar_box
   "def.rhm".def as shdef
-  "block.rhm".block
   "lazy.rhm" open
 
 export:
@@ -42,7 +41,7 @@ meta:
             [arg_id, ...])
 
 value.macro 'function ($arg, ...) $(res_type :: MaybeType):
-               $body':
+               $(body :: Group)':
   ~op_stx self
   let stx = '$self ($arg, ...) $res_type:
                $body'
@@ -75,9 +74,7 @@ expr.macro 'function ($arg, ...) $(res_type :: MaybeType):
            ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
            ~defns:«»
            ~body:
-             // this is Shplait's `block`:
-             block:
-               $body
+             $body
      »'
   t_s.wrap_type(expr, arrow_type)
 

@@ -262,293 +262,359 @@ unbox(box(1))           // => 1
 values(1, 2)   // => values(1, 2), but says "Number * Number" first
 values(1, "a") // => values(1, "a"), but says "Number * String" first
 
-/*
-
 ///////////////////////////////////////////
 // Definitions
 
 // Defining constants
-;;  (define <id> <expr>)
+//
+//   def <id> = <expr>
+//
+// or
+//
+//   def <id>: <expr>
 
-(define PI 3.14159)
-(* PI 10)                 // => 31.4159
+def PI = 3.14159
+PI * 10                 // => 31.4159
 
-;; Defining functions
-;;  (define (<id> <id> ...) <expr>)
+def TAU:
+  PI * 2
+TAU                     // 6.28
 
-(define (circle-area r)
-  (* PI (* r r)))
-(circle-area 10)          // => 314.159
+// Defining functions
+//
+//  fun <fun-id>(<arg-id>, ...): <expr>
 
-(define (is-odd? x)
-  (if (zero? x)
-      #f
-      (is-even? (- x 1))))
-(define (is-even? x)
-  (if (zero? x)
-      #t
-      (is-odd? (- x 1))))
-(is-odd? 12)              // => #false
+fun circle_area(r):
+  PI * r * r
+circle_area(10)          // => 314.159
 
-;; Definition matching a tuple
+fun num_is_odd(x):
+  if x == 0
+  | #false
+  | num_is_even(x-1)
 
-(define-values (size color) (values 10 'red))
-size // => 10
-color // => 'red
+fun num_is_even(x):
+  if x == 0
+  | #true
+  | num_is_odd(x-1)
+    
+num_is_odd(12)           // => #false
 
-;; Declaring types
+// Definition matching a tuple
+//
+//   def values(<id>, ...) = <expr>
+//
+// or with `:` instead of `=`
 
-(define e : Number 2.71828)
 
-;; Declaring argument and result types
-;;  (define (<id> [<id> : <type>] ...) : <type> <expr>)
+def values(size, color) = values(10, #'red)
+size   // => 10
+color  // => #'red
 
-(define (circle-perimeter [r : Number]) : Number
-  (* 2 (* PI r)))
+// Declaring types
+//
+//   def <id> :: <type> = <expr>
 
-(circle-perimeter 10) // => 62.8318
+def e :: Number = 2.71828
 
-;; Defining datatypes
-;;  (define-type <id>
-;;    [<id> (<id> : <type>) ...] ...)
+// Declaring argument and result types
+//
+//   fun <fun-id>(<arg-id> :: <arg-type>) :: <result-type>: <expr>
 
-(define-type Animal
-  [snake (name : Symbol)
-         (weight : Number)
-         (food : Symbol)]
-  [tiger (name : Symbol)
-         (stripe-count : Number)])
+fun circle_perimeter(r :: Number) :: Number:
+  2 * PI * r
 
-(snake 'Slimey 10 'rats)  // => (snake 'Slimey 10 'rats)
-(tiger 'Tony 12)          // => (tiger 'Tony 12)
+circle_perimeter(10) // => 62.8318
 
-(list (tiger 'Tony 12))   // => (list (tiger 'Tony 12))
-                          ;    since use of `tiger' cannot be quoted
+// Defining datatypes
+//
+//   type <type-id>
+//   | <variant-id>(<field-id> :: <type>, ...)
+//   | ...
 
-#;(snake 10 'Slimey 5)    ; error: Symbol vs Number
+type Animal
+| snake(name :: Symbol,
+        weight :: Number,
+        food :: Symbol)
+| tiger(name :: Symbol,        
+        stripe_count :: Number)
 
-(snake-name (snake 'Slimey 10 'rats)) // => 'Slimey
-(tiger-name (tiger 'Tony 12)) // => 'Tony
+snake(#'Slimey, 10, #'rats)  // => snake(#'Slimey, 10, #'rats)
+tiger(#'Tony, 12)            // => tiger(#'Tony, 12)
 
-(snake? (snake 'Slimey 10 'rats)) // => #true
-(tiger? (snake 'Slimey 10 'rats)) // => #false
+[tiger(#'Tony, 12)]          // => [tiger(#'Tony, 12)]
 
-#; (snake? 5) ; error: Number vs Animal
+#//
+snake(10, #'Slimey, 5)      // error: Symbol vs Number
 
-;; A type can have any number of variants:
-(define-type Shape
-  [square (side : Number)]
-  [circle (radius : Number)]
-  [triangle (height : Number)
-            (width : Number)])
+snake.name(snake(#'Slimey, 10, #'rats)) // => #'Slimey
+tiger.name(tiger(#'Tony, 12))           // => #'Tony
 
-(define (curvy? [s : Shape]) : Boolean
-  (circle? s))
+snake(#'Slimey, 10, #'rats) is_a snake // => #true
+snake(#'Slimey, 10, #'rats) is_a tiger // => #false
 
-(curvy? (square 5)) // => #false
-(curvy? (circle 5)) // => #true
-(curvy? (triangle 3 5)) // => #false
+#//
+5 is_a snake  // error: Number vs Animal
 
-;; Parameterized datatypes (like "generics" in Java)
-;;  (define-type (<id> '<id> ...)
-;;    [<id> (<id> : <type>) ...] ...)
+// A type can have any number of variants:
+type Shape
+| square(side :: Number)
+| circle(radius :: Number)
+| triangle(height :: Number,
+           width :: Number)
 
-(define-type (Tree 'a)
-  [leaf (val : 'a)]
-  [node (left : (Tree 'a))
-        (right : (Tree 'a))])
+fun is_curvy(s :: Shape) :: Boolean:
+  s is_a circle
 
-(leaf 10) // => (leaf 10), but says "(Tree Number)" first
-(leaf (circle 8)) // => (leaf 10), but says "(Tree Shape)" first
+is_curvy(square(5))      // => #false
+is_curvy(circle(5))      // => #true
+is_curvy(triangle(3, 5)) // => #false
 
-///////////////////////////////////////////
-;; Local binding forms
+// Parameterized datatypes (like "generics" in Java)
+//
+//   type <type-id>(?<type-arg>, ...)
+//   | <variant-id>(<field-id> :: <type>, ...)
+//   | ...
 
-;; Local
-;;  (local [<definition> ...] <expr>)
+type Treeof(?a)
+| leaf(val :: ?a)
+| node(left :: Treeof(?a),
+       right :: Treeof(?a))
 
-(local [(define x 10)]
-  (+ x x))                // => 20
-
-#;x                       ; error: unbound identifier
-
-(define (to-the-fourth x)
-  (local [(define (squared n)
-            (* n n))]
-    (* (squared x) (squared x))))
-(to-the-fourth 10)        // => 10000
-
-(local [(define (odd? x)
-          (if (zero? x)
-              #f
-              (even? (- x 1))))
-        (define (even? x)
-          (if (zero? x)
-              #t
-              (odd? (- x 1))))]
-  (odd? 12))              // => #false
-
-;; Let (more traditional but less regular)
-;;  (let ([<id> <expr>] ...) <expr>)
-
-(let ([x 10]
-      [y 11])
-  (+ x y))                // => 21
-
-(let ([x 0])
-  (let ([x 10]
-        [y (+ x 1)])
-    (+ x y)))             // => 11
-
-(let ([x 0])
-  (let* ([x 10]
-         [y (+ x 1)])
-    (+ x y)))             // => 21
+leaf(10)        // => leaf(10), but says "Treeof(Number)" first
+leaf(circle(8)) // => leaf(circle(8)), but says "Treeof(Shape)" first
 
 ///////////////////////////////////////////
-;; Datatype case dispatch
+// Local binding forms
 
-;; Type case
-;;  (type-case <id> <expr>
-;;    [(<id> <id> ...) <expr>] ...)
-;;  (type-case <id> <expr>
-;;    [(<id> <id> ...) <expr>] ...
-;;    [else <expr>])
+// Blocks
+//
+//   block:
+//     <defininition-or-expr>
+//     ...
+//     <expr>
 
-(type-case Animal (snake 'Slimey 10 'rats)
-  [(snake n w f) n]
-  [(tiger n sc) n])      // => 'Slimey
+block:
+  def x = 10
+  x + x                // => 20
 
-(define (animal-name a)
-  (type-case Animal a
-    [(snake n w f) n]
-    [(tiger n sc) n]))
+#//
+x                      // error: unbound identifier
 
-(animal-name (snake 'Slimey 10 'rats)) // => 'Slimey
-(animal-name (tiger 'Tony 12)) // => 'Tony
+fun to_the_fourth(x):
+  block:
+    fun squared(n):
+      n * n
+    squared(squared(x))
 
-#;(animal-name 10)        ; error: Number vs Animal
+to_the_fourth(10)      // => 10000
 
-#;(type-case Food ...)    ; error: Food is not a defined type
-  
-#;(define (animal-weight a)
-    (type-case Animal a
-      [snake (n w f) w])) ; error: missing tiger case
-  
-(define (animal-weight a)
-  (type-case Animal a
-    [(snake n w f) w]
-    [else 0]))
+block:
+  fun num_is_odd(x):
+    if x == 0
+    | #false
+    | num_is_even(x-1)
 
-;; Type case also works on lists with special `empty` and `cons`
-;; patterns to match empty and non-empty lists, respectively
+  fun num_is_even(x):
+    if x == 0
+    | #true
+    | num_is_odd(x-1)
 
-(define (list-length l)
-  (type-case (Listof Symbol) l
-    [empty 0]
-    [(cons fst rst) (+ 1 (list-length rst))]))
+  num_is_odd(12)         // => #false
 
-(list-length '(apple banana coconut)) // => 3
+// Let (more traditional but less regular)
+//
+//  let <id> = <expr>: <expr>
 
-///////////////////////////////////////////
-;; First-class functions
+let x = 1:
+  let y = 2:
+    x+y                  // => 3
 
-;; Anonymous function:
-;;  (lambda (<id> ...) <expr>)
-
-(lambda (x) (+ x 1))      // => #<procedure>, but shows "(Number -> Number)" first
-
-((lambda (x) (+ x 1)) 10) // => 11
-
-(define add-one
-  (lambda (x)
-    (+ x 1)))
-(add-one 10)              // => 11
-
-(define add-two : (Number -> Number)
-  (lambda (x)
-    (+ x 2)))
-(add-two 10)              // => 12
-
-(define (make-adder n)
-  (lambda (m)
-    (+ m n)))
-(make-adder 8)            // => #<procedure>
-(define add-five (make-adder 5))
-(add-five 12)             // => 17
-((make-adder 5) 12)       // => 17
-
-(map (lambda (x) (* x x))
-     (list 1 2 3))        // => (list 1 4 9)
+let x = 1:
+  let x = 2:
+    x                    // => 2
 
 ///////////////////////////////////////////
-;; Side-effects
-;;  IMPORTANT: in this class using a side-effect is
-;;             usually wrong; avoid all side-effects
+// Datatype case dispatch
 
-;; set! and begin
-;;  (set! <id> <expr>)
-;;  (begin <expr>*)
+// Variant dispatch via `match`
+//
+//   match <expr>
+//   | <variant-id>(<id>, ...): <expr>
+//   | ...
+//
+// or
+//
+//   match <expr>
+//   | <variant-id>(<id>, ...): <expr>
+//   | ...
+//   | ~else: <expr>
 
-(define count 0)
+match snake(#'Slimey, 10, #'rats)
+| snake(n, w, f): n
+| tiger(n, sc): n        // => 'Slimey
 
-(set! count (+ count 1))  // =>
+fun animal_name(a):
+  match a
+  | snake(n, w, f): n
+  | tiger(n, sc): n
+
+animal_name(snake(#'Slimey, 10, #'rats)) // => #'Slimey
+animal_name(tiger(#'Tony, 12))  // => #'Tony
+
+#//
+animal_name(10)        // error: Number vs Animal
+
+#//
+fun animal_weight(a):
+  match a
+  | snake(n, w, f): w
+  // error: missing tiger case
+
+fun animal_weight(a):
+  match a
+  | snake(n, w, f): w
+  | ~else: 0
+
+// `match` also works on lists with special `[]` and `cons`
+// patterns to match empty and non-empty lists, respectively
+
+fun list_length(lst):
+  match lst
+  | []: 0
+  | cons(f, rst): 1 + list_length(rst)
+
+
+list_length(["apple", "banana", "coconut"])   // => 3
+
+///////////////////////////////////////////
+// First-class functions
+
+// Anonymous function:
+//
+//    fun (<arg-id>, ...): <expr>
+//
+// That is, like a function definition, but without the
+// function name
+
+fun (x): x+1              // => #<function>, but shows "Number -> Number" first
+
+(fun (x): x+1)(10)        // => 11
+
+def add_one:
+  fun (x):
+    x+1
+
+add_one(10)               // => 11
+
+def add_two :: Number -> Number:
+  fun (x):
+    x+2
+
+add_two(10)               // => 12
+
+fun make_adder(n):
+  fun (m):
+    m+n
+
+make_adder(8)             // => #<function>
+def add_five = make_adder(5)
+add_five(12)              // => 17
+make_adder(5)(12)         // => 17
+
+map(fun (x): x*x,
+    [1, 2, 3])            // => [1, 4, 9]
+
+///////////////////////////////////////////
+// Side-effects
+//  IMPORTANT: in this class using a side-effect is
+//             usually wrong; avoid all side-effects
+
+// Defining and assigning mutable variables
+//
+//   def mutable <id> = <expr>
+//
+//   <id> := <expr
+
+def mutable count = 0
+
+count := count + 1
 count                     // => 1
 
-(begin
-  (set! count (+ count 1))
-  count)                  // => 2
+block:
+  count := count + 1
+  count                   // => 2
 
-(local [(define x '())]   ; note: demonstrates set! in local,
-  (begin                  ;       but it's terrible style
-    (set! x (cons 1 x))   ;
-    (set! x (cons 2 x))   ;
-    x))                   // => '(2 1)
+block:                  // note: demonstrates local assignment,
+  def mutable x = []    //       but it's terrible style
+  x := cons(1, x)
+  x := cons(2, x)
+  x                     // => [2, 1]
 
-;; set-box! is a function:
+// set_box is a function:
 
-(define B (box 10))
-(set-box! B 12)           // =>
-B                         // => (box 12)
-(unbox B)                 // => 12
-
-///////////////////////////////////////////
-;; Polymorphic functions
-
-(define identity (lambda (x) x))
-
-identity       // => #<procedure>, but shows "('a -> 'a)" first
-(identity "a") // => "a"
-(identity 1)   // => 1
-
-empty  // => '(), but shows "(list 'a)" first
-cons   // => #<procedure>, but shows "('a (Listof 'a) -> 'a)" first
-
-(define b (box empty))
-b      // => '#&(), but shows "(Boxof (Listof '_a))" first
-(set-box! b (list 1)) // =>
-#;(set-box! b (list "a")) ; error: Number vs String
+def B = box(10)
+set_box(B, 12)
+B                       // => box(12)
+unbox(B)                // => 12
 
 ///////////////////////////////////////////
-;; Testing
+// Polymorphic functions
 
-;; test, test/pred, and test/exn functions:
+def identity = fun(x): x
 
-(test (+ 5 5) 10)         // => displays (good 10 10 "...")
-(test (+ 5 4) 10)         // => error-displays (bad 9 10 "...")
+identity       // => #<function>, but shows "(?a -> ?a)" first
+identity("a")  // => "a"
+identity(1)    // => 1
 
-(test/exn (cond) "no matching")            // => displays (good ...)
-(test/exn (cond) "bad dog")                // => error-displays (exception ...)
-(test/exn (cond [#t 10]) "no matching")    // => error-displays (exception ...)
+[]     // => [], but shows "(list ?a)" first
+cons   // => #<function>, but shows "(?a, Listof(?a) -> Listof(?a)" first
 
-(print-only-errors #t)
-(test (+ 5 5) 10)         // => no display
-(test (+ 5 4) 10)         // => error-displays (bad 9 10 "...")
+def b = box([])
+b      // => box([]), but shows "Boxof(Listof(?_a))" first
+set_box(b, [1])
+b      // => box([]), but shows "Boxof(Listof(Number))" first
+
+#//
+set_box(b, ["a"])     // error: Number vs String
 
 ///////////////////////////////////////////
-;; More information
+// Testing
 
-;; Use the "Help Desk" item in DrRacket's "Help" menu
-;; and see "Plait Language"
+// A test case is written with `check`
+//
+//   check:
+//     <expr>
+//     ~is <expected-expr>
+//
+// or
+//
+//   check:
+//     <expr>
+//     ~raises <string-expr>
 
-*/
+check: 5 + 5
+       ~is 10                 // no output
+
+check: 5 + 4
+       ~is 10                 // prints a test-failure message
+
+check: cond
+       | #false: "no"
+       ~raises "no matching"
+
+check: cond
+       | #false: "no"
+       ~raises "bad dog"      // prints a test-failure message
+
+check: cond
+       | #true: "yes"
+       ~raises "no matching"  // prints a test-failure message
+
+"Note: those test-failure error messages are supposed to show up!"
+
+///////////////////////////////////////////
+// More information
+
+// Use the "Help Desk" item in DrRacket's "Help" menu
+// and see "Shplait Language"
