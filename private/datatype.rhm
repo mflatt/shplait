@@ -81,6 +81,7 @@ decl.macro
     let [var_ty_sym, ...] = [t_s.type_to_syntax(var_ty), ...]
     Function.pass(f.record_frame_defn_type(var_ty_sym, var_ty), ...)
     let dty_sym = t_s.type_to_syntax(dty)
+    f.record_frame_defn_type(dty_sym, dty)
     let [[var_field_ty, ...], ...] = [[t.poly_ize(t.Arrow(field.id, [dty], field_ty), arg_tys), ...], ...]
     let [[var_field_ty_sym, ...], ...] = [[t_s.type_to_syntax(var_field_ty), ...], ...]
     Function.pass(f.record_frame_defn_type(var_field_ty_sym, var_field_ty), ..., ...)

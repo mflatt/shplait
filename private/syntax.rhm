@@ -155,12 +155,12 @@ meta:
 
 expr.macro 'reference_syntax($(arg :: expr_meta.Parsed))':
   t.unify_do(arg, t_s.lookup_type(arg), t.Shrub(arg))
-  'check_single_term(force($arg))'
+  'check_single_group(force($arg))'
 
-fun check_single_term(stx_in):
+fun check_single_group(stx_in):
   let stx = SyntaxWrap.raw(stx_in)
-  unless stx is_a Term
-  | error("syntax object does not have a single term\n"
+  unless stx is_a Group
+  | error("syntax object does not have a single group\n"
             +& "  syntax object: " +& stx) // FIXME: print syntax object as value
   stx
 
