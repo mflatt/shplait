@@ -13,10 +13,13 @@
     expr: block
     defn: block)
 
+@(def rhombus_scrbl = ModulePath.s_exp(ModulePath 'lib("rhombus/scribblings/rhombus.scrbl")'))
+
 @title{Shplait}
 
 The Shplait language syntactically resembles the
-@rhombuslangname(rhombus) language, but the type system is close to that of
+@seclink(~doc: rhombus_scrbl, "top"){Rhombus}
+language, but the type system is close to that of
 @hyperlink("http://smlnj.org/"){ML}. For a quick introduction, see the
 @seclink("Tutorial"){tutorial section} or the
 @hyperlink(tutorial_video_url){tutorial videos}.
