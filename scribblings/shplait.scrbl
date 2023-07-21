@@ -730,8 +730,6 @@ and new types can be defined with @rhombus(type).
 }
 
 @doc(
-  ~nonterminal:
-    handle_expr: block expr
   expr.macro 'let_cc $id:
                 $expr'
 ){
@@ -749,6 +747,77 @@ and new types can be defined with @rhombus(type).
   10 + (let_cc k:
           1 + k(2))  
 )
+
+}
+
+@doc(
+  ~nonterminal:
+    fun_expr: block expr
+  expr.macro 'trace $fun_expr:
+                $expr'
+){
+
+ Returns the value of @rhombus(expr), but while @rhombus(expr) is being
+ evaluated, traces calls and results for the function produced by
+ @rhombus(fun_expr). The value of @rhombus(fun_expr) must be a function
+ as defined using @rhombus(def) or @rhombus(fun); that is,
+ @rhombus(fun_expr) does not have to be an identifier, but it must have
+ the same result as the defined identifier.
+
+ Tracing prints @litchar{=>} for each function call, adding one
+ additional @litchar{=} to the front of @litchar{=>} for each nesting
+ level. It print @litchar{<=} before showing each result, addin one
+ additional @litchar{=} to the end of @litchar{<=} for each nesting
+ level. When a traced call has the same continuation as the previous
+ traced call, the nesting depth is not increased, and no result is shown
+ for the previous call (since it is the same as the new call's result).
+
+@examples(
+  ~eval: eval
+  ~defn:
+    fun tail_sum(lst, accum):
+      match lst
+      | []: accum
+      | cons(n, rst): tail_sum(rst, n + accum)
+  ~defn:
+    fun nontail_sum(lst):
+      match lst
+      | []: 0
+      | cons(n, rst): n + nontail_sum(rst)
+  ~repl:
+    trace tail_sum:
+      tail_sum([1, 2, 3], 0)
+    trace nontail_sum:
+      nontail_sum([1, 2, 3])
+    trace tail_sum:
+      nontail_sum([1, 2, 3])                                
+)
+
+}
+
+@doc(
+  expr.macro '.... $anything ...'
+  expr.macro '$expr .... $anything ...'
+){
+
+ The @rhombus(....) operator (with four dots) can be used as a prefix,
+ infix, or suffix operator. The argument before an infix or suffix
+ @rhombus(....) must be a valid expression, but anything after
+ @rhombus(....) (in the same shrubbery group) is effectively commented
+ out. Furthermore, the overall @rhombus(....) expression can have any
+ type.
+
+@examples(
+  ~eval: eval
+  ~error:
+    ....
+  ~error:
+    .... not sure what should go here! ....
+  ~error:
+    ....:
+      maybe return []?
+      maybe call error?
+)    
 
 }
 

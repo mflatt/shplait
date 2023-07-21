@@ -25,6 +25,8 @@ import:
   "module.rhm"
   "macro.rhm"
   "import.rhm"
+  "trace.rhm"
+  "dots.rhm"
 
 export:
   all_from(.type_expr)
@@ -51,4 +53,6 @@ export:
   all_from(.module)
   all_from(.macro)
   all_from(.import)
+  all_from(.trace)
+  all_from(.dots)
   #%parens

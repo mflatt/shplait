@@ -1,0 +1,85 @@
+#lang rhombus/static/and_meta
+import:
+  "type_statinfo.rhm" as t_s
+
+export:
+  trace
+
+module traceable:
+  export:
+    maybe_wrap_traceable
+
+class Traceable(mutable proc, name):
+  private implements Callable
+  private override
+  | call(): proc()
+  | call(x): proc(x)
+  | call(x, y): proc(x, y)
+  | call(x, y, z): proc(x, y, z)
+  | call(x, y, z, w): proc(x, y, z, w)
+  | call(arg, ...): proc(arg, ...)
+
+fun maybe_wrap_traceable(v, name):
+  if v is_a Function
+  | Traceable(v, name)
+  | v
+
+def current_indentation = Parameter.make("")
+def tracing_mark = Symbol.gen()
+
+fun call_with_tracing(v, thunk):
+  match v
+  | tr :: Traceable:
+      let mutable alt_proc:
+        let orig_proc = tr.proc
+        fun (arg, ...):
+          fun show_call():
+            Printable.render(PrintDesc.concat(
+                               PrintDesc.concat(current_indentation(), "> "),
+                               PrintDesc.list(
+                                 PrintDesc.concat(Printable.describe(tr.name),
+                                                  "("),
+                                 [Printable.describe(arg, ~mode: #'expr), ...],
+                                 ")"),
+                               "\n"))
+          fun show_result(result):
+            Printable.render(PrintDesc.concat(
+                               PrintDesc.concat("<", current_indentation(), " "),
+                               Printable.describe(result, ~mode: #'expr),
+                               "\n"
+                             ))
+          Continuation.call_with_immediate_mark(
+            tracing_mark,
+            fun (v):
+              if v
+              | show_call()
+                orig_proc(arg, ...)
+              | parameterize { current_indentation:
+                                 PrintDesc.concat("=", current_indentation()) }:
+                  show_call()
+                  let result:
+                    Continuation.with_mark tracing_mark = #true:                 
+                      orig_proc(arg, ...)
+                  show_result(result)
+                  result
+          )
+      fun swap():
+        let old = tr.proc
+        tr.proc := alt_proc
+        alt_proc := old
+      try:
+        ~initially:
+          swap()
+        thunk()
+        ~finally:
+          swap()
+  | ~else:
+      error(#'trace, "not a traceable procedure: " +& to_string(v, ~mode: #'expr))
+
+expr.macro 'trace $fun_term ...: $(body :: expr_meta.Parsed)':
+  let '$(expr :: expr_meta.Parsed)' = '$fun_term ...'
+  let ty = t_s.lookup_type(body)
+  t_s.wrap_type('call_with_tracing($expr,
+                                   fun ():
+                                     $body)',
+                ty)

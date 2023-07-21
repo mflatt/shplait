@@ -1,0 +1,26 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "type.rhm" as t
+  "type_statinfo.rhm" as t_s
+
+export:
+  ....
+
+expr.macro
+| '.... $_ ... $()':
+    ~op_stx self
+    t_s.wrap_type('block:
+                     reached_dots('$self')',
+                  t.gen_tvar(#false))
+| '$left .... $_ ... $()':
+    ~op_stx self
+    t_s.wrap_type('block:
+                     reached_dots('$self')
+                     $left',
+                  t.gen_tvar(#false))
+
+fun reached_dots(op :: Syntax):  
+  throw Exn.Fail.Syntax("reached an incomplete expression",
+                        Continuation.current_marks(),
+                        [op.relocate_span([op])])

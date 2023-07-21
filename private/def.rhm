@@ -12,6 +12,7 @@ import:
   "value.rhm".current_value_tvar_box
   "tuple.rhm"!tuple as tu
   "lazy.rhm" open
+  "trace.rhm"!traceable.maybe_wrap_traceable
 
 export:
   rename:
@@ -74,7 +75,7 @@ meta:
                                 ~defns:«»
                                 ~body:
                                   $rhs
-                            $infer_id))'
+                            maybe_wrap_traceable($infer_id, #'$infer_id)))'
     match mutable_tag
     | '':
         '«statinfo.macro '$id': '(($t_s.type_key, $ty_sym))'

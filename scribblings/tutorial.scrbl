@@ -990,57 +990,44 @@ expression that has not been evaluated will turn orange with a black
 background. Resolve the problem and restore your program text's color by
 adding more tests.
 
-@(block:
-    #void
-
-/*
-
 When you're debugging a program, it may be helpful to see the
 arguments that are passed to a particular function and the results
 that the function returns. You can enable that kind of tracing for a
-function with the @rhombus(trace) declaration, which must appear after
-the function's definitions.
+function with the @rhombus(trace) form. Tracing is enablaed until the
+expression in the body of @rhombus(trace) returns a value.
 
-@racketblock[
-(define (got-milk? [_items : (Listof String)])
-  (type-case (Listof String) _items
-    [empty #false]
-    [(cons _item _rst-items) (or (string=? _item "milk")
-                                 (got-milk? _rst-items))]))
-(trace got-milk?)
-]
+@interaction(
+  ~defn:
+    fun got_milk(items :: Listof(String)):
+      match items
+      | []: #false
+      | cons(item, rst_items): item == "milk" || got_milk(rst_items)
+  ~repl:
+    trace got_milk:
+      got_milk([])
+    trace got_milk:
+      got_milk(["cookies", "milk"])
+)
 
-@interaction[
-#:hidden
-(require (typed-in racket/trace [trace : ('a -> Void)] [untrace : ('a -> Void)]))
-(define supressed (trace got-milk?))
-]
-
-@interaction[
-(got-milk? empty)
-(got-milk? '("cookies" "milk"))
-]
-
-@interaction[#:hidden (untrace got-milk?)]
+To trace more than one function, you can nest @rhombus(trace) forms.
 
 As you're devloping a program, sometimes it's useful to run a partial
-program where you haven't yet decided on part of the implementation.
-The @rhombus(....) expression (with four dots) can be used in place of
-any expression of any type. A program using @rhombus(....) can compile
-and run, but the @rhombus(....) reports an error if it is reached
-during evaluation.
+program where you haven't yet decided on part of the implementation. The
+@rhombus(....) operator (with four dots) can be used as a prefix, infix, or
+postfix operator. A program using @rhombus(....) can compile and run, but
+the @rhombus(....) reports an error if it is reached during evaluation.
 
-@interaction[
-(define (got-milk? [_items : (Listof String)])
-  (type-case (Listof String) _items
-    [empty #false]
-    [(cons _item _rst-items) ....]))
-(got-milk? '())
-(eval:error (got-milk? '("cheese")))
-]
-
-*/
-   )
+@interaction(
+  ~defn:
+    fun got_milk(items :: Listof(String)):
+      match items
+      | []: #false
+      | cons(item, rst_items): .... not sure ....
+  ~repl:
+    got_milk([])
+    ~error:
+      got_milk(["cheese"])
+)
 
 @// ----------------------------------------
 @section(~tag: "lambda-tutorial"){Anonymous Functions}
