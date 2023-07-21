@@ -5,7 +5,9 @@
 (define deps '("base"
                ("rhombus-prototype" #:version "0.4")))
 
-(define build-deps '("racket-doc"))
+(define build-deps '("racket-doc"
+                     "sandbox-lib"
+                     "scribble-lib"))
 
 (define version "0.1")
 
