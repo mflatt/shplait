@@ -17,7 +17,10 @@ export:
   map_get_k
   map_update
   map_set
-
+  map_remove
+  map_delete
+  map_keys
+  
 value.macro
 | 'braces { $key_term ... :  $(val :: value_meta.Parsed), ... }':
     let '($(key :: value_meta.Parsed), ...)' = '($key_term ..., ...)'
@@ -59,6 +62,12 @@ defwrap wrap_map_update map_update(map, key, val):
   (dynamic_force(map) :~ Map) ++ { dynamic_force(key): dynamic_force(val) } 
 defwrap wrap_map_set map_set(map, key, val):
   (dynamic_force(map) :~ MutableMap)[dynamic_force(key)] := val
+defwrap wrap_map_remove map_remove(map, key):
+  (dynamic_force(map) :~ Map).remove(key)
+defwrap wrap_map_delete map_delete(map, key):
+  (dynamic_force(map) :~ MutableMap).delete(dynamic_force(key))
+defwrap wrap_map_keys map_keys(map):
+  (dynamic_force(map) :~ ReadableMap).keys()
 
 expr.macro 'map_get_k':
   ~op_stx self
@@ -100,3 +109,40 @@ expr.macro 'map_set':
                                        key_tv,
                                        val_tv],
                                       t.Vd(self)))))
+
+expr.macro 'map_remove':
+  ~op_stx self
+  let key_tv = t.gen_tvar(self)
+  let val_tv = t.gen_tvar(self)
+  t_s.wrap_type('wrap_map_remove'.relocate(self),
+                t.Poly(self, key_tv,
+                       t.Poly(self, val_tv,
+                              t.Arrow(self,
+                                      [t.MapOf(self, key_tv, val_tv),
+                                       key_tv],
+                                      t.MapOf(self, key_tv, val_tv)))))
+  
+expr.macro 'map_delete':
+  ~op_stx self
+  let key_tv = t.gen_tvar(self)
+  let val_tv = t.gen_tvar(self)
+  t_s.wrap_type('wrap_map_delete'.relocate(self),
+                t.Poly(self, key_tv,
+                       t.Poly(self, val_tv,
+                              t.Arrow(self,
+                                      [t.MapOf(self, key_tv, val_tv),
+                                       key_tv],
+                                      t.Vd(self)))))
+  
+
+expr.macro 'map_keys':
+  ~op_stx self
+  let key_tv = t.gen_tvar(self)
+  let val_tv = t.gen_tvar(self)
+  t_s.wrap_type('wrap_map_keys'.relocate(self),
+                t.Poly(self, key_tv,
+                       t.Poly(self, val_tv,
+                              t.Arrow(self,
+                                      [t.MapOf(self, key_tv, val_tv)],
+                                      t.ListOf(self, key_tv)))))
+  

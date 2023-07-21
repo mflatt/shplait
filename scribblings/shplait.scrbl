@@ -276,6 +276,36 @@ and new types can be defined with @rhombus(type).
 
 }
 
+@doc(
+  expr.macro '$expr :: $type'
+){
+
+ The @rhombus(::) operator is normally used to declare a type for a
+ field, variable binding, or function result, but it can also be used as
+ and expression operator as long as the expression is within pareneses.
+
+ A @rhombus(::) expression in parentheses produces the same value as
+ @rhombus(expr), but also asserts that @rhombus(expr) has the type
+ @rhombus(type). The type checker will report an error if the assertion
+ does not hold.
+
+ Asserting a type is potentially useful for localizing type mismatches
+ that otherwise span large portions of a program.
+
+@examples(
+  ~eval: eval
+  ~error:
+    1:: Number
+  (1 :: Number)
+  ~error:
+    (1 :: String)
+  fun (x, y):
+    // same type variable `a` forces same type for `x` and `y`
+    values((x :: ?a), (y :: ?a))
+)
+
+}
+
 @// ------------------------------------------------------------
 @section(~tag: "sec:defn"){Definitions and Functions}
 
@@ -821,6 +851,31 @@ and new types can be defined with @rhombus(type).
 
 }
 
+@doc(
+  expr.macro 'time: $expr'
+){
+
+ Returns the resultof @rhombus(expr), but before returning, prints
+ information about how time passed when evaluating @rhombus(expr).
+
+}
+
+@doc(
+  expr.macro '#%literal $literal'
+){
+
+ The @rhombus(#%literal) expression form is generally not written out,
+ but it is implicitly used whenever a Shplait program uses a literal
+ value like @rhombus(1), @rhombus(#false), or @rhombus("apple").
+
+@examples(
+  ~eval: eval
+  1
+  #%literal 1
+)
+
+}
+
 @// ------------------------------------------------------------
 @section(~tag: "sec:builtin"){Predefined Types and Functions}
 
@@ -1091,6 +1146,26 @@ These operators have lower precedence than arithmetic operators.
 
 
 @doc(
+  fun print(v :: ?a) :: Void
+  fun println(v :: ?a) :: Void
+){
+
+ Converts @rhombus(v) to a string using @rhombus(to_string), then prints
+ the string. The @rhombus(println) function prints a newline after
+ printing that string.
+
+@examples(
+  println(1 + 2)
+  block:
+    print("a")
+    print("b")
+    println("")
+)
+
+}
+
+
+@doc(
   type 'Char'
 ){
 
@@ -1150,6 +1225,20 @@ string @rhombus("apple").
   ~eval: eval
   #'apple
   "apple"
+)
+
+}
+
+@doc(
+  fun string_to_symbol(s :: String) :: Symbol
+){
+
+ Converts a string to a symbol that has the same character content. Note
+ that @rhombus(to_string) converts a symbol to a string.
+
+@examples(
+  ~eval: eval
+  string_to_symbol("apple")
 )
 
 }
@@ -1440,6 +1529,21 @@ brackets implicitly uses the @rhombus(#%index) form, but
 }
 
 
+@doc(
+  fun array_length(arr :: Arrayof(?a)) :: Number
+){
+
+ Returns the number of slots in an array.
+
+@examples(
+  ~eval: eval
+  array_length(Array("a", "b", "c"))
+)
+
+}
+
+
+
 @// ------------------------------------------------------------
 @subsection(~tag: "sec:box"){Boxes}
 
@@ -1657,6 +1761,42 @@ normally not written.
 
 }
 
+@doc(
+  fun map_remove(map :: Mapof(?a, ?b), key :: ?a) :: Mapof(?a, ?b)
+  fun map_delete(map :: Mapof(?a, ?b), key :: ?a) :: Void
+){
+
+ The @rhombus(map_remove) function works only on immutable maps, and it
+ returns a new map without a mapping for @rhombus(key) (if there was
+ one). The @rhombus(set_delete) function works only on mutable maps, and
+ it modifies the map to remove a mapping for @rhombus(key), if there is
+ one.
+
+@examples(
+  ~eval: eval
+  ~repl:
+    map_remove({ "a": 1, "b": 2}, "a")
+  ~repl:
+    def m = MutableMap{ "a": 1, "b": 2 }
+    map_delete(m, "a")
+    m
+)
+
+}
+
+
+@doc(
+  fun map_keys(map :: Mapof(?a, ?b)) :: Listof(?a)
+){
+
+ Returns a list of keys mapped by @rhombus(map).
+
+@examples(
+  ~eval: eval
+  map_keys({ "a": 1, "b": 2})
+)
+
+}
 
 @// ------------------------------------------------------------
 @subsection(~tag: "sec:stxobj"){Syntax Objects}
@@ -1803,6 +1943,7 @@ well as in syntax-object expressions, which are also known as
   fun syntax_is_number(stx :: Syntax) :: Boolean
   fun syntax_is_boolean(stx :: Syntax) :: Boolean
   fun syntax_is_symbol(stx :: Syntax) :: Boolean
+  fun syntax_is_string(stx :: Syntax) :: Boolean
   fun syntax_is_list(stx :: Syntax) :: Boolean
 ){
 
@@ -1829,6 +1970,7 @@ well as in syntax-object expressions, which are also known as
   fun syntax_to_number(stx :: Syntax) :: Number
   fun syntax_to_boolean(stx :: Syntax) :: Boolean
   fun syntax_to_symbol(stx :: Syntax) :: Symbol
+  fun syntax_to_string(stx :: Syntax) :: String
   fun syntax_to_list(stx :: Syntax) :: Listof(Syntax)
 ){
 
@@ -1850,6 +1992,7 @@ well as in syntax-object expressions, which are also known as
   fun number_to_syntax(n :: Number) :: Syntax
   fun boolean_to_syntax(bool :: Boolean) :: Syntax
   fun symbol_to_syntax(sym :: Symbol) :: Syntax
+  fun string_to_syntax(str :: String) :: Syntax
   fun list_to_syntax(lst :: Listof(Syntax)) :: Syntax
 ){
 
@@ -1898,7 +2041,77 @@ well as in syntax-object expressions, which are also known as
 }
 
 
+@doc(
+  fun syntax_read() :: Syntax
+){
 
+ Reads shrubbery input from the program's current input and produces a
+ syntax object. Assuming no syntax errors, input is read until terminated
+ by an end-of-file.
+
+}
+
+@// ------------------------------------------------------------
+
+@section(~tag: "sec:module"){Modules and Imports}
+
+A Shplait program that starts
+@rhombus(#,(hash_lang()) #,(rhombuslangname(shplait))) is a module, and
+its definitions are all implicitly exported for use by other modules.
+Use @rhombus(import) in a module to import definitions from other
+modules. The @rhombus(module) form adds to a submodule, which is nested
+inside another module.
+
+@doc(
+  defn.macro 'import:
+                $import_spec
+                ....'
+
+  grammar import_spec:
+    $module_path
+    #,(@rhombus(open, ~impo)):
+      $module_path
+      ...
+
+  grammar module_path:
+    $id
+    $id / $module_path
+    lib($module_string)
+    file($path_string)
+
+  impo.macro 'open: $module_path; ...'
+){
+
+ The @rhombus(import) form acts like a definition for all of the exports
+ of another module, making them available in the current definition
+ context. Typically, @rhombus(import) is used in an immediate module
+ body, but it also can be used in a nested form, such as a
+ @rhombus(block) form.
+
+ If @rhombus(open, ~impo) is not used, then the last component of
+ @rhombus(module_path) (not counting a file suffix, if any), is used to
+ prefix all of the imported names. Use the prefix, then @litchar{.} then
+ a name exported from the module to use that name. If
+ @rhombus(open, ~impo) is used for the module, then its exported names
+ can be used directly, without a prefix.
+
+}
+
+@doc(
+  decl.macro 'module $id:
+                $definition_or_expr
+                ...'
+){
+
+ Adds to the submodule name @rhombus(id) within the enclosing module.
+ Typically, @rhombus(id) is @rhombus(test, ~datum), which adds to a
+ submodule that DrRacket automatically runs after the enclosing module,
+ so that tests within the submodule can run after all definitions are
+ ready. The submodule name @rhombus(main, ~datum) is also special; it is
+ run when the enclosing module is run as a main program, but not when the
+ enclosing module is used as imported into another module.
+
+}
 
 @// ------------------------------------------------------------
 
@@ -1933,6 +2146,103 @@ well as in syntax-object expressions, which are also known as
 )
 
 }
+
+@// ------------------------------------------------------------
+
+@section(~tag: "sec:inference"){Type Checking and Inference}
+
+Type checking and inference is just as in ML (Hindley-Milner), with
+a few small exceptions:
+
+@itemlist(
+
+ @item{Functions can take multiple arguments, instead of requring a @tech{tuple}
+   of arguments. Thus, @rhombus((Number, Number) -> Number, ~at shplait/type) is a different type
+   than either @rhombus((Number * Number) -> Number, ~at shplait/type), which is the tuple
+   variant, or @rhombus(Number -> (Number -> Number), ~at shplait/type), which is the curried
+   variant.}
+
+ @item{Since all top-level definitions are in the same
+   mutually-recursive scope, the type of a definition's right-hand
+   side is not directly unified with references to the defined
+   identifier on the right-hand side. Instead, every reference to an
+   identifier---even a reference in the identifier's definition---is
+   unified with a instantiation of a polymorphic type inferred for the
+   definition.
+
+   Compare OCaml:
+
+@verbatim(~indent: 2){
+       # let rec f = fun x -> x
+             and h = fun y -> f 0 
+             and g = fun z -> f "x";;
+       This expression has type string but is here used with type int
+}
+
+    with
+
+@examples(
+  ~eval: eval
+  ~defn:
+    fun f(x): x
+    fun h(y): f(0)
+    fun g(y): f("x")
+  ~repl:
+    f
+    h
+    g
+)
+
+   A minor consequence is that polymorphic recursion (i.e., a self
+   call with an argument whose type is different than that for the
+   current call) is allowed. Recursive types, however, are prohibited.
+   Polymorphic recursion is not decidable, so see @rhombus(~fuel) in
+   @secref("sec:option").
+
+   The usual value restriction applies for inferring polymorphic
+   types, where expression matching the following grammar
+   (@emph{before} macro expansion, unfortunately) are considered
+   values:
+
+@doc(
+  ~nonterminal_key: block
+  ~nonterminal:
+    maybe_type: fun maybe_type ~defn
+  grammar value:
+    fun ($typed_id, ...) $maybe_type: $expr
+    values($value, ...)
+    [$value, ...]
+    $variant_id($value, ...)
+    $literal
+    $id
+    '$template'
+){}
+
+   where @rhombus(variand_id, ~var) refers to any
+   or a constructor bound by @rhombus(type).}
+
+ @item{Since all definitions are recursively bound, and since the
+   right-hand side of a definition does not have to be a function, its
+   possible to refer to a variable before it is defined. The type
+   system does not prevent ``reference to identifier before
+   definition'' errors.}
+
+ @item{Interactive evaluation (e.g., in DrRacket's interactions
+   window) can redefine identifiers that were previously defined
+   interactively or that were defined in a module as mutable.
+   Redefinition cannot change the identifier's type. Due to a
+   limitation of the type checker, identifiers of polymorphic type
+   cannot be redefined or redeclared. Type declarations are allowed in
+   interactive evaluation, but a declared type is never treated as a
+   polymorphic type.}
+
+)
+
+When typechecking fails, the error messages reports and highlights (in
+pink) all of the expressions whose type contributed to the
+failure. That's often too much information. As usual, explicit type
+annotations can help focus the error message.
+
 
 @// ------------------------------------------------------------
 

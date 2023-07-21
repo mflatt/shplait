@@ -1,0 +1,36 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    "box.rhm" open
+    "id_map.rhm" open
+    "type.rhm" as t
+  "frame.rhm" as f
+  "type_statinfo.rhm" as t_s
+
+export:
+  except_space expr:
+    #%parens
+  rename:
+    shparens as #%parens
+    type_assert as ::
+
+expr.macro
+| 'shparens ($e_t ... $(op && '::') $t_t ...) $tail ...':
+    let '$(e :: expr_meta.Parsed)' = '$e_t ...'
+    let fr = f.get_current_frame()
+    let tvar_box = Box(fr.tvars)
+    let ty = f.parse_type('$t_t ...', op, tvar_box)
+    fr.tvars := tvar_box.val
+    t.unify_do(op, t_s.lookup_type(e), ty)
+    values(t_s.wrap_type(e, ty),
+           '$tail ...')
+| 'shparens $parens $tail ...':
+    ~op_stx self
+    let '$(e :: expr_meta.Parsed)' = '#%parens $parens'
+    values(e, '$tail ...')
+
+expr.macro '$left type_assert':
+  ~op_stx self
+  syntax_meta.error("needs to be in a type position or in parentheses",
+                    self)
+  

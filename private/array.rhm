@@ -13,6 +13,7 @@ export:
     shArray as Array
     shindex as #%index
   make_array
+  array_length
 
 expr.macro 'shArray $(elems && '($(elem :: expr_meta.Parsed), ...)')':
   let tv = t.gen_tvar(#false)
@@ -39,9 +40,16 @@ expr.macro
            '$tail ...')
 
 defwrap wrap_make_array make_array(n, init_val): Array.make(dynamic_force(n), init_val)
+defwrap wrap_array_length array_length(a): Array.length(dynamic_force(a))
 
 expr.macro 'make_array':
   ~op_stx self
   let tv = t.gen_tvar(self)
   t_s.wrap_type('wrap_make_array'.relocate(self),
                 t.Poly(self, tv, t.Arrow(self, [t.Num(self), tv], t.ArrayOf(self, tv))))
+
+expr.macro 'array_length':
+  ~op_stx self
+  let tv = t.gen_tvar(self)
+  t_s.wrap_type('wrap_array_length'.relocate(self),
+                t.Poly(self, tv, t.Arrow(self, [t.ArrayOf(self, tv)], t.Num(self))))

@@ -2,6 +2,7 @@
 
 import:
   "type_expr.rhm"
+  "parens.rhm"
   "datatype.rhm"
   "literal.rhm"
   "def.rhm"
@@ -30,6 +31,7 @@ import:
 
 export:
   all_from(.type_expr)
+  all_from(.parens)
   all_from(.datatype)
   all_from(.literal)
   all_from(.def)
@@ -55,4 +57,3 @@ export:
   all_from(.import)
   all_from(.trace)
   all_from(.dots)
-  #%parens

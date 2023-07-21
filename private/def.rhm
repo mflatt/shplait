@@ -96,7 +96,7 @@ meta:
       [id, ...]
       [type_seq, ...]
       mutable_tag
-  | 'values ($(one_arg ::Argument), ...)':
+  | 'values ($(one_arg :: Argument), ...)':
       field [id, ...] = [one_arg.id, ...]
       field [type_seq, ...] = [one_arg.type_seq, ...]
       field mutable_tag = ''
@@ -104,7 +104,7 @@ meta:
       field [id, ...] = [arg.id]
       field [type_seq, ...] = [arg.type_seq]
       field mutable_tag = ''
-  | '$(tag && 'mutable') $(arg ::Argument)':
+  | '$(tag && 'mutable') $(arg :: Argument)':
       field [id, ...] = [arg.id]
       field [type_seq, ...] = [arg.type_seq]
       field mutable_tag = 'mutable'.relocate(tag)

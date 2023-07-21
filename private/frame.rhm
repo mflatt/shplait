@@ -32,7 +32,7 @@ meta:
               ~parent: mutable parent :: maybe(Frame) = #false,
               mutable children :: List = [],
               ~poly_context: mutable poly_context :: List,
-              ~tvars: tvars :~ IdMap = IdMap{},
+              ~tvars: mutable tvars :~ IdMap = IdMap{},
               mutable submods :~ List = []):
     constructor(~parent: parent = #false,
                 ~tvars: tvars = IdMap{}):
