@@ -13,8 +13,8 @@ decl.macro 'def_binary $name $op $type_constr: $option; ...':
       ~op_stx self
       $option
       ...
-      t.unify_do(left, t_s.lookup_type(left), t.Num(self))
-      t.unify_do(right, t_s.lookup_type(right), t.Num(self))
+      t.unify_do(left, t_s.lookup_type(left, #false), t.Num(self))
+      t.unify_do(right, t_s.lookup_type(right, #false), t.Num(self))
       t_s.wrap_type('force($('$')left) $('$')('$op'.relocate(self)) force($('$')right)',
                     t. $type_constr ('$('$')left $('$')self $('$')right'))»'
 
@@ -40,7 +40,7 @@ def_binary shge >= Bool:
 export: rename: _not as !
 expr.macro '_not $right':
   ~op_stx self
-  t.unify_do(right, t_s.lookup_type(right), t.Bool(self))
+  t.unify_do(right, t_s.lookup_type(right, #false), t.Bool(self))
   t_s.wrap_type('! force($right)', t.Bool('$self $right'))
 
 decl.macro 'def_equality $op $type_constr':
@@ -49,8 +49,8 @@ decl.macro 'def_equality $op $type_constr':
       ~op_stx self
       ~weaker_than shplus shminus shtimes shdiv shmod
       let tv = t.gen_tvar(self)
-      t.unify_do(left, t_s.lookup_type(left), tv)
-      t.unify_do(right, t_s.lookup_type(right), tv)
+      t.unify_do(left, t_s.lookup_type(left, #false), tv)
+      t.unify_do(right, t_s.lookup_type(right, #false), tv)
       t_s.wrap_type('force_all($('$')left) $('$')('$op'.relocate(self)) force_all($('$')right)',
                     t.Bool(self))»'
 
@@ -66,8 +66,8 @@ export:
 meta:
   fun parse_bool(left, right, self, op :: Syntax):
     let bool = t.Bool(self)
-    t.unify_do(self, t_s.lookup_type(left), bool)
-    t.unify_do(self, t_s.lookup_type(right), bool)
+    t.unify_do(self, t_s.lookup_type(left, #false), bool)
+    t.unify_do(self, t_s.lookup_type(right, #false), bool)
     t_s.wrap_type('force($left) $(op.relocate(self)) force($right)',
                   bool)
 

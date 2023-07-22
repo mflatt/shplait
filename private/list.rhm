@@ -35,7 +35,7 @@ value.macro
 
 expr.macro 'brackets $(elems && '[$(elem :: expr_meta.Parsed), ...]')':
   let tv = t.gen_tvar(#false)
-  Function.pass(t.unify_do(elem, tv, t_s.lookup_type(elem)),
+  Function.pass(t.unify_do(elem, tv, t_s.lookup_type(elem, elem.group)),
                 ...)
   t_s.wrap_type('#%brackets [delay($elem), ...]'.relocate_span([elems]),
                 t.ListOf(elems, tv))

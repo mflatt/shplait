@@ -9,8 +9,10 @@ meta:
     kind ~sequence
     fields:
       id
+      op
       type_seq
   | '$(id :: Identifier)':
       field type_seq = ''
-  | '$(id :: Identifier) :: $te ...':
+      field op = ''
+  | '$(id :: Identifier) $(op && '::') $te ...':
       field type_seq = '$te ...'

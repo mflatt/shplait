@@ -85,8 +85,8 @@ meta:
     let [type, tvars] = get_current_frame().type_defns[id]
     values(tyex.force_type(type), tvars)
 
-  fun parse_type(stx, src, tvars_box):
-    tyex.parse(stx, src, tvars_box,
+  fun parse_type(stx, op, src, tvars_box):
+    tyex.parse(stx, op, src, tvars_box,
                fun (id):
                  match get_current_frame().type_defns[id]
                  | [type, tvars]: type_expr_meta.pack(type)
@@ -119,7 +119,7 @@ meta:
                            #void')
 
   fun interaction_type_string(stx):
-    let ty = t_s.lookup_poly_type(stx)
+    let ty = t_s.lookup_poly_type(stx, #false)
     t.type_to_string(MutableMap())(ty)
 
   fun register_submodule(stx):

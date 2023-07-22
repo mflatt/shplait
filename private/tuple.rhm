@@ -29,7 +29,7 @@ expr.macro 'shvalues $(args && '($(expr :: expr_meta.Parsed), ...)')':
   ~op_stx self
   if [expr, ...].length() == 1
   | [expr, ...][0]
-  | let [ty, ...] = [t_s.lookup_type(expr), ...]
+  | let [ty, ...] = [t_s.lookup_type(expr, expr.group), ...]
     t_s.wrap_type('Tuple([delay($expr), ...])'.relocate_span([self, args]),
                   t.TupleOf('$self $args', [ty, ...]))
 

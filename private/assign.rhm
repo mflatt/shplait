@@ -14,7 +14,7 @@ expr.macro '$left assign $right':
   ~weaker_than: ~other
   cond
   | statinfo_meta.lookup(left, '#%assignable'):
-      t.unify_do(left, t_s.lookup_type(left), t_s.lookup_type(right))
+      t.unify_do(left, t_s.lookup_type(left, #false), t_s.lookup_type(right, #false))
       let op = ':='.relocate(self)
       t_s.wrap_type('$left $op delay($right)', t.Vd(self))
   | ~else:

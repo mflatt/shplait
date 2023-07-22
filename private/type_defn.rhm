@@ -25,7 +25,7 @@ space.transform type_defn:
       '#false'
     fun unpack(stx :: Syntax):
       match stx
-      | '#false': values(#false, #false)
+      | '#false': values(#false, #false, #false)
       | '($id, $ty_sym, [($tv_id, $tv_ty_sym), ...])':          
           values(id,
                  t_s.syntax_to_type(ty_sym),

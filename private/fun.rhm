@@ -23,9 +23,11 @@ meta:
     kind ~sequence
     fields:
       type_seq
+      op
   | '':
       field type_seq = ''
-  | ':: $te ...':
+      field op = ''
+  | '$(op && '::') $te ...':
       field type_seq = '$te ...'
 
 meta:
@@ -33,10 +35,14 @@ meta:
     let '$_ ($arg, ...) $(res_type :: MaybeType):
            $body':
       stx
+    for:
+      each arg: [arg, ...]
+      match arg
+      | '$(arg_form :: Argument)': #void
     let '($(arg_form :: Argument), ...)' = '($arg, ...)'
     let [arg_id, ...] = [arg_form.id, ...]
-    let [arg_type, ...] = [f.parse_type(arg_form.type_seq, arg_id, tvar_box), ...]
-    let res_tv = f.parse_type(res_type.type_seq, self, tvar_box)
+    let [arg_type, ...] = [f.parse_type(arg_form.type_seq, arg_form.op, arg_id, tvar_box), ...]
+    let res_tv = f.parse_type(res_type.type_seq, res_type.op, self, tvar_box)
     values (t.Arrow(self, [arg_type, ...], res_tv),
             [arg_id, ...])
 
@@ -92,8 +98,8 @@ expr.macro '$fn call ($(arg :: expr_meta.Parsed), ...)':
   ~stronger_than: ~other
   let res_tv = t.gen_tvar(fn)
   t.unify_do(fn,
-             t_s.lookup_type(fn),
+             t_s.lookup_type(fn, #false),
              t.Arrow(fn,
-                     [t_s.lookup_type(arg), ...],
+                     [t_s.lookup_type(arg, arg.group), ...],
                      res_tv))
   t_s.wrap_type('force($fn) (maybe_delay($arg.group, $arg), ...)', res_tv)

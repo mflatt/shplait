@@ -40,8 +40,8 @@ meta:
     let '($(key :: expr_meta.Parsed), ...)' = '($key_term ..., ...)'    
     let key_tv = t.gen_tvar(#false)
     let val_tv = t.gen_tvar(#false)
-    Function.pass(t.unify_do(key, key_tv, t_s.lookup_type(key)), ...)
-    Function.pass(t.unify_do(val, val_tv, t_s.lookup_type(val)), ...)
+    Function.pass(t.unify_do(key, key_tv, t_s.lookup_type(key, key.group)), ...)
+    Function.pass(t.unify_do(val, val_tv, t_s.lookup_type(val, val.group)), ...)
     t_s.wrap_type('$make { $key : delay($val), ... }'.relocate_span([elems]),
                   t.MapOf(elems, key_tv, val_tv))
 

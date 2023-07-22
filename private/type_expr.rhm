@@ -8,7 +8,26 @@ import:
 
 space.enforest type_expr:
   space_path shplait/type
-  macro_definer macro
+  macro_definer just_macro
+  export: macro
+  defn.macro
+  | '«macro '$('$')$left $(id :: Name) $pat ...': $rhs»':
+      '«
+         type_expr.just_macro '$('$')$left $id $pat ...': $rhs
+         expr.macro '$id':
+           ~op_stx self
+           type_misuse(self)
+       »'
+  | '«macro '$(id :: Name) $pat ...': $rhs»':
+      '«
+         type_expr.just_macro '$id $pat ...': $rhs
+         expr.macro '$id':
+           ~op_stx self
+           type_misuse(self)
+       »'
+  | 'macro $oops':
+      ~op_stx self
+      syntax_meta.error("not a supported form", self)
   meta_namespace type_expr_meta:
     description "type"
     reflection space
@@ -36,6 +55,10 @@ space.enforest type_expr:
       t_s.syntax_to_type(_unpack(stx))
 
 meta:
+  fun type_misuse(self):
+    syntax_meta.error("type form is being used as an expression",
+                      self)
+
   syntax_class XParsed:
     kind: ~group
     fields: xparsed
@@ -107,21 +130,22 @@ meta:
     | ~else ty
 
 export:
+  Number
+  String
+  Char
+  Boolean
+  Syntax
+  Symbol
+  Void
+  ?
+  Listof
+  Arrayof
+  Boxof
+  Mapof
+  ->
   only_space type_expr:
-    Number
-    String
-    Char
-    Boolean
-    Syntax
-    Symbol
-    Void
-    ?
-    Listof
-    Arrayof
-    Boxof
-    Mapof
     #%parens
-    ->
+    #%literal
     *
 
 module define:
@@ -212,12 +236,15 @@ type_expr.macro 'Mapof ($(key :: ParsedType), $(val :: ParsedType))':
   ~op_stx self
   type_expr_meta.pack(t.MapOf(self, key.type, val.type))
 
-type_expr.macro
+type_expr.just_macro
 | '#%parens ($(elem :: ParsedType))':
     type_expr_meta.pack(elem.type)
 | '#%parens $(args && '($(elem :: ParsedType), ...)')':
     ~op_stx self
-    type_expr_meta.pack(t.ParenOf(args, [elem.type, ...]))  
+    type_expr_meta.pack(t.ParenOf(args, [elem.type, ...]))
+
+type_expr.just_macro '#%literal $lit $tail ...':
+  syntax_meta.error("literal value is being used as a type", lit)
 
 type_expr.macro '$args -> $(result :: type_expr_meta.XAfterInfixParsed('->')) $()':
   ~op_stx self
@@ -249,11 +276,14 @@ type_expr.macro '$init * $(next :: type_expr_meta.XAfterInfixParsed('*')) $()':
                tail)
 
 meta:
-  fun parse(stx, src :: Syntax, tvars_box, lookup_type, lookup_tvar):
+  fun parse(stx, op, src :: Syntax, tvars_box, lookup_type, lookup_tvar):
     parameterize { current_tvars_box: tvars_box,
                    current_type_lookup: lookup_type,
                    current_tvar_lookup: lookup_tvar}:      
       match stx
-      | '': t.gen_tvar(src)
+      | '':
+          match op
+          | '': t.gen_tvar(src)
+          | ~else: syntax_meta.error("expected a type after separator", op)          
       | '$(t :: ParsedType)':
           t.type

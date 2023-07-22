@@ -31,12 +31,12 @@ meta:
   | '($arg, ...)'
 
 type_defn.macro
-| 'type $(id :: Identifier) $(args :: MaybeArgs) = $ty_e ...':
+| 'type $(id :: Identifier) $(args :: MaybeArgs) $(op && '=') $ty_e0 $ty_e ...':
     ~op_stx self
     let tvar_box = Box(IdMap{})
     let arg_tys :~ List = parse_arg_types([args.arg, ...], self, args, tvar_box)
     let type_thunk = (fun ():
-                        let ty = f.parse_type('$ty_e ...', self, tvar_box)
+                        let ty = f.parse_type('$ty_e0 $ty_e ...', op, self, tvar_box)
                         if arg_tys.length() == 0
                         | ty
                         | t.TypeConstructor(id, t.poly_ize(ty, arg_tys), arg_tys))
@@ -75,7 +75,7 @@ decl.macro
     let tvar_box = Box(tvars)
     let arg_tys = dty.args
     let [arg_ty, ...] = arg_tys
-    let [[field_ty, ...], ...] = [[f.parse_type(field.type_seq, field.id, tvar_box), ...], ...]
+    let [[field_ty, ...], ...] = [[f.parse_type(field.type_seq, field.op, field.id, tvar_box), ...], ...]
     let [var_tmp_id, ...] = [Syntax.make_temp_id(var_id), ...]
     let [var_ty, ...] = [t.poly_ize(t.Arrow(var_id, [field_ty, ...], dty), arg_tys), ...]
     let [var_ty_sym, ...] = [t_s.type_to_syntax(var_ty), ...]
@@ -112,7 +112,8 @@ decl.macro
           '«type_expr.macro '$id($('$')$arg_g_id, ...)':
               type_expr_meta.pack(instantiate_datatype('$dty_sym', [$arg_g_id, ...]))»')
       expr.macro '$var_id':
-        t_s.wrap_type('$var_tmp_id',
+        ~op_stx self
+        t_s.wrap_type('$var_tmp_id'.relocate(self),
                       t_s.syntax_to_type('$var_ty_sym'))
       ...
       namespace $var_id:
@@ -123,7 +124,8 @@ decl.macro
           $(var_tmp_id_x) . $(field.id) (force(v))
         ...
         expr.macro '$field.id':
-          t_s.wrap_type('$field_id_accessor',
+          ~op_stx self
+          t_s.wrap_type('$field_id_accessor'.relocate(self),
                         t_s.syntax_to_type('$var_field_ty_sym'))
         ...
       ...
@@ -147,7 +149,7 @@ meta:
       each arg_g: [arg_g, ...]
       match arg_g
       | '? $(id :: Identifier)':
-          f.parse_type(arg_g, self, tvars_box)
+          f.parse_type(arg_g, '', self, tvars_box)
       | ~else:
           syntax_meta.error("expected a type variable", self, arg_g)
 
@@ -155,13 +157,13 @@ meta:
     match t_s.syntax_to_type(ty_sym)
     | dt :: t.Datatype:
         let tvars_box = current_tvars_box()
-        dt with (args = [f.parse_type(arg_g, arg_g, tvars_box),
+        dt with (args = [f.parse_type(arg_g, '', arg_g, tvars_box),
                          ...])
 
   fun instantiate_alias(ty_sym, [arg_g, ...]):
     let tvars_box = current_tvars_box()
     t.instantiate_at(t_s.syntax_to_type(ty_sym),
-                     [f.parse_type(arg_g, arg_g, tvars_box),
+                     [f.parse_type(arg_g, '', arg_g, tvars_box),
                       ...])
 
   fun parse_constructor_app_value(dty_sym, [arg, ...]):

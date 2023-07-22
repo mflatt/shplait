@@ -156,7 +156,7 @@ meta:
   | '$(_ :: Term) $(_ :: Term) ...'
 
 expr.macro 'reference_syntax($(arg :: expr_meta.Parsed))':
-  t.unify_do(arg, t_s.lookup_type(arg), t.Shrub(arg))
+  t.unify_do(arg, t_s.lookup_type(arg, arg.group), t.Shrub(arg))
   'check_single_group(force($arg))'
 
 fun check_single_group(stx_in):

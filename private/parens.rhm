@@ -19,9 +19,9 @@ expr.macro
     let '$(e :: expr_meta.Parsed)' = '$e_t ...'
     let fr = f.get_current_frame()
     let tvar_box = Box(fr.tvars)
-    let ty = f.parse_type('$t_t ...', op, tvar_box)
+    let ty = f.parse_type('$t_t ...', op, op, tvar_box)
     fr.tvars := tvar_box.val
-    t.unify_do(op, t_s.lookup_type(e), ty)
+    t.unify_do(op, t_s.lookup_type(e, e.group), ty)
     values(t_s.wrap_type(e, ty),
            '$tail ...')
 | 'shparens $parens $tail ...':

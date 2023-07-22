@@ -42,7 +42,7 @@ meta:
             let [ty, ...]:
               match val_ty && [type_seq, ...]
               | ['']: [val_ty]
-              | ~else: [f.parse_type(type_seq, id, tvar_box), ...]
+              | ~else: [f.parse_type(type_seq, '', id, tvar_box), ...]
             [t.create_defn(ty,
                            poly_context,
                            base_tvars,
@@ -50,7 +50,7 @@ meta:
              ...]
         | ~else:
             // non-value on rhs => disallow polymorphism
-            [t.as_non_poly(f.parse_type(type_seq, id, tvar_box),
+            [t.as_non_poly(f.parse_type(type_seq, '', id, tvar_box),
                            poly_context,
                            base_tvars),
              ...]
@@ -95,19 +95,23 @@ meta:
     fields:
       [id, ...]
       [type_seq, ...]
+      [op, ...]
       mutable_tag
   | 'values ($(one_arg :: Argument), ...)':
       field [id, ...] = [one_arg.id, ...]
       field [type_seq, ...] = [one_arg.type_seq, ...]
-      field mutable_tag = ''
-  | '$(arg ::Argument)':
-      field [id, ...] = [arg.id]
-      field [type_seq, ...] = [arg.type_seq]
+      field [op, ...] = [one_arg.op, ...]
       field mutable_tag = ''
   | '$(tag && 'mutable') $(arg :: Argument)':
       field [id, ...] = [arg.id]
       field [type_seq, ...] = [arg.type_seq]
+      field [op, ...] = [arg.op]
       field mutable_tag = 'mutable'.relocate(tag)
+  | '$(arg ::Argument)':
+      field [id, ...] = [arg.id]
+      field [op, ...] = ['']
+      field [type_seq, ...] = [arg.type_seq]
+      field mutable_tag = ''
 
 defn.macro
 | 'define $(lhs :: LHS) $(eql && '=') $rhs':

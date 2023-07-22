@@ -30,15 +30,16 @@ meta:
   fun syntax_to_type(stx :: Syntax):
     sym_to_ty[stx.unwrap()]
 
-  fun lookup_poly_type(expr :: Syntax):
+  fun lookup_poly_type(expr :: Syntax, orig :: maybe(Syntax)):
     let id = statinfo_meta.lookup(expr, type_key)
     cond
     | id: syntax_to_type(id)
-    | t.configured_as_checked(): syntax_meta.error("type information not found", expr)
+    | t.configured_as_checked():
+        syntax_meta.error("no type available, possibly an unbound identifier", orig || expr)
     | ~else: t.gen_tvar(#false)
 
-  fun lookup_type(expr :: Syntax):
-    t.poly_instance(lookup_poly_type(expr))
+  fun lookup_type(expr :: Syntax, orig :: maybe(Syntax)):
+    t.poly_instance(lookup_poly_type(expr, orig))
 
   fun wrap_type(expr :: Syntax, ty):
     statinfo_meta.wrap(expr, '(($type_key, $(type_to_syntax(ty))))')

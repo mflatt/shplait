@@ -16,7 +16,7 @@ expr.macro
      $(left :: expr_meta.Parsed)
      ~is $(right :: expr_meta.Parsed)':
     ~op_stx self
-    t.unify_do(self, t_s.lookup_type(left), t_s.lookup_type(right))
+    t.unify_do(self, t_s.lookup_type(left, #false), t_s.lookup_type(right, right.group))
     t_s.wrap_type('$('check'.relocate(self)):
                      force_all($left)
                      ~is force_all($right)',
@@ -25,7 +25,7 @@ expr.macro
      $(left :: expr_meta.Parsed)
      ~raises $(right :: expr_meta.Parsed)':
     ~op_stx self
-    t.unify_do(self, t_s.lookup_type(right), t.Str(self))
+    t.unify_do(self, t_s.lookup_type(right, right.group), t.Str(self))
     t_s.wrap_type('$('check'.relocate(self)):
                      force_all($left)
                      ~raises $right',
@@ -35,4 +35,4 @@ expr.macro
 | 'time: $(expr :: expr_meta.Parsed)':
     t_s.wrap_type('measure.time:
                      $expr',
-                  t_s.lookup_type(expr))
+                  t_s.lookup_type(expr, expr.group))

@@ -40,7 +40,7 @@ expr.macro
 expr.macro 'unify_phase_2 $mode $types:
               $(body :: Group)':
   let (expr, opaque_expr) = expr_meta.parse_all(body)
-  let body_ty = t_s.lookup_type(expr)
+  let body_ty = t_s.lookup_type(expr, #false)
   match mode
   | '~defn':
       match types

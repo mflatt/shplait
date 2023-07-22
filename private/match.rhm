@@ -35,6 +35,10 @@ meta:
   | '| $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)
      | ~else: $(empty_body :: Group)'
 
+  syntax_class OneListClause:
+  | '[]: $(empty_body :: Group)'
+  | '$(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)'
+  
   syntax_class SyntaxClauses:
     fields:
       [pat, ...]
@@ -54,6 +58,10 @@ expr.macro
                      '$expr ...',
                      lcs.empty_body,
                      lcs.f_id, lcs.r_id, lcs.cons_body)
+| 'shmatch $('$tail ...'
+               && '$expr ... | $(lc :: OneListClause)')':
+    ~op_stx self
+    syntax_meta.error("incomplete set of list clauses", '$self $tail ...')
 | 'shmatch $expr ... $(scs :: SyntaxClauses)':
     ~op_stx self
     parse_syntax_match(self,
@@ -83,6 +91,15 @@ expr.macro
                 [[ctr, [field, ...]], ...],
                 [body, ...],
                 #false)
+| 'shmatch $('$tail ...'
+               && '$expr ...
+                   | $(clause :: Block)
+                   | ...')':
+    ~op_stx self
+    let stx = '$self $tail ...'
+    // try to provide a helpful error message
+    Function.pass(check_clause_shape(clause, stx), ...)
+    syntax_meta.error("unrecognized mixture of clauses", stx)
 | 'shmatch $x ...':
     ~op_stx self
     syntax_meta.error("bad syntax", '$self $x ...')
@@ -94,7 +111,7 @@ meta:
                        f_id, r_id, cons_body):
     let '$(expr :: expr_meta.Parsed)' = expr_in
     let elem_tv = t.gen_tvar(self)
-    t.unify_do(expr_in, t_s.lookup_type(expr), t.ListOf(self, elem_tv))
+    t.unify_do(expr_in, t_s.lookup_type(expr, expr.group), t.ListOf(self, elem_tv))
     let tv = t.gen_tvar(self)
     let r:
       '«match force($expr)
@@ -117,7 +134,7 @@ meta:
                          [body, ...],
                          else_body):
     let '$(expr :: expr_meta.Parsed)' = expr_in
-    t.unify_do(expr_in, t_s.lookup_type(expr), t.Shrub(self))
+    t.unify_do(expr_in, t_s.lookup_type(expr, expr.group), t.Shrub(self))
     let tv = t.gen_tvar(self)
     let [[pat_cvt, [[pat_id, pat_cvt_tmpl, pat_depth], ...]], ...]: [convert_pat(pat, #true), ...]
     let [else, ...]:
@@ -170,7 +187,7 @@ meta:
         each i: 0..the_dt_arg_n
         t.gen_tvar(expr_in)
     let dt_ty = t.Datatype(self, the_dt_id, dt_args)
-    t.unify_do(self, t_s.lookup_type(expr), dt_ty)
+    t.unify_do(self, t_s.lookup_type(expr, expr.group), dt_ty)
     if else_body
     | when [dt_n, ...][0] == [dt_n, ...].length():
       | syntax_meta.error("else case is unreachable", self)
@@ -223,6 +240,35 @@ expr.macro '$left shis_a $(ctr :: Identifier)':
         each i: 0..dt_arg_n
         t.gen_tvar(left)
   let dt_ty = t.Datatype(self, dt_id, dt_args)
-  t.unify_do(self, t_s.lookup_type(left), dt_ty)
+  t.unify_do(self, t_s.lookup_type(left, #false), dt_ty)
   t_s.wrap_type('force($left) is_a $pat_id',
                 t.Bool(self))
+
+meta:
+  syntax_class MustBeGroup(stx):
+    kind: ~multi
+  | '$(g :: Group)'
+  | '$m':
+      syntax_meta.error("expected a single expression", stx, m)
+  syntax_class MustBeIdentifier(stx):
+  | '$(id :: Identifier)'
+  | '$m':
+      syntax_meta.error("expected an identifier", stx, m)
+
+  fun check_clause_shape(clause, stx):
+    match clause
+    | ': []: $(body :: MustBeGroup(stx))': #void
+    | ': [] $tail ...':
+        syntax_meta.error("bad empty-list clause", stx, clause)
+    | ': $(bound_as expr_meta.space: 'cons')($(f_id :: MustBeIdentifier(stx)), $(r_id :: MustBeIdentifier(stx))):
+           $(cons_body :: MustBeGroup(stx))':
+        #void
+    | ': $(bound_as expr_meta.space: 'cons') $tail ...':
+        syntax_meta.error("bad cons clause", stx, clause)
+    | ': $(ctr :: Identifier) ($(field :: MustBeIdentifier(stx)), ...):
+           $(body :: MustBeGroup(stx))':
+        #void
+    | ': «'$pat': $(body :: MustBeGroup(stx))»':
+        #void
+    | '$_':
+        syntax_meta.error("bad clause", stx, clause)

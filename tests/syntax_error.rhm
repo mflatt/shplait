@@ -1,0 +1,99 @@
+#lang shplait
+import:
+  open: "eval.rhm"
+
+check_eval:
+  1 + "a"
+  ~raises "typecheck failed"
+
+check_eval:
+  fun (x ::): 10
+  ~raises "expected a type after separator"
+
+check_eval:
+  fun (x) :: : 10
+  ~raises "expected a type after separator"
+
+check_eval:
+  nonesuch
+  ~raises "unbound identifier"
+
+check_eval:
+  1 :: String
+  ~raises "needs to be in a type position or in parentheses"
+
+check:
+  (1 :: Number)
+  ~is 1
+
+check_eval:
+  match [] | []: "ok" | cons(x, y):
+                          "ok"
+                          "oops"
+  ~raises "expected a single expression"
+
+check_eval:
+  match [] | cons(x, y): "oops"
+  ~raises "incomplete set of list clauses"
+
+check_eval:
+  match [] | []
+  ~raises "bad empty-list clause"
+
+check_eval:
+  match [] | cons
+  ~raises "bad cons clause"
+
+check_eval:
+  match [] | 1
+  ~raises "bad clause"
+
+check_eval:
+  match none() | some(1) | ~else: "ok"
+  ~raises "expected an identifier"
+
+check_eval:
+  match none() | some(1): "ok" | none(): "ok"
+  ~raises "expected an identifier"
+
+check_eval:
+  match none() | some(x): "ok" | :none(): "ok"
+  ~raises "bad clause"
+
+check_eval:
+  match none() | some(x): "ok" | nonesuch(): "ok"
+  ~raises "expected a variant name"
+
+check_eval:
+  fun ([1]): apple
+  ~raises "expected identifier"
+
+check_eval:
+  type Foo
+  | bar(1)
+  ~raises "expected identifier"
+
+// FIXME
+#//
+check_eval:
+  def mutable 1 = 1
+  ~raises "expected an identifier"
+
+// FIXME
+#//
+check_eval:
+  def values(1) = 1
+  ~raises "expected identifier"
+
+// Something about `Evaluator.import` isn't working right
+// with `type_expr`-space bindings?
+
+#//
+check_eval:
+  def x :: 1  = 2
+  ~raises "literal value is being used as a type"
+
+#//
+check_eval:
+  1 + String
+  ~raises "oops"
