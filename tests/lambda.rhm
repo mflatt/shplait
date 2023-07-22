@@ -18,7 +18,7 @@ type Exp
        body :: Exp)
 | lamE(n :: Symbol,
        body :: Exp)
-| appE(fun :: Exp,
+| appE(fn :: Exp,
        arg :: Exp)
 
 type Binding
@@ -102,8 +102,8 @@ fun interp(a :: Exp, env :: Env) :: Value:
              extend_env(bind(n, interp(rhs, env)),
                         env))
   | lamE(n, body): closV(n, body, env)
-  | appE(fun, arg):
-      match interp(fun, env)
+  | appE(fn, arg):
+      match interp(fn, env)
       | closV(n, body, c_env):
           interp(body,
                  extend_env(bind(n, interp(arg, env)),

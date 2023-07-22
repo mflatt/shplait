@@ -17,6 +17,7 @@ import:
   "value.rhm".value
   "value.rhm".value_meta
   "lazy.rhm" open
+  "blacklist.rhm"
 
 export:
   type
@@ -33,6 +34,7 @@ meta:
 type_defn.macro
 | 'type $(id :: Identifier) $(args :: MaybeArgs) $(op && '=') $ty_e0 $ty_e ...':
     ~op_stx self
+    blacklist.validate(id, "type")
     let tvar_box = Box(IdMap{})
     let arg_tys :~ List = parse_arg_types([args.arg, ...], self, args, tvar_box)
     let type_thunk = (fun ():
@@ -45,6 +47,7 @@ type_defn.macro
    | $_
    | ...':
     ~op_stx self
+    blacklist.validate(id, "type")
     let tvar_box = Box(IdMap{})
     let arg_tys :~ List = parse_arg_types([args.arg, ...], self, args, tvar_box)
     let dty = t.Datatype(id, id, arg_tys)
@@ -71,6 +74,8 @@ decl.macro
 | 'type $(id :: Identifier) $(args :: MaybeArgs)
    | $(var_id :: Identifier) ($(field :: Argument), ...)
    | ...':
+    Function.pass(blacklist.validate(var_id, "variant"), ...)
+    Function.pass(blacklist.validate(field.id, "field"), ..., ...)
     let (dty :: t.Datatype, tvars) = f.lookup_found_type_definition(id)
     let tvar_box = Box(tvars)
     let arg_tys = dty.args

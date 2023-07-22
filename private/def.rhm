@@ -13,6 +13,7 @@ import:
   "tuple.rhm"!tuple as tu
   "lazy.rhm" open
   "trace.rhm"!traceable.maybe_wrap_traceable
+  "blacklist.rhm"
 
 export:
   rename:
@@ -20,6 +21,7 @@ export:
 
 meta:
   fun build_def(self, mutable_tag, [id, ...], [type_seq, ...], rhs):
+    Function.pass(blacklist.validate(id, "definition"), ...)
     let tvar_box = Box(IdMap{})
     let poly_context = f.get_current_frame().poly_context
     let base_tvars = f.get_current_frame().all_tvars()

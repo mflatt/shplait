@@ -1,0 +1,63 @@
+#lang shplait
+import:
+  open: "eval.rhm"
+
+check_eval:
+  1 + "a"
+  ~raises "typecheck failed"
+
+check_eval:
+  def fun = 5
+  ~raises "disallowed"
+
+check_eval:
+  fun (def): 5
+  ~raises "disallowed"
+
+check_eval:
+  let def = 5: "ok"
+  ~raises "disallowed"
+
+check_eval:
+  letrec def = 5: "ok"
+  ~raises "disallowed"
+
+check_eval:
+  type def | foo()
+  ~raises "disallowed"
+
+check_eval:
+  type foo | fun()
+  ~raises "disallowed"
+
+check_eval:
+  type foo | bar(fun)
+  ~raises "disallowed"
+
+check_eval:
+  fun (x): match x
+           | []: "ok"
+           | cons(fun, x): x
+  ~raises "disallowed"
+
+check_eval:
+  fun (x): match x
+           | []: "ok"
+           | cons(x, fun): x
+  ~raises "disallowed"
+
+check_eval:
+  fun (x): match '1'
+           | '$fun': "ok"
+  ~raises "disallowed"
+
+check_eval:
+  fun (x): match '1'
+           | '$fun ...': "ok"
+  ~raises "disallowed"
+
+check_eval:
+  fun (x): match none()
+           | some(fun): "ok"
+           | none(): "ok"
+  ~raises "disallowed"

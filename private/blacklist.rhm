@@ -1,0 +1,25 @@
+#lang rhombus/static/and_meta
+
+export:
+  meta:
+    validate
+
+meta:
+  def blacklist = {
+    #'def, #'fun, #'block, #'let, #'letrec,
+    #'if, #'cond, #'match,
+    #'check, #'try, #'module, #'import,
+    #'type, #'is_a,
+    #'Number, #'Boolean, #'Void, #'String, #'Symbol,
+    #'Listof, #'Arrayof, #'Mapof, #'Syntax, #'Boxof,
+    #'cons, #'first, #'rest,
+    #'values, #'box, #'unbox, #'set_box,
+    #'Array, #'MutableMap,
+  }
+
+  fun validate(id :: Identifier, what):
+    when blacklist[id.unwrap()]
+    | syntax_meta.error("disallowed name for " +& what +& ";\n"
+                          +& " to prevent confusion, some predefined names"
+                          +& " must not be shadowed or redefined\n",
+                        id)

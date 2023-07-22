@@ -11,6 +11,7 @@ import:
   "syntax.rhm"!convert.syntax_def
   "syntax.rhm"!convert.syntax_unwrap
   "lazy.rhm" open
+  "blacklist.rhm"
 
 export:
   rename:
@@ -115,6 +116,8 @@ meta:
                        expr_in,
                        empty_body,
                        f_id, r_id, cons_body):
+    blacklist.validate(f_id, "variable")
+    blacklist.validate(r_id, "variable")
     let '$(expr :: expr_meta.Parsed)' = expr_in
     let elem_tv = t.gen_tvar(self)
     t.unify_do(expr_in, t_s.lookup_type(expr, expr.group), t.ListOf(self, elem_tv))
@@ -143,6 +146,7 @@ meta:
     t.unify_do(expr_in, t_s.lookup_type(expr, expr.group), t.Shrub(self))
     let tv = t.gen_tvar(self)
     let [[pat_cvt, [[pat_id, pat_cvt_tmpl, pat_depth], ...]], ...]: [convert_pat(pat, #true), ...]
+    Function.pass(blacklist.validate(pat_id, "pattern variable"), ..., ...)
     let [else, ...]:
       if else_body
       | ['~else:
@@ -169,6 +173,7 @@ meta:
                   [[ctr, [field, ...]], ...],
                   [body, ...],
                   else_body):
+    Function.pass(blacklist.validate(field, "variable"), ..., ...)
     let '$(expr :: expr_meta.Parsed)' = expr_in
     let [[dt_id, dt_arg_n, dt_n, pat_id, pat_ctr_ty,], ...]:
       for List:

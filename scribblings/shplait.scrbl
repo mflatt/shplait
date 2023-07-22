@@ -15,6 +15,8 @@
 
 @(def rhombus_scrbl = ModulePath.s_exp(ModulePath 'lib("rhombus/scribblings/rhombus.scrbl")'))
 
+@(macro 'nodef($id)': '@rhombus($id, ~datum)')
+
 @title{Shplait}
 
 The Shplait language syntactically resembles the
@@ -308,6 +310,18 @@ and new types can be defined with @rhombus(type).
 
 @// ------------------------------------------------------------
 @section(~tag: "sec:defn"){Definitions and Functions}
+
+When defining or locally binding a name, some predefined names must be
+avoided. The following names are blacklisted for binding, since
+redefining or shadowing the names could easily create confusion:
+@nodef(def), @nodef(fun), @nodef(block), @nodef(let), @nodef(letrec),
+@nodef(if), @nodef(cond), @nodef(match), @nodef(check), @nodef(try),
+@nodef(module), @nodef(import), @nodef(type), @nodef(is_a),
+@nodef(Number), @nodef(Boolean), @nodef(Void), @nodef(String),
+@nodef(Symbol), @nodef(Listof), @nodef(Arrayof), @nodef(Mapof),
+@nodef(Syntax), @nodef(Boxof), @nodef(cons), @nodef(first),
+@nodef(rest), @nodef(values), @nodef(box), @nodef(unbox),
+@nodef(set_box), @nodef(Array), and @nodef(MutableMap).
 
 @doc(
   defn.macro 'def $typed_id = $expr'
