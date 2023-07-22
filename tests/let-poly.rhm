@@ -4,6 +4,10 @@ import:
 
 // basic poly inference for a function
 
+check_eval:
+  fun (f): f(f)
+  ~raises "cycle in type constraints"
+
 fun top_identity(x):
   x
 check:

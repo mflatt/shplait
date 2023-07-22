@@ -760,7 +760,7 @@ fun type_size(b):
   | ~else 1
 
 fun occurs(a :: Type, b :: Type):
-  match a
+  match b
   | _ when (a === b):
       #true
   | b :: TVar when b.rep:
