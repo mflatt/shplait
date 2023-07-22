@@ -1,0 +1,6 @@
+#lang shplait
+
+check:
+  match 1
+  | ~else: "always"
+  ~is "always"

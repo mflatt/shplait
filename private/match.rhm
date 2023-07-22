@@ -52,6 +52,12 @@ meta:
       | ~else: $(else_body :: Group)»'
 
 expr.macro
+| 'shmatch $expr ...
+   | ~else: $(body :: Group)':
+    ~op_stx self
+    parse_else_match(self,
+                     '$expr ...',
+                     body)
 | 'shmatch $expr ... $(lcs :: ListClauses)':
     ~op_stx self
     parse_list_match(self,
@@ -227,6 +233,17 @@ meta:
         | $else
         | ...»'
     t_s.wrap_type(r, tv)
+
+  // special case for just `~else`, makes no requirements on `expr_in` type
+  fun parse_else_match(self, expr_in, body):
+    let '$(expr :: expr_meta.Parsed)' = expr_in
+    let tv = t.gen_tvar(#false)
+    t_s.wrap_type('block:
+                     $expr
+                     unify ~expr $(t_s.type_to_syntax(tv)):
+                       ~body:
+                         $body',
+                  tv)
 
 expr.macro '$left shis_a $(ctr :: Identifier)':
   ~op_stx self

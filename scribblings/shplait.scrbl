@@ -633,7 +633,9 @@ and new types can be defined with @rhombus(type).
  with or without @rhombus(~else). All of the @rhombus(variant_id)s must
  be for the same type, and the type of @rhombus(target_expr) ust match
  that type. If @rhombus(~else) is not present, every variant associated
- with the type must have a case.
+ with the type must have a case. In the unusul case that only
+ @rhombus(~else) is present, the type of @rhombus(target_expr) is
+ unconstrained.
 
 @examples(
   ~eval: eval
