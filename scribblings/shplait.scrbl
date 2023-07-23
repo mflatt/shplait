@@ -4,7 +4,8 @@
     meta_label:
       shplait open
     "eval.rhm".eval
-    "tutorial_url.rhm" open)
+    "tutorial_url.rhm" open
+    "spacer.rhm" open)
 
 @(nonterminal:
     id: block
@@ -66,16 +67,17 @@ specificaiton of shrubbery notation.)
     id :: type
 ){
 
- In syntax descriptions:
+ These names are used in syntax descriptions, sometimes with a prefix to
+ indicate a role within an enclosing form:
 
 @itemlist(
 
-  @item{@rhombus(id) stands for an identifier, such as
-  @rhombus(x, ~datum) or @rhombus(interp, ~datum).}
+  @item{@rhombus(id) (or a name that ends in @rhombus(id)) stands for an
+  identifier, such as @rhombus(x, ~datum) or @rhombus(interp, ~datum).}
 
-  @item{@rhombus(expr) stands for an expression, such as
-  @rhombus(x, ~datum), @rhombus("hello"), @rhombus(1 + 2), or
-  @rhombus(f(3, 4)).}
+  @item{@rhombus(expr) (or a name than end in ...) stands for an
+  expression, such as @rhombus(x, ~datum), @rhombus("hello"),
+  @rhombus(1 + 2), or @rhombus(f(3, 4)).}
 
   @item{@rhombus(defn) stands for an definition, such as
   @rhombus(def x = 1) or @rhombus(fun f(x): x).}
@@ -150,7 +152,7 @@ and new types can be defined with @rhombus(type).
     (? $of_id, ? $of_id, ...)
 ){
 
- Defines a new type, either @rhombus(id) or or @rhombus(id(type, ...)).
+ Defines a new type, either @rhombus(id) or or @rhombus(id(#,(@nontermref(type)), ...)).
  A plain @rhombus(id) type is defined when @rhombus(maybe_type_args) is
  empty.
 

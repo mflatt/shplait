@@ -5,8 +5,8 @@
     meta_label:
       shplait open
     "eval.rhm".eval
-    meta:
-      scribble/private/typeset_meta
+    "spacer.rhm" open
+    scribble/private/typeset_meta
     lib("scribble/core.rkt") as s_core
     lib("scribble/html-properties.rkt") as html_prop
     "tutorial_url.rhm" open

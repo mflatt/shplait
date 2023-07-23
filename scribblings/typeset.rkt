@@ -6,11 +6,10 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/property)
-         scribble/private/doc
          rhombus/parse
          (only-in scribble/rhombus
                   rhombusblock_etc)
-         (submod scribble/private/rhombus-doc for-doc))
+         scribble/private/typeset-doc)
 
 (provide (for-space rhombus/doc
                     type))
@@ -19,21 +18,21 @@
   (syntax-parse stx
     #:datum-literals (group op $ parens)
     [(group _ (quotes (group (~and dollar (op $)) arg (op id) e ...)))
-     (rhombus-typeset #:at stx
-                      #:pattern? #t
-                      #`(group dollar arg #,@(subst #'id) e ...))]
+     (doc-typeset-rhombusblock #:at stx
+                               #:pattern? #t
+                               #`(group dollar arg #,@(subst #'id) e ...))]
     [(group _ (quotes (group (~and pns (parens . _)) (op id) e ...)))
-     (rhombus-typeset #:at stx
-                      #:pattern? #t
-                      #`(group pns #,@(subst #'id) e ...))]
+     (doc-typeset-rhombusblock #:at stx
+                               #:pattern? #t
+                               #`(group pns #,@(subst #'id) e ...))]
     [(group _ (quotes (~and g (group (~and o (op id)) e ...))))
-     (rhombus-typeset #:at #'g
-                      #:pattern? #t
-                      #`(group #,@(subst #'id) e ...))]
+     (doc-typeset-rhombusblock #:at #'g
+                               #:pattern? #t
+                               #`(group #,@(subst #'id) e ...))]
     [(group _ (quotes (group id e ...)))
-     (rhombus-typeset #:at stx
-                      #:pattern? #t
-                      #`(group #,@(subst #'id) e ...))]))
+     (doc-typeset-rhombusblock #:at stx
+                               #:pattern? #t
+                               #`(group #,@(subst #'id) e ...))]))
 
 (define-doc-syntax type
   (make-doc-transformer #:extract-desc (lambda (stx) "type")
@@ -49,4 +48,11 @@
                                             ((make-interned-syntax-introducer 'shplait/type) #'id 'add)]
                                            [(group _ (quotes (group id _ ...)))
                                             ((make-interned-syntax-introducer 'shplait/type) #'id 'add)]))
+                        #:extract-metavariables (lambda (stx space-name vars)
+                                                  (syntax-parse stx
+                                                    #:datum-literals (group op quotes)
+                                                    [(group _ (quotes g))
+                                                     (extract-pattern-metavariables #'g vars)]
+                                                    [_
+                                                     vars]))
                         #:extract-typeset extract-typeset))
