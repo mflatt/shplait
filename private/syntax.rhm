@@ -254,13 +254,13 @@ decl.nestable_macro 'extractor $is_x ($unwrap_x, $post_unwrap) ($wrap_x, $pre_wr
        SyntaxWrap(Syntax.make($pre_wrap(v)))
      expr.macro '$is_x':
        ~op_stx self
-       t_s.wrap_type('stx_is_x', t.Arrow(self, [t.Shrub(self)], t.Bool(self)))
+       t_s.wrap_type('stx_is_x'.relocate(self), t.Arrow(self, [t.Shrub(self)], t.Bool(self)))
      expr.macro '$unwrap_x':
        ~op_stx self
-       t_s.wrap_type('stx_unwrap_x', t.Arrow(self, [t.Shrub(self)], t . $Ty(self)))
+       t_s.wrap_type('stx_unwrap_x'.relocate(self), t.Arrow(self, [t.Shrub(self)], t . $Ty(self)))
      expr.macro '$wrap_x':
        ~op_stx self
-       t_s.wrap_type('stx_wrap_x', t.Arrow(self, [t . $Ty(self)], t.Shrub(self)))
+       t_s.wrap_type('stx_wrap_x'.relocate(self), t.Arrow(self, [t . $Ty(self)], t.Shrub(self)))
    »'
 extractor syntax_is_number (syntax_to_number, values) (number_to_syntax, values) Num Number "number"
 extractor syntax_is_boolean (syntax_to_boolean, values) (boolean_to_syntax, values) Bool Boolean "boolean"  
