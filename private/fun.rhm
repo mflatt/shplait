@@ -90,7 +90,7 @@ defn.macro
 | 'function $(id :: Identifier) ($arg, ...) $(res_type :: MaybeType):
      $body':
     ~op_stx self
-    'shdef $id: $self ($arg, ...) $res_type: $body'
+    'shdef $id: $(self.relocate(id)) ($arg, ...) $res_type: $body'
 | 'function ($arg, ...) $(res_type :: MaybeType):
      $body':
     ~op_stx self
