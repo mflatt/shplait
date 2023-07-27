@@ -28,7 +28,7 @@ Rhombus expression and definition macros. The Shplait `def`, for
 example, is a definition macro that expands to Rhombus's `def`. The
 type checking strategy is as follows:
 
- * As a prmitive expresison form is parsed (in the sense of
+ * As a primitive expression form is parsed (in the sense of
    `expr_meta.Parsed`), it adds static information to the parsed form
    to report it's type.
 
@@ -50,9 +50,9 @@ type checking strategy is as follows:
 
 The type and inference system is Hindley-Milner, but with a twist that
 complicates this picture: inference of polymorphic types of recursive
-functions. That's technically not decidable, but the implementaiton
+functions. That's technically not decidable, but the implementation
 here uses a heuristic that works well, and that heuristic involves
-tracking the nesting level of definitions to infer polymophism only
+tracking the nesting level of definitions to infer polymorphism only
 for type variables that were introduced at the definition's level. The
 nesting level is reflected by a compile-time frame that is stored in a
 syntax parameter. The `unify` form serves a related secondary role,
@@ -67,8 +67,8 @@ The type-inference engine in "private/type.rhm" is a direct port of
 the engine from Plait in Racket. It provides `unify_do` and
 `unify_defn_do`, for example, to get unification requests and ones
 that specifically register definitions that are subject to inference
-of polymorphism. The inference engine has facilties to distinguish
-some arrow types from others, because that's tused to cusotmize the
+of polymorphism. The inference engine has facilities to distinguish
+some arrow types from others, because that's used to customize the
 error message more reliably when a (non-)function is misused; that was
 probably more important for Racket-style syntax, though, where
 students are easily confused by extra parentheses.
@@ -92,11 +92,11 @@ Rhombus binding spaces facilitate two key aspects of Shplait:
  * Type expressions like `Number -> Number` are implemented by binding
    types in a `type_expr` space. There's a little bit of a parsing
    trick needed to handle things like `(Number, Number) -> Number`,
-   where `(Number, Number)` is not a valid type expresion by itself,
+   where `(Number, Number)` is not a valid type expression by itself,
    but otherwise type-expression parsing is straightforward.
 
  * Let-based polymorphism relies on a syntactic distinction between
-   value forms like `fun` or lists constructions (which values forms
+   value forms like `fun` or lists constructions (with value forms
    as elements) versus non-value forms like box allocations. The
    `value` binding space allows composable extension of "value" in
    this sense (e.g., `fun` is bound as a macro in the `value` space,
@@ -107,7 +107,7 @@ Syntax Objects
 
 Shplait's syntax-object pattern and template language is a little
 different than Rhombus, because the default class of a type variable
-is a term`Sequence` instead of `Term`. That simplifies parsing a
+is a term `Sequence` instead of `Term`. That simplifies parsing a
 Shplait language with Shplait patterns, to some degree. It's
 implemented by compiling Shplait patterns and templates to Rhombus
 patterns and templates, naturally; that bridge turns out to be one of
@@ -121,7 +121,7 @@ To support the `~lazy` language option, primitive forms expand to
 suitable `delay` or`maybe_delay` calls. Normally, the latter should be
 used, because it detects when an expression is a "value" form (in a
 sense that coincides with values for let-based polymorphism) and
-efrains from adding a thunk. Primitives generally need to force
+refrains from adding a thunk. Primitives generally need to force
 arguments, in case they're being called from a lazy context. Library
 functions like `map` are implemented twice — with the same code, but
 in `~lazy` or non-`~lazy` modules — and a macro selects based on the
@@ -130,17 +130,17 @@ referencing context.
 Some Rhombus Helpers
 ====================
 
-Some definitions that might help to run a Shplait as a Rhombus program:
+Some definitions that might help to run a Shplait program as a Rhombus
+program:
 
 
 ```
 defn.macro 'type $id
             | $var($field, ...)
             | ...':
-  'class $id():
-     nonfinal
+  'interface $id
    class $var($field, ...):
-     extends $id
+     implements $id
    ...'
 
 def cons = List.cons
