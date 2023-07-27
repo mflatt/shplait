@@ -1,7 +1,6 @@
 #lang rhombus/static/and_meta
 import:
   meta:
-    "box.rhm" open
     "id_map.rhm" open
     "type.rhm" as t
   "frame.rhm" as f
@@ -20,7 +19,7 @@ expr.macro
     let fr = f.get_current_frame()
     let tvar_box = Box(fr.tvars)
     let ty = f.parse_type('$t_t ...', op, op, tvar_box)
-    fr.tvars := tvar_box.val
+    fr.tvars := tvar_box.value
     let [e_ty, new_e] = t_s.lookup_type(e, e.group)
     t.unify_do(op, e_ty, ty)
     values(t_s.wrap_type(new_e, ty),

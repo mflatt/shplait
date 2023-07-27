@@ -3,7 +3,6 @@ import:
   meta:
     "type.rhm" as t
     "id_map.rhm" open
-    "box.rhm" open
   "argument.rhm" open
   "frame.rhm" as f
   "type_statinfo.rhm" as t_s
@@ -48,7 +47,7 @@ meta:
             [t.create_defn(ty,
                            poly_context,
                            base_tvars,
-                           IdMap.val_set(tvar_box.val)),
+                           IdMap.val_set(tvar_box.value)),
              ...]
         | ~else:
             // non-value on rhs => disallow polymorphism
@@ -58,7 +57,7 @@ meta:
              ...]
     let [ty_sym, ...] = [t_s.type_to_syntax(ty), ...]
     Function.pass(f.record_frame_defn_type(ty_sym, ty), ...)
-    let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.val)
+    let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.value)
     let (tuple_lhs, rhs_delay, infer_id):
       match [id, ...]:
       | [id]: values(id, 'delay', id)

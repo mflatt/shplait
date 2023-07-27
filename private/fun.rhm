@@ -3,7 +3,6 @@ import:
   meta:
     "type.rhm" as t
     "id_map.rhm" open
-    "box.rhm" open
   "argument.rhm" open
   "type_statinfo.rhm" as t_s
   "frame.rhm" as f
@@ -68,7 +67,7 @@ expr.macro 'function ($arg, ...) $(res_type :: MaybeType):
     parse_function_type(stx, self, tvar_box)
   let [arg_type, ...] = arrow_type.args
   let res_tv = arrow_type.result
-  let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.val)
+  let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.value)
   let [arg_tmp, ...] = [Syntax.make_temp_id(arg_id), ...]
   let expr:                                       
     '«

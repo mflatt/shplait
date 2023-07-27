@@ -2,7 +2,6 @@
 import:
   meta:
     "type.rhm" as t
-    "box.rhm" open
     "id_map.rhm" open
   "argument.rhm" open
   "frame.rhm" as f
@@ -42,7 +41,7 @@ type_defn.macro
                         if arg_tys.length() == 0
                         | ty
                         | t.TypeConstructor(id, t.poly_ize(ty, arg_tys), arg_tys))
-    type_defn_meta.pack(id, t.LazyParseType(id, arg_tys, type_thunk), tvar_box.val)
+    type_defn_meta.pack(id, t.LazyParseType(id, arg_tys, type_thunk), tvar_box.value)
 | 'type $(id :: Identifier) $(args :: MaybeArgs)
    | $_
    | ...':
@@ -51,7 +50,7 @@ type_defn.macro
     let tvar_box = Box(IdMap{})
     let arg_tys :~ List = parse_arg_types([args.arg, ...], self, args, tvar_box)
     let dty = t.Datatype(id, id, arg_tys)
-    type_defn_meta.pack(id, dty, tvar_box.val)
+    type_defn_meta.pack(id, dty, tvar_box.value)
 | 'type $_ ...':
     type_defn_meta.pack_nothing()
 

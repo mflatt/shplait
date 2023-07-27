@@ -4,7 +4,6 @@ import:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
   "value.rhm".value
-  "box.rhm" open
   "wrap.rhm" open
   "lazy.rhm" open
 
@@ -14,8 +13,8 @@ export:
   set_box
 
 defwrap box_wrap box(v): Box(v)
-defwrap unbox_wrap unbox(b): Box.val(dynamic_force(b))
-defwrap set_box_wrap set_box(b, v): (dynamic_force(b) :~ Box).val := v
+defwrap unbox_wrap unbox(b): (dynamic_force(b) :~ Box).value
+defwrap set_box_wrap set_box(b, v): (dynamic_force(b) :~ Box).value := v
 
 expr.macro 'box':
   ~op_stx self

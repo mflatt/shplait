@@ -2,7 +2,6 @@
 import:
   meta:
     "type.rhm" as t
-    "box.rhm" open
     "id_map.rhm" open
   "type_statinfo.rhm" as t_s
 
@@ -210,13 +209,13 @@ type_expr.macro 'Void':
 type_expr.macro '? $(id :: Identifier)':
   ~op_stx self
   let tvars_box :: Box = current_tvars_box()
-  let tvars :: IdMap = tvars_box.val
+  let tvars :: IdMap = tvars_box.value
   let tv:
     tvars[id]
       || current_tvar_lookup()(id)
       || (block:
             let tv = t.gen_tvar('$self $id')
-            tvars_box.val := tvars ++ IdMap{id: tv}
+            tvars_box.value := tvars ++ IdMap{id: tv}
             tv)
   type_expr_meta.pack(tv)
 
