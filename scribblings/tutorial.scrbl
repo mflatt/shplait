@@ -162,7 +162,7 @@ Extra parentheses are allowed around an expression.
   (((1) + ((2))))
 )
 
-The type of a function is written with @rhombus(->). The function's
+The type of a function is written with @rhombus(->, ~at shplait/type). The function's
 argument types appear before the arrow, and the function's result type
 is after the arrow. If a function only has one argument, the argument
 type can be written by itself, otherwise the argument types are
@@ -186,7 +186,7 @@ Line breaks and indentation matter in Shplait. A @rhombus(1 +) with
 )
 
 An expression with infix operator can be split across lines, as long as
-the operator appears at the start of the second line, and as long at the
+the operator appears at the start of the second line, and as long as the
 second line is more indented than the first.
 
 @interaction(
@@ -243,7 +243,7 @@ the documentation:
 Note that some operations work on multiple types. For example,
 @rhombus(==) works on any two values, as long as the two values
 have the same type. That flexibility and constraint is reflected in
-the type of @rhombus(==) by a symbol placeholder @rhombus(?a), which
+the type of @rhombus(==) by a symbol placeholder @rhombus(?a, ~at shplait/type), which
 you can read as ``a type to be picked later.'' A specific type is
 picked for every individual use of @rhombus(==).
 
@@ -282,14 +282,14 @@ the first @litchar{|}.
 )
 
 DrRacket can help you indent by the right amount. Hit the Tab key to cycle
-through syntactically vaid indentations for the current line. Note that
+through syntactically valid indentations for the current line. Note that
 if your line doesn't yet start with @litchar{|}, then DrRacket will
 offer different choices than when the line does start with @litchar{|}.
 
 The @rhombus(cond) form is a multi-way @rhombus(if). A @rhombus(cond)
 form has a sequence of clauses, each starting with @litchar{|}. A clause
 has a ``question'' and a result expression, and those two parts are
-seperated with a colon @litchar{:}. When @rhombus(cond) runs, the result
+separated with a colon @litchar{:}. When @rhombus(cond) runs, the result
 expression is used only when the question expression produces
 @rhombus(#true). The @rhombus(cond) form tries the clauses in order, and
 as soon as it finds a @rhombus(#true) result from a question, it returns
@@ -357,7 +357,7 @@ are @defterm{short-circuiting}, which means that they stop as soon as a
   #true && #true
   #true && #false
   2 < 1 && #true
-  2 < 1 && 1/0 == 0 // second expression is not evaluated}
+  2 < 1 && 1/0 == 0 // second expression is not evaluated
   #false || #true
   #false || #false
   1 < 2 || 1/0 == 0 // second expression is not evaluated
@@ -476,8 +476,7 @@ The @rhombus(first) and @rhombus(rest) operations are the opposite of
 returns the item that @rhombus(cons) added to the start of the list,
 and @rhombus(rest) returns the list that @rhombus(cons) added to. More
 generally, @rhombus(first) gets the first item from a list, and
-@rhombus(rest) gets everything list in the list when the first argument
-is removed.
+@rhombus(rest) gets everything in the list with the first item removed.
 
 @interaction(
   first(cons(1, [2, 3]))
@@ -567,8 +566,8 @@ Click @onscreen{Run}. The functions @rhombus(num_is_odd) and @rhombus(num_is_eve
 are now available in the interactions area:
 
 @interaction(
-  is_odd
-  is_odd(12)
+  num_is_odd
+  num_is_odd(12)
 )
 
 In our definitions of @rhombus(pi) and @rhombus(tau), Shplait inferred
@@ -579,7 +578,7 @@ that the newly defined names have type
 to read and understand if you write the type that would otherwise be
 inferred. Declaring types can sometimes help improve or localize error
 messages when Shplait's attempt to infer a type fails, since inference
-can other end up depending on the whole program.
+can otherwise end up depending on the whole program.
 
 Declare a type in @rhombus(def) by writing @rhombus(::) and a type after
 the defined identifier:
@@ -957,7 +956,7 @@ order of function definitions generally does not matter, even if the
 functions call each other. A test at the top level of a program,
 however, must appear after all functions that the test may end up
 calling. To relax this constraint, wrap tests in a @rhombus(module test)
-form. A @rhombus(module test)) wrapper effectively moves its content to
+form. A @rhombus(module test) wrapper effectively moves its content to
 the end of the program.
 
 @rhombusblock(
@@ -989,7 +988,7 @@ adding more tests.
 When you're debugging a program, it may be helpful to see the
 arguments that are passed to a particular function and the results
 that the function returns. You can enable that kind of tracing for a
-function with the @rhombus(trace) form. Tracing is enablaed until the
+function with the @rhombus(trace) form. Tracing is enabled until the
 expression in the body of @rhombus(trace) returns a value.
 
 @interaction(
@@ -1007,7 +1006,7 @@ expression in the body of @rhombus(trace) returns a value.
 
 To trace more than one function, you can nest @rhombus(trace) forms.
 
-As you're devloping a program, sometimes it's useful to run a partial
+As you're developing a program, sometimes it's useful to run a partial
 program where you haven't yet decided on part of the implementation. The
 @rhombus(....) operator (with four dots) can be used as a prefix, infix, or
 postfix operator. A program using @rhombus(....) can compile and run, but
@@ -1187,7 +1186,7 @@ which extracts the pieces of a single-line syntax object.
 
 Parenthesized terms and blocks formed with @litchar{:} count as
 individual terms for @rhombus(syntax_split), although they also have
-nested structure.
+nested structures.
 
 @interaction(
   syntax_split('1 * (3 + 4)')
@@ -1201,7 +1200,7 @@ defines how newlines and indentation work with @litchar{|} and
 
 Splitting a syntax object like @rhombus('1 2 3') produces three
 syntax objects, but those syntax object are still distinct from Shplait
-numbers. Clearly, there is a corerspondence bwteen the syntax object
+numbers. Clearly, there is a correspondence between the syntax object
 @rhombus('1') and the number @rhombus(1), the syntax object
 @rhombus('#false') and the boolean @rhombus(#false), and the syntax
 object @rhombus('x') and the symbol @rhombus(#'x). Functions like
@@ -1263,7 +1262,7 @@ specific languages like Shplait).
 
 Going the other way, suppose you want to check whether a syntax object
 is anything with @rhombus('*') in the middle. Any such term is one that
-@emph{could} have ben generated with the template
+@emph{could} have been generated with the template
 @rhombus('$left * $right') for some @rhombus(left) and @rhombus(right).
 In other words, we want to turn the template around and use it as a
 @defterm{pattern}.
@@ -1462,7 +1461,7 @@ technically defining a @defterm{module}. A Shplait module contains a
 mixture of expressions and definitions. The expressions are evaluated in
 order, and the value of each expression is printed after the expression
 is evaluated (unless the result value has type
-@rhombus(Void, ~at shplait/type). The order of function definitions
+@rhombus(Void, ~at shplait/type)). The order of function definitions
 doesn't matter, as long as a function definition appears before any
 expression that eventually calls the function.
 
@@ -1602,7 +1601,7 @@ operator.
 )
 
 The type of a @rhombus(:=) expression is
-@rhombus(Void, ~at rhombus/type), meaning that it doesn't return a
+@rhombus(Void, ~at shplait/type), meaning that it doesn't return a
 useful value, and the useless value doesn't even print as a result. If
 you need to change a variable and then return a value, use
 @rhombus(block) to sequence the operations. The value of a
@@ -1648,7 +1647,7 @@ object's field, and @rhombus(set_box) changes the object's field.
 
 An @defterm{array} is a traditional mutable array. Every element of an
 array must have the same type, which can be inferred from the value that
-you suply when making an array to serve as the initial value for each of
+you supply when making an array to serve as the initial value for each of
 the array's slots. The @rhombus(make_array) function creates an array,
 @brackets can be used after an array expression to access a slot of the
 array by position, and @brackets plus @rhombus(:=) changes a slot value

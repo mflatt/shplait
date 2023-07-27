@@ -75,7 +75,7 @@ string_get("a", 0)       // => #{#\a}
 
 #{#\a} == #{#\b} // => #false
 
-// Beware that `===` is object identity (or "pointer equality),
+// Beware that `===` is object identity (or "pointer equality"),
 // not the usual `==` equality
 "apple" == ("a" +& "pple")   // => #true
 "apple" === ("a" +& "pple")  // => #false
@@ -115,7 +115,8 @@ syntax_to_string('1') // says "String", but then reports an error
 // Basic expression forms
 
 // Prefix and infix operators
-//  <expr>(<expr>, ...)
+//  <op> <expr>
+//  <expr> <op> <expr>
 
 ! #false                // => #true
 1 + 2                   // => 3
@@ -138,7 +139,7 @@ string_append("a", "b")   // => "ab"
 // or
 //
 //    cond
-//    | <expr>: <expr> ...
+//    | <expr>: <expr>
 //    | ...
 //    | ~else: <expr>
 
@@ -319,7 +320,7 @@ def e :: Int = 2
 
 // Declaring argument and result types
 //
-//   fun <fun-id>(<arg-id> :: <arg-type>) :: <result-type>: <expr>
+//   fun <fun-id>(<arg-id> :: <arg-type>, ...) :: <result-type>: <expr>
 
 fun circle_perimeter(r :: Int) :: Int:
   2 * PI * r
@@ -534,7 +535,7 @@ map(fun (x): x*x,
 //
 //   def mutable <id> = <expr>
 //
-//   <id> := <expr
+//   <id> := <expr>
 
 def mutable count = 0
 
@@ -563,12 +564,12 @@ unbox(B)                // => 12
 
 def identity = fun(x): x
 
-identity       // => #<function>, but shows "(?a -> ?a)" first
+identity       // => #<function>, but shows "?a -> ?a" first
 identity("a")  // => "a"
 identity(1)    // => 1
 
-[]     // => [], but shows "(list ?a)" first
-cons   // => #<function>, but shows "(?a, Listof(?a) -> Listof(?a)" first
+[]     // => [], but shows "Listof(?_a)" first
+cons   // => #<function>, but shows "(?a, Listof(?a)) -> Listof(?a)" first
 
 def b = box([])
 b      // => box([]), but shows "Boxof(Listof(?_a))" first

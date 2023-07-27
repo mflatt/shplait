@@ -76,7 +76,7 @@ specification of shrubbery notation.)
   @item{@rhombus(id) (or a name that ends in @rhombus(id)) stands for an
   identifier, such as @rhombus(x, ~datum) or @rhombus(interp, ~datum).}
 
-  @item{@rhombus(expr) (or a name than end in ...) stands for an
+  @item{@rhombus(expr) (or a name that ends in ...) stands for an
   expression, such as @rhombus(x, ~datum), @rhombus("hello"),
   @rhombus(1 + 2), or @rhombus(f(3, 4)).}
 
@@ -110,7 +110,7 @@ and new types can be defined with @rhombus(type).
 ){
 
  A type variable, which stands for a type to be chosen later. For
- example, @rhombus(?a -> ?a) is the type of an identity function that
+ example, @rhombus(?a -> ?a, ~at shplait/type) is the type of an identity function that
  accepts any value and returns the same value.
 
 @examples(
@@ -144,6 +144,7 @@ and new types can be defined with @rhombus(type).
     field_id: block id
     of_id: block id
     as_type: block type
+    arg_type: block type
   decl.macro 'type $id $maybe_type_args = $as_type'
   decl.macro 'type $id $maybe_type_args
               | $variant_id ($typed_id, ...)
@@ -153,14 +154,14 @@ and new types can be defined with @rhombus(type).
     (? $of_id, ? $of_id, ...)
 ){
 
- Defines a new type, either @rhombus(id) or or @rhombus(id(#,(@nontermref(type)), ...)).
+ Defines a new type, either @rhombus(id) or @rhombus(id(arg_type, ...)).
  A plain @rhombus(id) type is defined when @rhombus(maybe_type_args) is
  empty.
 
  Using @rhombus(type) with @rhombus(=) defines @rhombus(id) as an alias
  for @rhombus(as_type). If @rhombus(maybe_type_args) is not empty, then
  @rhombus(as_type) can refer to the arguments, and those references are
- replaced with the @rhombus(type)s supplied when @rhombus(id(type, ...))
+ replaced with the @rhombus(arg_type)s supplied when @rhombus(id(arg_type, ...))
  is used as a type. Any other type variables references in @rhombus(as_type)
  are unified across all instantiations of the type alias.
 
@@ -180,7 +181,7 @@ and new types can be defined with @rhombus(type).
  When @rhombus(type) is used with @rhombus(variant_id) cases,
  each @rhombus(variant_id) is defined as a constructor function, which
  takes arguments according to the @rhombus(typed_id) field declarations
- and produces a value of type @rhombus(id) or @rhombus(id(type, ...)).
+ and produces a value of type @rhombus(id) or @rhombus(id(arg_type, ...)).
 
 @examples(
   ~eval: eval
@@ -225,7 +226,7 @@ and new types can be defined with @rhombus(type).
 )
 
 
- When a @rhombus(id(type, ...)) is defined with @rhombus(variant_id)s, then @rhombus(id) is a
+ When a @rhombus(id(arg_type, ...)) is defined with @rhombus(variant_id)s, then @rhombus(id) is a
  polymorphic type constructor, and the corresponding field-accessor
  functions are also polymorphic. These are polymorphic only to the degree
  that @rhombus(type) forms in the constructor @rhombus(typed_id)s refer
@@ -295,7 +296,7 @@ and new types can be defined with @rhombus(type).
 
  The @rhombus(::) operator is normally used to declare a type for a
  field, variable binding, or function result, but it can also be used as
- and expression operator as long as the expression is within pareneses.
+ an expression operator as long as the expression is within parentheses.
 
  A @rhombus(::) expression in parentheses produces the same value as
  @rhombus(expr), but also asserts that @rhombus(expr) has the type
@@ -308,7 +309,7 @@ and new types can be defined with @rhombus(type).
 @examples(
   ~eval: eval
   ~error:
-    1:: Int
+    1 :: Int
   (1 :: Int)
   ~error:
     (1 :: String)
@@ -484,9 +485,9 @@ redefining or shadowing the names could easily create confusion:
  The type of a function. The @rhombus(arg_type)s specify the types of
  arguments, while @rhombus(result_type) is the type of the result.
 
- The @rhombus(->, ~at rhombus/type) operator associates to the right, so
- @rhombus(a -> b -> c) is the type of a function that takes @rhombus(a)
- and returns a function of type @rhombus(b -> c).
+ The @rhombus(->, ~at shplait/type) operator associates to the right, so
+ @rhombus(a -> b -> c, ~at shplait/type) is the type of a function that takes @rhombus(a)
+ and returns a function of type @rhombus(b -> c, ~at shplait/type).
 
 @examples(
   ~eval: eval
@@ -507,6 +508,8 @@ redefining or shadowing the names could easily create confusion:
 }
 
 @doc(
+  ~nonterminal:
+    rhs_expr: block expr
   expr.macro 'let $id = $rhs_expr:
                 $expr'
   expr.macro 'letrec $id = $rhs_expr:
@@ -541,9 +544,9 @@ redefining or shadowing the names could easily create confusion:
 
  Changes the value of @rhombus(id) to the result of @rhombus(expr). The
  @rhombus(id) must have been defined using @rhombus(def mutable). The
- type of @rhombus(id) and the typ eof @rhombus(expr) ust be the same.
+ type of @rhombus(id) and the type of @rhombus(expr) must be the same.
 
- No result is produced by the assignment expression. That is, the type
+ No useful result is produced by the assignment expression. That is, the type
  of the @rhombus(:=) expression is @rhombus(Void, ~at shplait/type).
 
 @examples(
@@ -664,11 +667,11 @@ redefining or shadowing the names could easily create confusion:
  either for variants of a type defined with @rhombus(type, ~decl), for
  empty or nonempty lists, for syntax patterns, or for integer cases.
 
- The most common us of @rhombus(match) is the @rhombus(variant_id) form,
+ The most common use of @rhombus(match) is the @rhombus(variant_id) form,
  with or without @rhombus(~else). All of the @rhombus(variant_id)s must
  be for variants of the same type, and the type of @rhombus(target_expr) must match
  that type. If @rhombus(~else) is not present, every variant associated
- with the type must have a case. In the unusul case that only
+ with the type must have a case. In the unusual case that only
  @rhombus(~else) is present, the type of @rhombus(target_expr) is
  unconstrained.
 
@@ -764,8 +767,8 @@ redefining or shadowing the names could easily create confusion:
  that contains the string produced by @rhombus(string_expr). Expressions
  @rhombus(expr) and @rhombus(expected_expr) must have the same type,
  while @rhombus(string_expr) must have the type
- @rhombus(String, ~at shplait/type). The result of a @rhombus(check) form
- is @rhombus(#void).
+ @rhombus(String, ~at shplait/type). The type of the @rhombus(check) expression
+ is @rhombus(Void, ~at shplait/type).
 
  When the result does not match the expected result, then an error is
  printed, but evaluation continues.
@@ -795,7 +798,7 @@ redefining or shadowing the names could easily create confusion:
 ){
 
  Returns the same result as @rhombus(expr), unless an exception is
- raised during @rhombus(expr), in which case @rhombus(handle_expr) is
+ raised during the evaluation of @rhombus(expr), in which case @rhombus(handle_expr) is
  evaluated and its result is returned. The type of @rhombus(expr) and the
  type of @rhombus(handle_expr) must be the same.
 
@@ -916,7 +919,7 @@ redefining or shadowing the names could easily create confusion:
   expr.macro 'time: $expr'
 ){
 
- Returns the resultof @rhombus(expr), but before returning, prints
+ Returns the result of @rhombus(expr), but before returning, prints
  information about how time passed when evaluating @rhombus(expr).
 
 }
@@ -1134,7 +1137,7 @@ These operators have lower precedence than arithmetic operators.
  result of the first @rhombus(expr) is @rhombus(#false) for @rhombus(&&)
  or @rhombus(#true) for @rhombus(||), then the second expression is not
  evaluated. Both expressions must have type
- @rhombus(Boolean, ~at schplait/type).
+ @rhombus(Boolean, ~at shplait/type).
 
  These operators have lower precedence than all other operators, and
  @rhombus(||) has lower precedence than @rhombus(&&).
@@ -1156,7 +1159,7 @@ These operators have lower precedence than arithmetic operators.
 ){
 
  The type of an expression that has a side effect and produces the value
- @rhombus(#:void). For example, the result type of @rhombus(println) is
+ @rhombus(#void). For example, the result type of @rhombus(println) is
  @rhombus(Void, ~at shplait/type).
 
 }
@@ -1296,7 +1299,7 @@ These operators have lower precedence than arithmetic operators.
 @subsection(~tag: "sec:symbol"){Symbols}
 
 A @deftech{symbol} is similar to a string in that it simply comprises a
-sequence of characters, but a symbol expression as written with a
+sequence of characters, but a symbol expression is written with a
 @rhombus(#') prefix, instead of in double quotes. Also, the character
 sequence of a symbol must be valid for an identifier.
 
@@ -1383,7 +1386,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
-  fun cons(elem :: ?a, lst :: Listof(?a)) :: ?a
+  fun cons(elem :: ?a, lst :: Listof(?a)) :: Listof(?a)
   fun first(lst :: Listof(?a)) :: ?a
   fun rest(lst :: Listof(?a)) :: Listof(?a)
   fun is_cons(lst :: Listof(?a)) :: Boolean
@@ -1397,7 +1400,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
  element of a nonempty list. The @rhombus(is_cons) and @rhombus(is_empty)
  functions report whether a list is nonempty or empty, respectively.
 
- The @rhombus(first) and @rhombus(rest) functions raise anexception when
+ The @rhombus(first) and @rhombus(rest) functions raise an exception when
  given an empty list.
 
 @examples(
@@ -1501,7 +1504,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
- fun map2(f :: ?a ?b -> ?c, lst1 :: Listof(?a), lst2 :: Listof(?a))
+ fun map2(f :: (?a, ?b) -> ?c, lst1 :: Listof(?a), lst2 :: Listof(?b))
    :: Listof(?c)
 ){
 
@@ -1542,8 +1545,8 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
  each time obtaining a new accumulated value. The second argument to
  @rhombus(foldl) or @rhombus(foldr) is the initial accumulated value, and
  it is provided as the first argument in each call to the given function
- @rhombus(f). While @rhombus(foldl) applies the function or items in the
- list from from to last, @rhombus(foldr) applies the function or items in
+ @rhombus(f). While @rhombus(foldl) applies the function to items in the
+ list from first to last, @rhombus(foldr) applies the function to items in
  the list from last to first.
 
 @examples(
@@ -1582,7 +1585,7 @@ brackets implicitly uses the @rhombus(#%index) form, but
   expr.macro 'Array($expr, ...)'
 ){
 
- Produces an array whose elements in order as the values produced by the
+ Produces an array whose elements in order are the values produced by the
  @rhombus(expr)s. All of the @rhombus(expr)s must have the same type.
 
 @examples(
@@ -1666,7 +1669,7 @@ A @deftech{box} is a mutable object that holds a single value.
   fun set_box(bx :: Boxof(?a), val :: ?a) :: Void
 ){
 
- The @rhombus(box) function a box that is distinct from all existing
+ The @rhombus(box) function produces a box that is distinct from all existing
  boxes and that initially holds @rhombus(val). The @rhombus(unbox)
  function extracts the current value of a box, and the @rhombus(set_box)
  function changes the value that is held by a box.
@@ -1836,8 +1839,8 @@ normally not written.
 ){
 
  Functions to look up a key in a @tech{map}. Since the key might not be
- mapped to a value, the value cannote be returned directly. Instead,
- @rhombus(map_get) returns @rhombus(some(@rhombus(val, ~var))) if
+ mapped to a value, the value cannot be returned directly. Instead,
+ @rhombus(map_get) returns @rhombus(some(#,(@rhombus(val, ~var)))) if
  @rhombus(key) is mapped to @rhombus(val, ~var) and @rhombus(none()) if
  @rhombus(key) is not mapped to a value.
 
@@ -1898,8 +1901,8 @@ normally not written.
 ){
 
  The @rhombus(map_remove) function works only on immutable maps, and it
- returns a new map without a mapping for @rhombus(key) (if there was
- one). The @rhombus(set_delete) function works only on mutable maps, and
+ returns a new map without a mapping for @rhombus(key), if there is
+ one. The @rhombus(map_delete) function works only on mutable maps, and
  it modifies the map to remove a mapping for @rhombus(key), if there is
  one.
 
@@ -1924,7 +1927,7 @@ normally not written.
 
 @examples(
   ~eval: eval
-  map_keys({ "a": 1, "b": 2})
+  map_keys({ "a": 1, "b": 2 })
 )
 
 }
@@ -2053,7 +2056,7 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
  @rhombus($, ~datum)-escaped identifier in the template is under a number of
  ellipses that match the repetition binding. Each element of the
  repetition is put in the result syntax object in place of the escape.
- The rules for patterns above show several example templates that sue repetitions.
+ The rules for patterns above show several example templates that use repetitions.
 
  If an escape does not refer to a repetition, then it must have an
  expression that produces a syntax object, and it must not be under any
@@ -2080,11 +2083,11 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
                          ...'»'
 ){
 
- Produces a syntax object, quoting the @rhombus(term)s literally intead
+ Produces a syntax object, quoting the @rhombus(term)s literally instead
  of treating them as subexpressions. Usually, @rhombus(#%quotes) is
  omitted, since it is implied by using quotes as an expression form.
 
- See @elemref("stxpat"){above} for informaTion about @rhombus($, ~datum)
+ See @elemref("stxpat"){above} for information about @rhombus($, ~datum)
  escapes within the quotes for a syntax object.
 
 }
@@ -2147,7 +2150,7 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 ){
 
  The inverse of @rhombus(syntax_to_integer), etc., converting a value
- into asyntax representation.
+ into a syntax representation.
 
 @examples(
   ~eval: eval
@@ -2163,12 +2166,12 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
   fun syntax_join(stx :: Syntax) :: Listof(Syntax)
 ){
 
- Functions for simple splitting and joins tasks. For more general and
+ Functions for simple splitting and joining tasks. For more general and
  precise tasks, use @rhombus(match) and template construction with
  @rhombus(#%quotes), potentially converting to and from form that
  @rhombus(list_to_syntax) and @rhombus(syntax_to_list) can handle.
 
- The @rhombus(syntax_split) function takes a single-group syntax oibject
+ The @rhombus(syntax_split) function takes a single-group syntax object
  and splits it into a list of term syntax objects, or it takes a
  multi-group syntax object and splits it into a list of group syntax
  objects.
@@ -2205,7 +2208,7 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 
 @section(~tag: "sec:module"){Modules and Imports}
 
-A Shplait program that starts
+A Shplait program that starts with
 @rhombus(#,(hash_lang()) #,(rhombuslangname(shplait))) is a module, and
 its definitions are all implicitly exported for use by other modules.
 Use @rhombus(import) in a module to import definitions from other
@@ -2240,7 +2243,7 @@ inside another module.
 
  If @rhombus(open, ~impo) is not used, then the last component of
  @rhombus(module_path) (not counting a file suffix, if any), is used to
- prefix all of the imported names. Use the prefix, then @litchar{.} then
+ prefix all of the imported names. Use the prefix, then @litchar{.}, then
  a name exported from the module to use that name. If
  @rhombus(open, ~impo) is used for the module, then its exported names
  can be used directly, without a prefix.
@@ -2248,8 +2251,10 @@ inside another module.
 }
 
 @doc(
+  ~nonterminal:
+    defn_or_expr: block defn_or_expr ~expr
   decl.macro 'module $id:
-                $definition_or_expr
+                $defn_or_expr
                 ...'
 ){
 
@@ -2458,7 +2463,7 @@ predefined functions like @rhombus(map) refer to a lazy variant in a
 lazy context or an eager variant in an eager context.
 
 A lazy Shplait module will not interoperate well with an eager module in
-general, but use Use @rhombus(~accomodating) in place of @rhombus(~lazy)
+general, but use @rhombus(~accomodating) in place of @rhombus(~lazy)
 to define a Shplait module that uses eager evaluation and can
 interoperate with a lazy Shplait module.
 
@@ -2467,4 +2472,4 @@ interoperate with a lazy Shplait module.
 Use @rhombus(~fuel #,(@rhombus(amount, ~var))) as a @tech{language option} to
 specify how much effort should be spent resolving potentially cyclic
 dependencies due to inference of polymorphic recursion. The default fuel
-amount is 100.
+amount is @rhombus(100).
