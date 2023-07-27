@@ -9,7 +9,7 @@ as the start of a program module.
 
 The package is meant to be installed with the Racket package manager:
 
- * In recent versions of DrRacket, choose "Install Package.."
+ * In recent versions of DrRacket, choose "Install Package..."
    from the "File" menu, and enter
 
    ```
@@ -18,7 +18,7 @@ The package is meant to be installed with the Racket package manager:
 
    in the dialog.
 
- * From the comamnd line:
+ * From the command line:
 
    ```
    raco pkg install shplait
