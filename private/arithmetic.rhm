@@ -13,9 +13,11 @@ decl.macro 'def_binary $name $op $type_constr: $option; ...':
       ~op_stx self
       $option
       ...
-      t.unify_do(left, t_s.lookup_type(left, #false), t.Num(self))
-      t.unify_do(right, t_s.lookup_type(right, #false), t.Num(self))
-      t_s.wrap_type('force($('$')left) $('$')('$op'.relocate(self)) force($('$')right)',
+      let [left_ty, new_left] = t_s.lookup_type(left, #false)
+      let [right_ty, new_right] = t_s.lookup_type(right, #false)
+      t.unify_do(left, left_ty, t.Num(self))
+      t.unify_do(right, right_ty, t.Num(self))
+      t_s.wrap_type('force($('$')new_left) $('$')('$op'.relocate(self)) force($('$')new_right)',
                     t. $type_constr ('$('$')left $('$')self $('$')right'))»'
 
 def_binary shplus + Num:
@@ -40,8 +42,9 @@ def_binary shge >= Bool:
 export: rename: _not as !
 expr.macro '_not $right':
   ~op_stx self
-  t.unify_do(right, t_s.lookup_type(right, #false), t.Bool(self))
-  t_s.wrap_type('! force($right)', t.Bool('$self $right'))
+  let [right_ty, new_right] = t_s.lookup_type(right, #false)
+  t.unify_do(right, right_ty, t.Bool(self))
+  t_s.wrap_type('! force($new_right)', t.Bool('$self $right'))
 
 decl.macro 'def_equality $op $type_constr':
   '«export: rename: equals as $op
@@ -49,9 +52,11 @@ decl.macro 'def_equality $op $type_constr':
       ~op_stx self
       ~weaker_than shplus shminus shtimes shdiv shmod
       let tv = t.gen_tvar(self)
-      t.unify_do(left, t_s.lookup_type(left, #false), tv)
-      t.unify_do(right, t_s.lookup_type(right, #false), tv)
-      t_s.wrap_type('force_all($('$')left) $('$')('$op'.relocate(self)) force_all($('$')right)',
+      let [left_ty, new_left] = t_s.lookup_type(left, #false)
+      let [right_ty, new_right] = t_s.lookup_type(right, #false)
+      t.unify_do(left, left_ty, tv)
+      t.unify_do(right, right_ty, tv)
+      t_s.wrap_type('force_all($('$')new_left) $('$')('$op'.relocate(self)) force_all($('$')new_right)',
                     t.Bool(self))»'
 
 def_equality ==
@@ -66,9 +71,11 @@ export:
 meta:
   fun parse_bool(left, right, self, op :: Syntax):
     let bool = t.Bool(self)
-    t.unify_do(self, t_s.lookup_type(left, #false), bool)
-    t.unify_do(self, t_s.lookup_type(right, #false), bool)
-    t_s.wrap_type('force($left) $(op.relocate(self)) force($right)',
+    let [left_ty, new_left] = t_s.lookup_type(left, #false)
+    let [right_ty, new_right] = t_s.lookup_type(right, #false)
+    t.unify_do(self, left_ty, bool)
+    t.unify_do(self, right_ty, bool)
+    t_s.wrap_type('force($new_left) $(op.relocate(self)) force($new_right)',
                   bool)
 
 expr.macro '$left shand $right':

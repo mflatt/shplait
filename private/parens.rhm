@@ -21,8 +21,9 @@ expr.macro
     let tvar_box = Box(fr.tvars)
     let ty = f.parse_type('$t_t ...', op, op, tvar_box)
     fr.tvars := tvar_box.val
-    t.unify_do(op, t_s.lookup_type(e, e.group), ty)
-    values(t_s.wrap_type(e, ty),
+    let [e_ty, new_e] = t_s.lookup_type(e, e.group)
+    t.unify_do(op, e_ty, ty)
+    values(t_s.wrap_type(new_e, ty),
            '$tail ...')
 | 'shparens $parens $tail ...':
     ~op_stx self

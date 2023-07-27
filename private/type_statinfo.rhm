@@ -39,7 +39,9 @@ meta:
     | ~else: t.gen_tvar(#false)
 
   fun lookup_type(expr :: Syntax, orig :: maybe(Syntax)):
-    t.poly_instance(lookup_poly_type(expr, orig))
+    let expr = expr_meta.parse_more(expr)
+    [t.poly_instance(lookup_poly_type(expr, orig)),
+     expr]
 
   fun wrap_type(expr :: Syntax, ty):
     statinfo_meta.wrap(expr, '(($type_key, $(type_to_syntax(ty))))')

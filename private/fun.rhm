@@ -99,9 +99,11 @@ defn.macro
 expr.macro '$fn call ($(arg :: expr_meta.Parsed), ...)':
   ~stronger_than: ~other
   let res_tv = t.gen_tvar(fn)
+  let [fn_ty, new_fn] = t_s.lookup_type(fn, #false)
+  let [[arg_ty, new_arg], ...] = [t_s.lookup_type(arg, arg.group), ...]
   t.unify_do(fn,
-             t_s.lookup_type(fn, #false),
+             fn_ty,
              t.Arrow(fn,
-                     [t_s.lookup_type(arg, arg.group), ...],
+                     [arg_ty, ...],
                      res_tv))
-  t_s.wrap_type('force($fn) (maybe_delay($arg.group, $arg), ...)', res_tv)
+  t_s.wrap_type('force($new_fn) (maybe_delay($arg.group, $new_arg), ...)', res_tv)

@@ -18,6 +18,9 @@ class Traceable(mutable proc, name):
   | call(x, y, z): proc(x, y, z)
   | call(x, y, z, w): proc(x, y, z, w)
   | call(arg, ...): proc(arg, ...)
+  private implements Printable
+  private override describe(mode, recur):
+    "#<function:" +& name +& ">"
 
 fun maybe_wrap_traceable(v, name):
   if v is_a Function
@@ -78,8 +81,8 @@ fun call_with_tracing(v, thunk):
 
 expr.macro 'trace $fun_term ...: $(body :: expr_meta.Parsed)':
   let '$(expr :: expr_meta.Parsed)' = '$fun_term ...'
-  let ty = t_s.lookup_type(body, body.group)
+  let [ty, new_body] = t_s.lookup_type(body, body.group)
   t_s.wrap_type('call_with_tracing($expr,
                                    fun ():
-                                     $body)',
+                                     $new_body)',
                 ty)

@@ -10,11 +10,11 @@ export:
 
 expr.macro 'shlet $(id :: Identifier) = $rhs ...:
               $(body :: Group)':
-  def tmp = syntax_meta.flip_introduce(id)
+  def tmp = Syntax.make_temp_id(id, ~keep_name: #true)
   'b.block:
-     d.def tmp = $rhs ...
+     d.def $tmp = $rhs ...
      b.block:
-      d.def $id = tmp
+      d.def $id = $tmp
       $body'
 
 

@@ -17,7 +17,8 @@ export:
 
 expr.macro 'shArray $(elems && '($(elem :: expr_meta.Parsed), ...)')':
   let tv = t.gen_tvar(#false)
-  Function.pass(t.unify_do(elem, tv, t_s.lookup_type(elem, elem.group)),
+  let [[elem_ty, new_elem], ...] = [t_s.lookup_type(elem, elem.group), ...]
+  Function.pass(t.unify_do(elem, tv, elem_ty),
                 ...)
   t_s.wrap_type('Array(delay($elem), ...)'.relocate_span([elems]),
                 t.ArrayOf(elems, tv))
@@ -26,16 +27,21 @@ expr.macro
 | '$left shindex $(brackets && '[$(index :: expr_meta.Parsed)]') $(assign && ':=') $rhs_term ...':
     let '$(rhs :: expr_meta.Parsed)' = '$rhs_term ...'
     let tv = t.gen_tvar(#false)
-    t.unify_do(#false, t.ArrayOf(brackets, tv), t_s.lookup_type(left, #false))
-    t.unify_do(#false, t.Num(brackets), t_s.lookup_type(index, index.group))
-    t.unify_do(#false, tv, t_s.lookup_type(rhs, rhs.group))    
-    t_s.wrap_type('(force($left) :~ Array)[force($index)] := delay($rhs)'.relocate_span([left, rhs]),
+    let [left_ty, new_left] = t_s.lookup_type(left, #false)
+    t.unify_do(#false, t.ArrayOf(brackets, tv), left_ty)
+    let [index_ty, new_index] = t_s.lookup_type(index, index.group)
+    t.unify_do(#false, t.Num(brackets), index_ty)
+    let [rhs_ty, new_rhs] = t_s.lookup_type(rhs, rhs.group)
+    t.unify_do(#false, tv, rhs_ty)    
+    t_s.wrap_type('(force($new_left) :~ Array)[force($new_index)] := delay($new_rhs)'.relocate_span([left, rhs]),
                   t.Vd(assign))
 | '$left shindex $(brackets && '[$(index :: expr_meta.Parsed)]') $tail ...':
     let tv = t.gen_tvar(#false)
-    t.unify_do(#false, t.ArrayOf(brackets, tv), t_s.lookup_type(left, #false))
-    t.unify_do(#false, t.Num(brackets), t_s.lookup_type(index, index.group))
-    values(t_s.wrap_type('(force($left) :~ Array)[force($index)]'.relocate_span([left, brackets]),
+    let [left_ty, new_left] = t_s.lookup_type(left, #false)
+    t.unify_do(#false, t.ArrayOf(brackets, tv), left_ty)
+    let [index_ty, new_index] = t_s.lookup_type(index, index.group)
+    t.unify_do(#false, t.Num(brackets), index_ty)
+    values(t_s.wrap_type('(force($new_left) :~ Array)[force($new_index)]'.relocate_span([left, brackets]),
                          tv),
            '$tail ...')
 

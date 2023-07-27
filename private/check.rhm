@@ -16,23 +16,27 @@ expr.macro
      $(left :: expr_meta.Parsed)
      ~is $(right :: expr_meta.Parsed)':
     ~op_stx self
-    t.unify_do(self, t_s.lookup_type(left, #false), t_s.lookup_type(right, right.group))
+    let [left_ty, new_left] = t_s.lookup_type(left, left.group)
+    let [right_ty, new_right] = t_s.lookup_type(right, right.group)
+    t.unify_do(self, left_ty, right_ty)
     t_s.wrap_type('$('check'.relocate(self)):
-                     force_all($left)
-                     ~is force_all($right)',
+                     force_all($new_left)
+                     ~is force_all($new_right)',
                   t.Vd(self))
 | 'shcheck:
      $(left :: expr_meta.Parsed)
      ~raises $(right :: expr_meta.Parsed)':
     ~op_stx self
-    t.unify_do(self, t_s.lookup_type(right, right.group), t.Str(self))
+    let [right_ty, new_right] = t_s.lookup_type(right, right.group)
+    t.unify_do(self, right_ty, t.Str(self))
     t_s.wrap_type('$('check'.relocate(self)):
                      force_all($left)
-                     ~raises $right',
+                     ~raises $new_right',
                   t.Vd(self))
 
 expr.macro
 | 'time: $(expr :: expr_meta.Parsed)':
+    let [expr_ty, new_expr] = t_s.lookup_type(expr, expr.group)
     t_s.wrap_type('measure.time:
-                     $expr',
-                  t_s.lookup_type(expr, expr.group))
+                     $new_expr',
+                  expr_ty)

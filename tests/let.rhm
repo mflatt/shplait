@@ -1,0 +1,7 @@
+#lang shplait
+
+check:
+  let f = (fun(x): x):
+    to_string(f)
+  ~is "#<function:f>"
+

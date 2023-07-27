@@ -18,10 +18,13 @@ expr.macro 'shif $tst ...
   let '$(thn :: expr_meta.Parsed)' = '$thn ...'
   let '$(els :: expr_meta.Parsed)' = '$els ...'
   let tv = t.gen_tvar(#false)
-  t.unify_do(tst, t.Bool(self), t_s.lookup_type(tst, tst.group))
-  t.unify_do(tst, t_s.lookup_type(thn, thn.group), tv)
-  t.unify_do(tst, t_s.lookup_type(els, els.group), tv)
-  t_s.wrap_type('if force($tst) | $thn | $els', tv)
+  let [tst_ty, new_tst] = t_s.lookup_type(tst, tst.group)
+  let [thn_ty, new_thn] = t_s.lookup_type(thn, thn.group)
+  let [els_ty, new_els] = t_s.lookup_type(els, els.group)
+  t.unify_do(tst, t.Bool(self), tst_ty)
+  t.unify_do(tst, thn_ty, tv)
+  t.unify_do(tst, els_ty, tv)
+  t_s.wrap_type('if force($new_tst) | $new_thn | $new_els', tv)
 
 expr.macro
 | 'shcond
@@ -34,14 +37,17 @@ expr.macro
     let '[$(tst :: expr_meta.Parsed), ...]' = '[$tst ..., ...]'
     let '[$(body :: expr_meta.Parsed), ...]' = '[$body, ...]'
     let '$(els :: expr_meta.Parsed)' = els
+    let [[tst_ty, new_tst], ...] = [t_s.lookup_type(tst, tst.group), ...]
+    let [[body_ty, new_body], ...] = [t_s.lookup_type(body, body.group), ...]
+    let [els_ty, new_els] = t_s.lookup_type(els, els.group)
     let tv = t.gen_tvar(#false)
-    Function.pass(t.unify_do(tst, t.Bool(self), t_s.lookup_type(tst, tst.group)), ...)
-    Function.pass(t.unify_do(tst, tv, t_s.lookup_type(body, body.group)), ...)
-    t.unify_do(els, tv, t_s.lookup_type(els, els.group))
+    Function.pass(t.unify_do(tst, t.Bool(self), tst_ty), ...)
+    Function.pass(t.unify_do(tst, tv, body_ty), ...)
+    t.unify_do(els, tv, els_ty)
     t_s.wrap_type('$('cond'.relocate(self))
-                   | force($tst): $body
+                   | force($new_tst): $new_body
                    | ...
-                   | ~else: $els',
+                   | ~else: $new_els',
                   tv)
 | 'shcond
    | $tst ...:
@@ -51,9 +57,11 @@ expr.macro
     let '[$(tst :: expr_meta.Parsed), ...]' = '[$tst ..., ...]'
     let '[$(body :: expr_meta.Parsed), ...]' = '[$body, ...]'
     let tv = t.gen_tvar(self)
-    Function.pass(t.unify_do(tst, t.Bool(self), t_s.lookup_type(tst, tst.group)), ...)
-    Function.pass(t.unify_do(tst, tv, t_s.lookup_type(body, body.group)), ...)
+    let [[tst_ty, new_tst], ...] = [t_s.lookup_type(tst, tst.group), ...]
+    let [[body_ty, new_body], ...] = [t_s.lookup_type(body, body.group), ...]
+    Function.pass(t.unify_do(tst, t.Bool(self), tst_ty), ...)
+    Function.pass(t.unify_do(tst, tv, body_ty), ...)
     t_s.wrap_type('$('cond'.relocate(self))
-                   | force($tst): $body
+                   | force($new_tst): $new_body
                    | ...',
                   tv)

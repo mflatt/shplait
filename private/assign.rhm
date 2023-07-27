@@ -14,8 +14,10 @@ expr.macro '$left assign $right':
   ~weaker_than: ~other
   cond
   | statinfo_meta.lookup(left, '#%assignable'):
-      t.unify_do(left, t_s.lookup_type(left, #false), t_s.lookup_type(right, #false))
+      let [left_ty, new_left] = t_s.lookup_type(left, #false)
+      let [right_ty, new_right] = t_s.lookup_type(right, #false)
+      t.unify_do(left, left_ty, right_ty)
       let op = ':='.relocate(self)
-      t_s.wrap_type('$left $op delay($right)', t.Vd(self))
+      t_s.wrap_type('$new_left $op delay($new_right)', t.Vd(self))
   | ~else:
       syntax_meta.error("not a variable that is assignable", self, left)
