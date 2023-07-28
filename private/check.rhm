@@ -21,7 +21,7 @@ expr.macro
     t.unify_do(self, left_ty, right_ty)
     t_s.wrap_type('$('check'.relocate(self)):
                      force_all($new_left)
-                     ~is force_all($new_right)',
+                     ~is_now force_all($new_right)',
                   t.Vd(self))
 | 'shcheck:
      $(left :: expr_meta.Parsed)

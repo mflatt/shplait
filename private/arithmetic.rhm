@@ -46,7 +46,7 @@ expr.macro '_not $right':
   t.unify_do(right, right_ty, t.Bool(self))
   t_s.wrap_type('! force($new_right)', t.Bool('$self $right'))
 
-decl.macro 'def_equality $op $type_constr':
+decl.macro 'def_equality $op $as_op':
   '«export: rename: equals as $op
     expr.macro '$('$')left equals $('$')right':
       ~op_stx self
@@ -56,12 +56,12 @@ decl.macro 'def_equality $op $type_constr':
       let [right_ty, new_right] = t_s.lookup_type(right, #false)
       t.unify_do(left, left_ty, tv)
       t.unify_do(right, right_ty, tv)
-      t_s.wrap_type('force_all($('$')new_left) $('$')('$op'.relocate(self)) force_all($('$')new_right)',
+      t_s.wrap_type('force_all($('$')new_left) $('$')('$as_op'.relocate(self)) force_all($('$')new_right)',
                     t.Bool(self))»'
 
-def_equality ==
-def_equality !=
-def_equality ===
+def_equality == is_now
+def_equality != !=
+def_equality === ===
 
 export:
   rename:

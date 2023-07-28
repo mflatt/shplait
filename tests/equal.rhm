@@ -1,0 +1,15 @@
+#lang shplait
+
+check:
+  1 == 1
+  ~is #true
+
+// `==` is Rhombus's `is_now`
+check:
+  box(1) == box(1)
+  ~is #true
+
+// `~is` is Rhombus's `~is_now`
+check:
+  box(1)
+  ~is box(1)

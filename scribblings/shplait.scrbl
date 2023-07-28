@@ -1051,11 +1051,20 @@ These operators have lower precedence than arithmetic operators.
  @rhombus(expr)s have the same type. The overall comparison expression
  has type @rhombus(Boolean, ~at shplait/type).
 
+ For mutable values, @rhombus(==) checks whether the values are equal
+ ``now,'' even though they may be changed to be different in the future
+ (and @rhombus(!=) checks that values are not equal now).
+
 @examples(
   ~eval: eval
   ~repl:
     1 == 1
     "apple" == "orange"
+  ~repl:
+    def b = box(1)
+    b == box(1)
+    set_box(b, 2)
+    b == box(1)
 )
 
 }
