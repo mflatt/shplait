@@ -7,6 +7,9 @@ export:
   only_space spacer.typeset:
     fun
     type
+    def
+    let
+    letrec
 
 spacer.bridge fun(self, tail, context, esc):  
   ~in: ~expr ~defn
@@ -58,4 +61,35 @@ meta:
         '$name ... $op $(spacer.adjust_sequence('$ty ...', #'#{shplait/type}, esc))'.relocate(arg)
     | ~else:
         arg
-      
+
+spacer.bridge def(self, tail, context, esc):
+  ~in: ~expr
+  adjust_def_like(self, tail, context, esc)
+
+spacer.bridge let(self, tail, context, esc):
+  ~in: ~expr
+  adjust_def_like(self, tail, context, esc)
+
+spacer.bridge letrec(self, tail, context, esc):
+  ~in: ~expr
+  adjust_def_like(self, tail, context, esc)
+
+meta:
+  fun adjust_def_like(self, tail, context, esc):
+    match tail
+    | '$name ... $(op && '=') $rest ...':
+        let new_rest = spacer.adjust_sequence('$rest ...', context, esc)
+        '$self $(adjust_arg_maybe_values('$name ...', context, esc)) $op $new_rest'
+    | '$name ... : $(b :: Block)':
+        let new_block = spacer.adjust_term(b, context, esc)
+        '$self $(adjust_arg_maybe_values('$name ...', context, esc)) $new_block'
+    | '$other ...':
+        '$self $other ...'
+
+  fun adjust_arg_maybe_values(arg, context, esc):
+    match arg
+    | '$(vals_id && 'values') $(parens && '($val_arg, ...)')':
+        let new_args = '($(adjust_arg(val_arg, context, esc)), ...)'.relocate(parens)
+        '$vals_id $new_args'.relocate(arg)
+    | ~else:
+        adjust_arg(arg, context, esc)
