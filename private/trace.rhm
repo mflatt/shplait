@@ -1,6 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   "type_statinfo.rhm" as t_s
+  "lazy.rhm" open
 
 export:
   trace
@@ -31,6 +32,7 @@ def current_indentation = Parameter.make("")
 def tracing_mark = Symbol.gen()
 
 fun call_with_tracing(v, thunk):
+  let v = dynamic_force(v)
   match v
   | tr :: Traceable:
       let mutable alt_proc:
@@ -42,13 +44,15 @@ fun call_with_tracing(v, thunk):
                                PrintDesc.list(
                                  PrintDesc.concat(Printable.describe(tr.name),
                                                   "("),
-                                 [Printable.describe(arg, ~mode: #'expr), ...],
+                                 parameterize { current_print_force_all: #false }:
+                                   [Printable.describe(arg, ~mode: #'expr), ...],
                                  ")"),
                                "\n"))
           fun show_result(result):
             Printable.render(PrintDesc.concat(
                                PrintDesc.concat("<", current_indentation(), " "),
-                               Printable.describe(result, ~mode: #'expr),
+                               parameterize { current_print_force_all: #false }:
+                                 Printable.describe(result, ~mode: #'expr),
                                "\n"
                              ))
           Continuation.call_with_immediate_mark(

@@ -1,4 +1,5 @@
 #lang shplait
+~lazy
 
 type Value
 | numV(n :: Number)
@@ -177,7 +178,7 @@ module test:
                         let x256 = (fun (n): x16(x16(n))):
                           let x65536 = (fun (n): x256(x256(n))):
                             x65536(1)'),
-           mt_env)    
+           mt_env)
                
 // num_plus and num_mult ----------------------------------------
 fun num_op(op :: (Number, Number) -> Number, l :: Value, r :: Value) :: Value:

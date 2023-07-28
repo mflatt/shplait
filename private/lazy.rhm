@@ -10,6 +10,7 @@ export:
   dynamic_force
   dynamic_force_all
   Forceable
+  current_print_force_all
 
 module representation:
   export:
@@ -22,10 +23,18 @@ meta:
     is_lazy := is_lz
     is_accomodating := is_lz || is_acc
 
+def current_print_force_all = Parameter.make(#true)
+
 class Lazy(mutable v, mutable is_forced):
   implements Printable
   override describe(mode, recur):
-    recur(dynamic_force(this))
+    cond
+    | current_print_force_all():
+        recur(dynamic_force(this))
+    | is_forced:
+        recur(this.v)
+    | ~else:
+        "#<thunk>"
 
 interface Forceable:
   method force_all()
