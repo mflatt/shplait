@@ -820,7 +820,7 @@ redefining or shadowing the names could easily create confusion:
  level. When a traced call has the same continuation as the previous
  traced call, the nesting depth is not increased, and no result is shown
  for the previous call (since it is the same as the new call's result).
- When tracing lazy evaluation (see @secref("sec:option")), arguments and
+ When tracing lazy evaluation (see @secref("sec:lazy")), arguments and
  results may print as @litchar{#<thunk>}, indicating that an expression's
  value has not been demanded, yet.
 
@@ -2219,7 +2219,7 @@ a few small exceptions:
    call with an argument whose type is different than that for the
    current call) is allowed. Recursive types, however, are prohibited.
    Polymorphic recursion is not decidable, so see @rhombus(~fuel) in
-   @secref("sec:option").
+   @secref("sec:fuel").
 
    The usual value restriction applies for inferring polymorphic
    types, where expression matching the following grammar
@@ -2265,37 +2265,77 @@ pink) all of the expressions whose type contributed to the
 failure. That's often too much information. As usual, explicit type
 annotations can help focus the error message.
 
+Type checking can be disabled for a Shplait module using
+@rhombus(~untyped) @tech{language option}. See @secref("sec:untyped")
+for more information.
 
 @// ------------------------------------------------------------
 
-@section(~tag: "sec:option"){Untyped, Lazy, and Fuel Modes}
+@section(~tag: "sec:option"){Language Options}
 
-Use @rhombus(~untyped) on a line immediately after
-@rhombus(#,(hash_lang()) #,(@rhombuslangname(shplait))) to disable type
+Keyword @deftech{language options} written immediately after
+@rhombus(#,(hash_lang()) #,(@rhombuslangname(shplait))) change the
+language that is implemented by
+@rhombus(#,(hash_lang()) #,(@rhombuslangname(shplait))). ``Immediately
+after'' means that no definitions or expressions can appear before a
+keyword but whitespace and comments can precede a keyword.
+
+The @rhombus(~untyped), @rhombus(~lazy) or @rhombus(~accomodating), and
+@rhombus(~fuel) modifiers can be combined within a module, each on its
+own line, and the combination can be declared in any order. Only one of
+@rhombus(~lazy) and @rhombus(~accomodating) can be used.
+
+@subsection(~tag: "sec:untyped"){Untyped Mode}
+
+The @rhombus(~untyped) @tech{language option} disables type
 checking. The syntax of a @rhombuslangname(shplait) module is the same
 with and without @rhombus(~untyped), but types are ignored when
 @rhombus(~untyped) is specified. An untyped Shplait module can
 interoperate with a typed Shplait module, but soundness guarantees
 normally provided by Shplait are not preserved.
 
-Use @rhombus(~lazy) on a line immediately after
-@rhombus(#,(hash_lang()) #,(@rhombuslangname(shplait))) to switch to
-lazy evaluation mode. The syntax and type system are unchanged, but
-argument expressions for function calls are evaluated only when forced
-(by a test or by printing, ultimately), except that expression fitting the
-@nontermref(value) grammar are not delayed. A lazy Shplait module will not
-interoperate well with an eager module in general, but use Use
-@rhombus(~accomodating) in place of @rhombus(~lazy) to define a Shplait
-module that uses eager evaluation and can interoperate with a lazy
-Shplait module.
+@subsection(~tag: "sec:lazy"){Lazy Mode}
 
-Use @rhombus(~fuel #,(@rhombus(amount, ~var))) on a line immediately
-after @rhombus(#,(hash_lang()) #,(@rhombuslangname(shplait))) to
+The @rhombus(~lazy) @tech{language option} changes Shplait to
+lazy evaluation. The syntax and type system are unchanged, but the
+evaluation of certain expression positions are delayed until forced (by
+a test or by printing, ultimately):
+
+@itemlist(
+
+ @item{the right-hand side of a definition;}
+
+ @item{argument in a function call (including calls to variant
+ constructors);}
+
+ @item{expressions for elements in a list construction using @litchar{[]},
+ in a tuple using @rhombus(values), or an array using @rhombus(Array);}
+
+ @item{expressions for values (not keys) in a map construction using
+ @litchar{{}}; and}
+
+ @item{the right-hand side of an assignment}
+
+ @item{... but expressions fitting the @nontermref(value) grammar are
+ not delayed.}
+
+)
+
+Printing a value forces all components of the value, such as elements of
+a list. Note that every module-level expression's result is printed,
+unless the result is @rhombus(#void), so that forces results.
+Accessing just one component of a compound value (such as an
+element of a list) will not force the other components. Functions like
+@rhombus(map) behave lazily when given a lazy-function argument.
+
+A lazy Shplait module will not interoperate well with an eager module in
+general, but use Use @rhombus(~accomodating) in place of @rhombus(~lazy)
+to define a Shplait module that uses eager evaluation and can
+interoperate with a lazy Shplait module.
+
+@subsection(~tag: "sec:fuel"){Inference Fuel}
+
+Use @rhombus(~fuel #,(@rhombus(amount, ~var))) as a @tech{language option} to
 specify how much effort should be spent resolving potentially cyclic
 dependencies due to inference of polymorphic recursion. The default fuel
 amount is 100.
-
-The @rhombus(~untyped), @rhombus(~lazy) or @rhombus(~accomodating), and
-@rhombus(~fuel) modifiers can be combined within a module, each on its
-own line, and the combination can be declared in any order. Only one of
-@rhombus(~lazy) and @rhombus(~accomodating) can be used.
