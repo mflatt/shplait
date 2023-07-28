@@ -5,6 +5,8 @@ import:
     "type.rhm" as t
   "frame.rhm" as f
   "type_statinfo.rhm" as t_s
+  "value.rhm".value
+  "value.rhm".value_meta
 
 export:
   except_space expr:
@@ -33,4 +35,10 @@ expr.macro '$left type_assert':
   ~op_stx self
   syntax_meta.error("needs to be in a type position or in parentheses",
                     self)
-  
+
+value.macro
+| 'shparens ($(g :: Group))':
+    match g
+    | '$(v :: value_meta.Parsed)': v
+| 'shparens $_ ...':
+    '#false'

@@ -12,7 +12,8 @@
     type: block
     typed_id: block
     expr: block
-    defn: block)
+    defn: block
+    value: block)
 
 @(def rhombus_scrbl = ModulePath.s_exp(ModulePath 'lib("rhombus/scribblings/rhombus.scrbl")'))
 
@@ -814,11 +815,14 @@ redefining or shadowing the names could easily create confusion:
 
  Tracing prints @litchar{=>} for each function call, adding one
  additional @litchar{=} to the front of @litchar{=>} for each nesting
- level. It print @litchar{<=} before showing each result, addin one
+ level. It prints @litchar{<=} before showing each result, adding one
  additional @litchar{=} to the end of @litchar{<=} for each nesting
  level. When a traced call has the same continuation as the previous
  traced call, the nesting depth is not increased, and no result is shown
  for the previous call (since it is the same as the new call's result).
+ When tracing lazy evaluation (see @secref("sec:option")), arguments and
+ results may print as @litchar{#<thunk>}, indicating that an expression's
+ value has not been demanded, yet.
 
 @examples(
   ~eval: eval
@@ -2227,13 +2231,13 @@ a few small exceptions:
   ~nonterminal:
     maybe_type: fun maybe_type ~defn
   grammar value:
+    ($value)
     fun ($typed_id, ...) $maybe_type: $expr
     values($value, ...)
     [$value, ...]
     $variant_id($value, ...)
     $literal
     $id
-    '$template'
 ){}
 
    where @rhombus(variand_id, ~var) refers to any
@@ -2278,7 +2282,8 @@ Use @rhombus(~lazy) on a line immediately after
 @rhombus(#,(hash_lang()) #,(@rhombuslangname(shplait))) to switch to
 lazy evaluation mode. The syntax and type system are unchanged, but
 argument expressions for function calls are evaluated only when forced
-(by a test or by printing, ultimately). A lazy Shplait module will not
+(by a test or by printing, ultimately), except that expression fitting the
+@nontermref(value) grammar are not delayed. A lazy Shplait module will not
 interoperate well with an eager module in general, but use Use
 @rhombus(~accomodating) in place of @rhombus(~lazy) to define a Shplait
 module that uses eager evaluation and can interoperate with a lazy

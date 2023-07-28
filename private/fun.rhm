@@ -83,7 +83,7 @@ expr.macro 'function ($arg, ...) $(res_type :: MaybeType):
            ~body:
              $body
      »'
-  t_s.wrap_type(expr, arrow_type)
+  t_s.wrap_type(delay_function(expr), arrow_type)
 
 defn.macro
 | 'function $(id :: Identifier) ($arg, ...) $(res_type :: MaybeType):

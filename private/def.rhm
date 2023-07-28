@@ -24,20 +24,21 @@ meta:
     let tvar_box = Box(IdMap{})
     let poly_context = f.get_current_frame().poly_context
     let base_tvars = f.get_current_frame().all_tvars()
+    let (ok_poly, val_ty, is_value):
+      parameterize { current_value_tvar_box: tvar_box }:
+        match mutable_tag
+        | '':
+            match rhs
+            | '$(v :: value_meta.Parsed)' when v.unwrap():
+                // the type `v` might be a function type to help
+                // with specific mismatch messages
+                values(#true, t_s.syntax_to_type(v), #true)
+            | ~else:
+                values(#false, #false, #false)
+        | ~else:
+            values(#false, #false, #false)
     let [ty, ...]:
       parameterize { current_value_tvar_box: tvar_box }:
-        let (ok_poly, val_ty):
-          match mutable_tag
-          | '':
-              match rhs
-              | '$(v :: value_meta.Parsed)' when v.unwrap():
-                  // the type `v` might be a function type to help
-                  // with specific mismatch messages
-                  values(#true, t_s.syntax_to_type(v))
-              | ~else:
-                  values(#false, #false)
-          | ~else:
-                  values(#false, #false)
         cond
         | ok_poly:
             let [ty, ...]:
@@ -60,7 +61,7 @@ meta:
     let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.value)
     let (tuple_lhs, rhs_delay, infer_id):
       match [id, ...]:
-      | [id]: values(id, 'delay', id)
+      | [id]: values(id, if is_value | 'values' | 'delay', id)
       | _: values('tu.Tuple([$id, ...])',
                   // force tuple, while tuple construction delays values; this is
                   // not as lazy as it could be, because we could delay the unpacking

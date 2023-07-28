@@ -1,0 +1,43 @@
+#lang shplait
+~lazy
+
+import:
+  open: "check_prints.rhm"
+
+check_prints:
+  fun f(x): x + 1
+  trace f:
+    f(10)
+  "=> f(10)\n<= 11\n"
+
+check_prints:
+  fun f(x): x + 1
+  trace f:
+    f(10+10)
+  "=> f(#<thunk>)\n<= 21\n"
+
+check_prints:
+  fun f(x): x
+  fun g(y): y + 1
+  trace f:
+    trace g:
+      // using `to_string` has the effect of demanding a value within `trace`
+      to_string(f(g(1)))
+  ("=> f(#<thunk>)\n"
+     +& "<= #<thunk>\n"
+     +& "=> g(1)\n"
+     +& "<= 2\n")
+
+macro 'check_is_value $expr':
+  '«check_prints:
+      fun f(x): x
+      trace f:
+        f($expr)
+      "=> f(" +& ($expr) +& ")\n<= " +& ($expr) +& "\n"»'
+
+check_is_value 1
+check_is_value []
+check_is_value [1, 2]
+check_is_value (1)
+check_is_value values(1, 2)
+check_is_value { 1: "a" }

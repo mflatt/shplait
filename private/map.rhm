@@ -5,8 +5,8 @@ import:
   "type_statinfo.rhm" as t_s
   "value.rhm".value
   "value.rhm".value_meta
+  "value.rhm".all_value_types
   "wrap.rhm" open
-  "list.rhm"!for_map as lfm
   "tuple.rhm"!tuple as tu
   "lazy.rhm" open
 
@@ -24,13 +24,13 @@ export:
 value.macro
 | 'braces { $key_term ... :  $(val :: value_meta.Parsed), ... }':
     let '($(key :: value_meta.Parsed), ...)' = '($key_term ..., ...)'
-    def key0 = lfm.extract_common_type([key, ...])
-    def val0 = lfm.extract_common_type([val, ...])
-    if key0 && val0
-    | t_s.type_to_syntax(t.ListOf(#false, t.MapOf(#false,
-                                                  t_s.syntax_to_type(key0),
-                                                  t_s.syntax_to_type(val0))))
-    | '#false'
+    cond
+    | all_value_types([key, ..., val, ...]):
+        // context only cares about functionness, not precise type
+        def key0 = t.gen_tvar(#false)
+        def val0 = t.gen_tvar(#false)
+        t_s.type_to_syntax(t.MapOf(#false, key0, val0))
+    | ~else '#false'
 | 'braces {$_, ...}':
     '#false'
 
@@ -44,7 +44,7 @@ meta:
     let [[val_ty, new_val], ...] = [t_s.lookup_type(val, val.group), ...]
     Function.pass(t.unify_do(key, key_tv, key_ty), ...)
     Function.pass(t.unify_do(val, val_tv, val_ty), ...)
-    t_s.wrap_type('$make { force($new_key) : delay($new_val), ... }'.relocate_span([elems]),
+    t_s.wrap_type('$make { force($new_key) : maybe_delay($val.group, $new_val), ... }'.relocate_span([elems]),
                   t.MapOf(elems, key_tv, val_tv))
 
 expr.macro 'braces $(elems && '{ $key_term ...: $(val :: expr_meta.Parsed), ... }')':  

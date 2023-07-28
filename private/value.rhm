@@ -9,6 +9,7 @@ export:
   meta:
     value_meta
     current_value_tvar_box
+    all_value_types
 
 space.transform value:
   space_path shplait/value
@@ -28,3 +29,9 @@ meta:
 
 meta:
   def current_value_tvar_box = Parameter.make(#false)
+
+  fun all_value_types([maybe_val :~ Syntax, ...]):
+    for all:
+      each maybe_val: [maybe_val, ...]
+      maybe_val.unwrap() != #false
+

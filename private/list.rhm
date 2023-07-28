@@ -7,6 +7,7 @@ import:
   "value.rhm".value_meta
   "wrap.rhm" open
   "lazy.rhm" open
+  "value.rhm".all_value_types
 
 export:
   rename:
@@ -15,21 +16,16 @@ export:
   rest
   cons
 
-module for_map:
-  export:
-    meta:
-      extract_common_type
-
 value.macro
-| 'brackets []':
-    ~op_stx self
-    let tv = t.gen_tvar(self)  
-    t_s.type_to_syntax(t.Poly(self, tv, t.ListOf(self, tv)))
 | 'brackets [$(v :: value_meta.Parsed), ...]':
-    def v0 = extract_common_type([v, ...])
-    if v0
-    | t_s.type_to_syntax(t.ListOf(#false, t_s.syntax_to_type(v0)))
-    | '#false'
+    ~op_stx self
+    cond
+    | all_value_types([v, ...]):
+        // type is currently relevant only to the degree that it's
+        // a function type or not, so just explain that it's a list
+        let tv = t.gen_tvar(self)  
+        t_s.type_to_syntax(t.Poly(self, tv, t.ListOf(self, tv)))
+    | ~else '#false'
 | 'brackets [$_, ...]':
     '#false'
 
@@ -37,7 +33,7 @@ expr.macro 'brackets $(elems && '[$(elem :: expr_meta.Parsed), ...]')':
   let tv = t.gen_tvar(#false)
   let [[elem_ty, new_elem], ...] = [t_s.lookup_type(elem, elem.group), ...]
   Function.pass(t.unify_do(elem, tv, elem_ty), ...)
-  t_s.wrap_type('#%brackets [delay($new_elem), ...]'.relocate_span([elems]),
+  t_s.wrap_type('#%brackets [maybe_delay($elem.group, $new_elem), ...]'.relocate_span([elems]),
                 t.ListOf(elems, tv))
 
 defwrap wrap_first first(l): Pair.first(dynamic_force(l))
@@ -63,12 +59,3 @@ expr.macro 'cons':
   let ty = t.ListOf(self, tv)
   t_s.wrap_type('wrap_cons'.relocate(self),
                 t.Poly(self, tv, t.Arrow(self, [tv, ty], ty)))
-
-meta:
-  fun extract_common_type([v :~ Syntax, ...]):    
-    def v0 = [v, ...][0]
-    v0.unwrap()
-      && (for all:
-            each v: [v, ...]
-            v.unwrap() == v0.unwrap())
-      &&  v0

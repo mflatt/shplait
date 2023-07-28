@@ -1,0 +1,13 @@
+#lang rhombus/static/and_meta
+
+export:
+  check_prints
+
+expr.macro 'check_prints:
+              $body
+              ...
+              $expected':
+  'check:
+     $body
+     ...
+     ~prints $expected'

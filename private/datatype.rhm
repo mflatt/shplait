@@ -15,6 +15,7 @@ import:
   "pattern.rhm".pattern_meta
   "value.rhm".value
   "value.rhm".value_meta
+  "value.rhm".all_value_types
   "lazy.rhm" open
   "blacklist.rhm"
 
@@ -177,7 +178,7 @@ meta:
         '#false'
     | ~else:
         match '($arg, ...)':
-        | '($(v :: value_meta.Parsed), ...)':
+        | '($(v :: value_meta.Parsed), ...)' when all_value_types([v, ...]):
             dty_sym
         | ~else:
             '#false'

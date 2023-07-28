@@ -1,8 +1,11 @@
 #lang rhombus/static/and_meta
+import:
+  "value.rhm".value_meta
 
 export:
   meta:
     set_is_lazy
+    delay_function
   delay
   maybe_delay
   force
@@ -15,6 +18,7 @@ export:
 module representation:
   export:
     Lazy
+    LazyFunction
 
 meta:
   def mutable is_lazy = #false
@@ -39,16 +43,21 @@ class Lazy(mutable v, mutable is_forced):
 interface Forceable:
   method force_all()
 
+expr.macro 'maybe_delay($e_orig, $e)':
+  if is_lazy
+  | match e_orig
+    | '$(v :: value_meta.Parsed)' when v.unwrap():
+        // a practical and realistic shortcut for a lazy language,
+        // and helps avoid an excessive coverage requirement for tests
+        e
+    | ~else:
+        'Lazy(fun (): $e, #false)'
+  | e
+
 expr.macro 'delay($e)':
   if is_lazy
   | 'Lazy(fun (): $e, #false)'
   | e
-
-expr.macro
-| 'maybe_delay($(_ :: Identifier), $e)':
-    e // helps avoid an excessive coverage requirement for tests
-| 'maybe_delay($_, $e)':
-    'delay($e)'
 
 expr.macro 'force($e)':  
   if is_accomodating
@@ -97,3 +106,23 @@ defn.macro 'delay($e)':
     | ~else:
         '(delay($e))'
   | e
+
+class LazyFunction(proc):
+  private implements Callable
+  private override
+  | call(): proc()
+  | call(x): proc(x)
+  | call(x, y): proc(x, y)
+  | call(x, y, z): proc(x, y, z)
+  | call(x, y, z, w): proc(x, y, z, w)
+  | call(arg, ...): proc(arg, ...)
+  private implements Printable
+  private override describe(mode, recur):
+    recur(proc, mode)
+
+meta:
+  fun delay_function(e):
+    if is_lazy
+    | 'LazyFunction($e)'
+    | e
+

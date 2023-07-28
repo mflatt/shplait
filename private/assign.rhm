@@ -9,15 +9,16 @@ export:
   rename:
     assign as :=
 
-expr.macro '$left assign $right':
+expr.macro '$left assign $right_t ...':
   ~op_stx self
   ~weaker_than: ~other
+  let '$(right :: expr_meta.Parsed)' = '$right_t ...'
   cond
   | statinfo_meta.lookup(left, '#%assignable'):
       let [left_ty, new_left] = t_s.lookup_type(left, #false)
       let [right_ty, new_right] = t_s.lookup_type(right, #false)
       t.unify_do(left, left_ty, right_ty)
       let op = ':='.relocate(self)
-      t_s.wrap_type('$new_left $op delay($new_right)', t.Vd(self))
+      t_s.wrap_type('$new_left $op maybe_delay($right.group, $new_right)', t.Vd(self))
   | ~else:
       syntax_meta.error("not a variable that is assignable", self, left)

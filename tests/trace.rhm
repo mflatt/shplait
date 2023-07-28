@@ -1,0 +1,38 @@
+#lang shplait
+import:
+  open: "check_prints.rhm"
+
+check_prints:
+  fun f(x): x + 1
+  trace f:
+    f(10)
+  "=> f(10)\n<= 11\n"
+
+check_prints:
+  fun tail(x, acc):
+    if x == 0
+    | acc
+    | tail(x-1, acc+2)
+  trace tail:
+    tail(3, 0)
+  ("=> tail(3, 0)\n"
+     +& "=> tail(2, 2)\n"
+     +& "=> tail(1, 4)\n"
+     +& "=> tail(0, 6)\n"
+     +& "<= 6\n")
+
+check_prints:
+  fun nontail(x):
+    if x == 0
+    | 0
+    | 2 + nontail(x-1)
+  trace nontail:
+    nontail(3)
+  ("=> nontail(3)\n"
+     +& "==> nontail(2)\n"
+     +& "===> nontail(1)\n"
+     +& "====> nontail(0)\n"
+     +& "<==== 0\n"
+     +& "<=== 2\n"
+     +& "<== 4\n"
+     +& "<= 6\n")

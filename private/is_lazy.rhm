@@ -4,6 +4,7 @@ import:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
   "lazy.rhm"!representation.Lazy
+  "lazy.rhm"!representation.LazyFunction
 
 export:
   is_lazy
@@ -15,4 +16,4 @@ export:
 // version of a libary function
 expr.macro '$left is_lazy':
   ~op_stx self
-  t_s.wrap_type('$left is_a Lazy', t.Bool(self))
+  t_s.wrap_type('$left is_a (Lazy || LazyFunction)', t.Bool(self))

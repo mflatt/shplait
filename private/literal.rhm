@@ -20,8 +20,13 @@ meta:
     | ~else:
         syntax_meta.error("literal type not known", lit)  
 
-expr.macro 'literal $(lit :: Term)':
-  t_s.wrap_type(Syntax.relocate_span('#%literal $lit', [lit]), type_of_literal(lit))
+expr.macro 'literal $(lit :: Term) $tail ...':
+  values(t_s.wrap_type(Syntax.relocate_span('#%literal $lit', [lit]), type_of_literal(lit)),
+         '$tail ...')
 
-value.macro 'literal $(lit :: Term)':
-  t_s.type_to_syntax(type_of_literal(lit))
+value.macro
+| 'literal $(lit :: Term)':
+    t_s.type_to_syntax(type_of_literal(lit))
+| 'literal $_ ...':
+    // non-empty tail means more complex expression, assume non value
+    '#false'
