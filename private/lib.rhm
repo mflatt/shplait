@@ -13,7 +13,7 @@ type Optionof(?a)
 | some(val :: ?a)
 
 fun add1(n): n+1
-fun sub1(n): n+1
+fun sub1(n): n-1
 
 fun is_even(n): n mod 2 == 0
 fun is_odd(n): n mod 2 == 1
