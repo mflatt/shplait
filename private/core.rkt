@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     rhombus/private/runtime-config
+                     rhombus/expand-config ; for workaround
                      version/utils)
          (prefix-in rhombus: rhombus)
          (for-syntax
@@ -39,17 +39,27 @@
     #:datum-literals (top)
     [(_ (top form-in ...))
      #:with (config (_ form ...)) (parse_and_apply_configure (syntax->list #'(form-in ...)))
-     (find_type_definitions #'(block form ...))
-     (when (version<? (version) "8.10.0.3")
-       ;; workaround for `module` not setting expand config during `#%module-begin`
-       (install-runtime-config!))
+     (define call-as-expand
+       (cond
+         [(version<? (version) "8.10.0.3")
+          ;; workaround for `module` not setting expand config during `#%module-begin`
+          (lambda (thunk)
+            (call-with-parameterization
+             (enter-parameterization)
+             thunk))]
+         [else
+          (lambda (thunk) (thunk))]))
      (define b
-       (local-expand #'(rhombus:#%module-begin
-                        (top
-                         form ...))
-                     'module-begin
-                     null))
-     (finish_current_frame)
+       (call-as-expand
+        (lambda ()
+          (find_type_definitions #'(block form ...))
+          (begin0
+            (local-expand #'(rhombus:#%module-begin
+                             (top
+                              form ...))
+                          'module-begin
+                          null)
+            (finish_current_frame)))))
      (syntax-parse b
        [(#%mb e ...)
         #`(#%mb e ...
