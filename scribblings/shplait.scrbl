@@ -2334,8 +2334,9 @@ Printing a value forces all components of the value, such as elements of
 a list. Note that every module-level expression's result is printed,
 unless the result is @rhombus(#void), so that forces results.
 Accessing just one component of a compound value (such as an
-element of a list) will not force the other components. Functions like
-@rhombus(map) behave lazily when given a lazy-function argument.
+element of a list) will not force the other components. Names of
+predefined functions like @rhombus(map) refer to a lazy variant in a
+lazy context or an eager variant in an eager context.
 
 A lazy Shplait module will not interoperate well with an eager module in
 general, but use Use @rhombus(~accomodating) in place of @rhombus(~lazy)
