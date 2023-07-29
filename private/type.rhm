@@ -443,7 +443,6 @@ fun poly_instance(t :: Type):
           // Type is determined:
           poly_instance(t.rhs)
       | ~else:
-          import lib("racket/base.rkt")
           // We only have a skeleton...
           let inst = poly_instance(t.base)
           // Remember this instance to check the type later:
@@ -522,6 +521,8 @@ fun at_source(t, expr):
         loop(t.element)
     | t :: Datatype:
         t.args.for_each(loop)
+    | ~else:
+        #void
     t
 
 fun extract_srcs_do(r, ht :: MutableMap):
@@ -607,8 +608,8 @@ fun lookup(id :: Identifier, env, ~default: default = #'fail):
             | loop(env, #true) || (!is_symbolic && val)
         | ~else loop(env, is_symbolic)
           
-fun add_srcs_do(r :: Type, a_in :: Type):
-  def a = Hide(a_in)
+fun add_srcs_do(r :: Type, a_in):
+  def a = (if a_in is_a Type | Hide(a_in) | a_in)
   match r.src
   | #false: r.src := a
   | srcs :: List:

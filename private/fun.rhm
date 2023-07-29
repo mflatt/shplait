@@ -43,8 +43,8 @@ meta:
     let [arg_id, ...] = [arg_form.id, ...]
     Function.pass(blacklist.validate(arg_id, "argument"), ...)
     let [arg_type, ...] = [f.parse_type(arg_form.type_seq, arg_form.op, arg_id, tvar_box), ...]
-    let res_tv = f.parse_type(res_type.type_seq, res_type.op, self, tvar_box)
-    values (t.Arrow(self, [arg_type, ...], res_tv),
+    let res_ty = f.parse_type(res_type.type_seq, res_type.op, self, tvar_box)
+    values (t.Arrow(self, [arg_type, ...], res_ty),
             [arg_id, ...])
 
 value.macro 'function ($arg, ...) $(res_type :: MaybeType):
@@ -66,7 +66,7 @@ expr.macro 'function ($arg, ...) $(res_type :: MaybeType):
   let (arrow_type :: t.Arrow, [arg_id, ...]):
     parse_function_type(stx, self, tvar_box)
   let [arg_type, ...] = arrow_type.args
-  let res_tv = arrow_type.result
+  let res_ty = arrow_type.result
   let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.value)
   let [arg_tmp, ...] = [Syntax.make_temp_id(arg_id), ...]
   let expr:                                       
@@ -77,7 +77,7 @@ expr.macro 'function ($arg, ...) $(res_type :: MaybeType):
          statinfo.macro '$arg_id': '(($t_s.type_key,
                                       $(t_s.type_to_syntax(arg_type))))'
          ...
-         unify ~expr $(t_s.type_to_syntax(res_tv)):                   
+         unify ~expr $(t_s.type_to_syntax(res_ty)):
            ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
            ~defns:«»
            ~body:

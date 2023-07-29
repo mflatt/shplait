@@ -97,7 +97,8 @@ meta:
                                   +& "expected count: " +& ty.args.length() +& "\n"
                                   +& "given count: " +& [arg, ...].length() +& "\n",
                                 '$id $tail ...')
-            values(type_expr_meta.pack(ty with (args = [type_expr_meta.unpack(arg), ...])),
+            values(type_expr_meta.pack(t.at_source(ty with (args = [type_expr_meta.unpack(arg), ...]),
+                                                   id)),
                    [])
     | ty :: t.TypeConstructor:
         match '$id $tail ...':
@@ -107,11 +108,13 @@ meta:
                                   +& "expected count: " +& ty.arg_tvars.length() +& "\n"
                                   +& "given count: " +& [arg, ...].length() +& "\n",
                                 '$id $tail ...')
-            values(type_expr_meta.pack(t.instantiate_at(ty.base, [type_expr_meta.unpack(arg), ...])),
+            values(type_expr_meta.pack(t.at_source(t.instantiate_at(ty.base, [type_expr_meta.unpack(arg), ...]),
+                                                   id)),
                    [])
     | ~else:
         unless nonempty_tail_ok || [tail, ...].length() == 0
         | syntax_meta.error("extra terms after type name", '$tail ...')
+        let ty = (if ty is_a t.Datatype | t.at_source(ty, id) | ty)
         values(type_expr_meta.pack(ty), [tail, ...])
 
   fun force_type(ty):

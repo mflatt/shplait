@@ -41,8 +41,8 @@ type_defn.macro
                         let ty = f.parse_type('$ty_e0 $ty_e ...', op, self, tvar_box)
                         if arg_tys.length() == 0
                         | ty
-                        | t.TypeConstructor(id, t.poly_ize(ty, arg_tys), arg_tys))
-    type_defn_meta.pack(id, t.LazyParseType(id, arg_tys, type_thunk), tvar_box.value)
+                        | t.TypeConstructor(#false, t.poly_ize(ty, arg_tys), arg_tys))
+    type_defn_meta.pack(id, t.LazyParseType(#false, arg_tys, type_thunk), tvar_box.value)
 | 'type $(id :: Identifier) $(args :: MaybeArgs)
    | $_
    | ...':
@@ -50,7 +50,7 @@ type_defn.macro
     blacklist.validate(id, "type")
     let tvar_box = Box(IdMap{})
     let arg_tys :~ List = parse_arg_types([args.arg, ...], self, args, tvar_box)
-    let dty = t.Datatype(id, id, arg_tys)
+    let dty = t.Datatype(#false, id, arg_tys)
     type_defn_meta.pack(id, dty, tvar_box.value)
 | 'type $_ ...':
     type_defn_meta.pack_nothing()
@@ -82,7 +82,7 @@ decl.macro
     let [arg_ty, ...] = arg_tys
     let [[field_ty, ...], ...] = [[f.parse_type(field.type_seq, field.op, field.id, tvar_box), ...], ...]
     let [var_tmp_id, ...] = [Syntax.make_temp_id(var_id), ...]
-    let [var_ty, ...] = [t.poly_ize(t.Arrow(var_id, [field_ty, ...], dty), arg_tys), ...]
+    let [var_ty, ...] = [t.poly_ize(t.Arrow(#false, [field_ty, ...], dty), arg_tys), ...]
     let [var_ty_sym, ...] = [t_s.type_to_syntax(var_ty), ...]
     Function.pass(f.record_frame_defn_type(var_ty_sym, var_ty), ...)
     let dty_sym = t_s.type_to_syntax(dty)
@@ -112,10 +112,12 @@ decl.macro
           ...
       $(if [arg_ty, ...] == []
         | '«type_expr.macro '$id':
-              type_expr_meta.pack(t_s.syntax_to_type('$dty_sym'))»'
+              ~op_stx self
+              type_expr_meta.pack(t.at_source(t_s.syntax_to_type('$dty_sym'), self))»'
         | let [arg_g_id, ...] = [Syntax.make_temp_id(arg_ty), ...]
           '«type_expr.macro '$id($('$')$arg_g_id, ...)':
-              type_expr_meta.pack(instantiate_datatype('$dty_sym', [$arg_g_id, ...]))»')
+              ~op_stx self
+              type_expr_meta.pack(t.at_source(instantiate_datatype('$dty_sym', [$arg_g_id, ...]), self))»')
       expr.macro '$var_id':
         ~op_stx self
         t_s.wrap_type('$var_tmp_id'.relocate(self),

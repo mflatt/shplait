@@ -80,10 +80,10 @@ expr.macro
    | $(ctr :: Identifier) ($(field :: Identifier), ...):
        $(body :: Group)
    | ...
-   | ~else:
+   | $(else_kw && '~else'):
        $(else_body :: Group)':
     ~op_stx self
-    parse_match(self,
+    parse_match(self, else_kw,
                 '$expr ...',
                 [[ctr, [field, ...]], ...],
                 [body, ...],
@@ -93,7 +93,7 @@ expr.macro
        $(body :: Group)
    | ...':
     ~op_stx self
-    parse_match(self,
+    parse_match(self, #false,
                 '$expr ...',
                 [[ctr, [field, ...]], ...],
                 [body, ...],
@@ -170,7 +170,7 @@ meta:
     t_s.wrap_type(r, tv)
 
 
-  fun parse_match(self,
+  fun parse_match(self, else_kw,
                   expr_in,
                   [[ctr, [field, ...]], ...],
                   [body, ...],
@@ -204,7 +204,7 @@ meta:
     t.unify_do(self, expr_ty, dt_ty)
     if else_body
     | when [dt_n, ...][0] == [dt_n, ...].length():
-      | syntax_meta.error("else case is unreachable", self)
+      | syntax_meta.error("else case is unreachable", self, else_kw)
     | unless [dt_n, ...][0] == [dt_n, ...].length()
       | syntax_meta.error("missing at least one variant case", self)
     let [[pat_ty, ...], ...]: [t.Arrow.args(t.instantiate_constructor_at(pat_ctr_ty, dt_ty)), ...]
