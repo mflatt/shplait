@@ -643,12 +643,12 @@ redefining or shadowing the names could easily create confusion:
 ){
 
  Pattern-matching case dispatch on the result of @rhombus(target_expr),
- either for variants of a type defined with @rhombus(type, ~defn), for
+ either for variants of a type defined with @rhombus(type, ~decl), for
  empty or nonempty lists, or for syntax patterns.
 
  The most common us of @rhombus(match) is the @rhombus(variant_id) form,
  with or without @rhombus(~else). All of the @rhombus(variant_id)s must
- be for the same type, and the type of @rhombus(target_expr) ust match
+ be for variants of the same type, and the type of @rhombus(target_expr) must match
  that type. If @rhombus(~else) is not present, every variant associated
  with the type must have a case. In the unusul case that only
  @rhombus(~else) is present, the type of @rhombus(target_expr) is
@@ -660,7 +660,7 @@ redefining or shadowing the names could easily create confusion:
     type Shape
     | circle(radius)
     | rectangle(width, height)
-
+  ~defn:
     fun area(s :: Shape):
       match s
       | circle(r): 3.14*r*r
@@ -704,7 +704,7 @@ redefining or shadowing the names could easily create confusion:
  escape with @rhombus($, ~datum) followed by an identifier, in which case it
  binds the identifier to one part of the input syntax or as a
  @tech{repetition} for multiple parts. See @secref("sec:stxobj") for
- examples.
+ more information and for examples.
 
 }
 
@@ -1830,7 +1830,10 @@ normally not written.
 }
 
 @// ------------------------------------------------------------
-@subsection(~tag: "sec:stxobj"){Syntax Objects}
+@section(~tag: "sec:stxobj"){Syntax Objects, Patterns, and Templates}
+
+@margin_note{See @secref("syntax-object") for an overview of syntax
+ objects.}
 
 A @deftech{syntax object} is a representation of source code. It is
 written as quoted term using single quotes, such as
@@ -1856,26 +1859,36 @@ implicitly use @rhombus(#%brackets).
      x + 1'
 )
 
-@elemtag("stxpat"){Syntax} patterns in @rhombus(match) are also written
-with quotes, and @rhombus($, ~datum) acts as an escape in syntax patterns as
-well as in syntax-object expressions, which are also known as
-@deftech{templates}:
+An expression written with quotes is more generally a
+@deftech{template}, because it can include @rhombus($, ~datum) as an
+escape and an ellipsis (written as @litchar{...}) to instantiate a
+repetition. @elemtag("stxpat"){Syntax} @deftech{patterns} in
+@rhombus(match) are also written with quotes, @rhombus($, ~datum) as an
+escape, and an ellipsis to match a repetition.
 
-@itemlist(
+Rules for @rhombus($, ~datum) and @litchar{...} in patterns:
 
-@item{When @rhombus($, ~datum) appears in a pattern, then it must be followed by
- an identifier. In the simple case that the pattern has no ellipses
- (written as @litchar{..}), then the identifier is bound to a non-empty
+@nested(~style: #'inset){
+
+ When @rhombus($, ~datum) appears in a pattern, then it must be followed
+ by an identifier. In the simple case that the pattern has no ellipses
+ (written as @litchar{...}), then the identifier is bound to a non-empty
  sequence of terms from the corresponding part of the input syntax
- object.
+ object. Sequences are matched greedily, meaning that as many terms are
+ matched to an identifier as possible to find a match for the pattern
+ overall.
 
  @examples(
   ~eval: eval
-  match '1 2 3 4'
-  | '1 $x 4': x
+  ~repl:
+    match '1 2 3 4'
+    | '1 $x 4': x
+  ~repl:
+    match 'a b c d'
+    | '$x $y': [x, y]
  )
 
- When an ellipsis appears in a pattern, then it matches 0 or more
+ When an ellipsis @litchar{...} appears in a pattern, then it greedily matches 0 or more
  repetitions of the preceding pattern element. If the preceding element
  contains a @rhombus($, ~datum) escape, then the escaped identifier is not bound
  to a single syntax object, but it is instead bound as a
@@ -1924,9 +1937,14 @@ well as in syntax-object expressions, which are also known as
        | ...':
         '{$x, ...}'
  )
+
 }
 
-@item{When @rhombus($, ~datum) appears in a template, then it must be followed
+Rules for @rhombus($, ~datum) and @litchar{...} in templates:
+
+@nested(~style: #'inset){
+
+ When @rhombus($, ~datum) appears in a template, then it must be followed
  by an identifier or an expression that is written as a single term
  (e.g., a parenthesized expression).
 
@@ -1935,6 +1953,7 @@ well as in syntax-object expressions, which are also known as
  @rhombus($, ~datum)-escaped identifier in the template is under a number of
  ellipses that match the repetition binding. Each element of the
  repetition is put in the result syntax object in place of the escape.
+ The rules for patterns above show several example templates that sue repetitions.
 
  If an escape does not refer to a repetition, then it must have an
  expression that produces a syntax object, and it must not be under any
@@ -1944,9 +1963,9 @@ well as in syntax-object expressions, which are also known as
  @examples(
   ~eval: eval
   '1 $(if #true | '2' | 'oops') 3'
- )}
+ )
 
-)
+}
 
 @doc(
   type 'Syntax'
