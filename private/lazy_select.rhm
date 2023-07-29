@@ -1,0 +1,10 @@
+#lang rhombus/static/and_meta
+import:
+  "lazy.rhm"
+
+export:
+  lazy_select
+
+defn.macro 'lazy_select $id: $(eager :: Name) $(lazy :: Name)':
+  '«expr.macro '$id':
+      lazy.lazy_select('$eager', '$lazy')»'

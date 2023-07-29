@@ -1,7 +1,7 @@
-Shplait is meant to resemble Rhombus—a Shplait program should run with
-the `type` macro at the end of this document and other, similar small
-modifications—and Shplait is also implemented in Rhombus. Since
-Shplait is one of the first implementations of a language using
+Shplait is meant to resemble Rhombus — a Shplait program should run
+with the `type` macro at the end of this document and other, similar
+small modifications — and Shplait is also implemented in Rhombus.
+Since Shplait is one of the first implementations of a language using
 Rhombus, it demonstrates how language building with Rhombus works.
 
 Glue Code and Library Functions
@@ -15,10 +15,10 @@ print out a type before evaluating. Hopefully, more of that can be
 implemented in Rhombus in the future, although the file suffix will
 have to stay ".rkt".
 
-The "private/core.rkt" serves a language for implement some parts of
-Shplait in core Shplait. See "private/lib.rhm", which starts with
-`#lang shplait/private/core`. The definitions of "private/lib.rhm"
-are reexported by "main.rkt".
+The "private/core.rkt" module serves as a language for implementing
+some parts of Shplait in core Shplait. See "private/lib.rhm", which
+starts with `#lang shplait/private/core`. The definitions of
+"private/lib.rhm" are reexported by "main.rkt".
 
 Type Checking
 =============
@@ -113,6 +113,19 @@ implemented by compiling Shplait patterns and templates to Rhombus
 patterns and templates, naturally; that bridge turns out to be one of
 the larger pieces, aside from the inference engine, because it
 requires a traversal over all the different shrubbery shapes.
+
+Laziness
+========
+
+To support the `~lazy` language option, primitive forms expand to
+suitable `delay` or`maybe_delay` calls. Normally, the latter should be
+used, because it detects when an expression is a "value" form (in a
+sense that coincides with values for let-based polymorphism) and
+efrains from adding a thunk. Primitives generally need to force
+arguments, in case they're being called from a lazy context. Library
+functions like `map` are implemented twice — with the same code, but
+in `~lazy` or non-`~lazy` modules — and a macro selects based on the
+referencing context.
 
 Some Rhombus Helpers
 ====================

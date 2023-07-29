@@ -5,7 +5,7 @@ import:
 export:
   meta:
     set_is_lazy
-    delay_function
+    lazy_select
   delay
   maybe_delay
   force
@@ -18,7 +18,6 @@ export:
 module representation:
   export:
     Lazy
-    LazyFunction
 
 meta:
   def mutable is_lazy = #false
@@ -107,22 +106,8 @@ defn.macro 'delay($e)':
         '(delay($e))'
   | e
 
-class LazyFunction(proc):
-  private implements Callable
-  private override
-  | call(): proc()
-  | call(x): proc(x)
-  | call(x, y): proc(x, y)
-  | call(x, y, z): proc(x, y, z)
-  | call(x, y, z, w): proc(x, y, z, w)
-  | call(arg, ...): proc(arg, ...)
-  private implements Printable
-  private override describe(mode, recur):
-    recur(proc, mode)
-
 meta:
-  fun delay_function(e):
+  fun lazy_select(eager, lazy):
     if is_lazy
-    | 'LazyFunction($e)'
-    | e
-
+    | lazy
+    | eager

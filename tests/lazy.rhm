@@ -30,6 +30,12 @@ check:
   ~is [-2]
 
 check:
+  block:
+    fun mk(x): [x]
+    first(map(mk,
+              [-2, 1, 1/0]))
+  ~is [-2]
+check:
   first(map2(fun (x, y): x + y,
              [-2, 1, 1/0],
              [1, 2, 3]))
@@ -39,6 +45,11 @@ check:
   first(filter(fun (x): x > 0,
                [-2, 1, 1/0]))
   ~is 1
+
+check:
+  first(map(add1,
+            [-2, 1, 1/0]))
+  ~is -1
 
 // submodule should also be lazy
 module test:
