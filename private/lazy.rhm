@@ -33,7 +33,7 @@ class Lazy(mutable v, mutable is_forced):
   override describe(mode, recur):
     cond
     | current_print_force_all():
-        recur(dynamic_force(this))
+        recur(dynamic_force_all(this))
     | is_forced:
         recur(this.v)
     | ~else:
@@ -89,7 +89,7 @@ fun dynamic_force(maybe_lazy):
 
 fun dynamic_force_all(v):
   match dynamic_force(v)
-  | List.cons(a, d): List.cons(dynamic_force_all(a), dynamic_force_all(d))
+  | Pair.cons(a, d): List.cons(dynamic_force_all(a), dynamic_force_all(d))
   | v :: Forceable: v.force_all()
   | v: v
 

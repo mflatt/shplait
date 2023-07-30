@@ -51,6 +51,10 @@ check:
             [-2, 1, 1/0]))
   ~is -1
 
+check:
+  to_string(cons(1, cons(2, [])))
+  ~is "[1, 2]"
+
 // submodule should also be lazy
 module test:
   check:
