@@ -12,7 +12,7 @@
   name the start and end sequences in this comment.
 */
 
-// #// comments out a single form. We use #; below
+// #// comments out a single form. We use #// below
 // to comment out error examples.
 #//
 (1+1) / 0
@@ -297,7 +297,7 @@ fun num_is_even(x):
   if x == 0
   | #true
   | num_is_odd(x-1)
-    
+
 num_is_odd(12)           // => #false
 
 // Definition matching a tuple
@@ -336,7 +336,7 @@ type Animal
 | snake(name :: Symbol,
         weight :: Number,
         food :: Symbol)
-| tiger(name :: Symbol,        
+| tiger(name :: Symbol,
         stripe_count :: Number)
 
 snake(#'Slimey, 10, #'rats)  // => snake(#'Slimey, 10, #'rats)
@@ -469,7 +469,7 @@ animal_name(10)        // error: Number vs Animal
 fun animal_weight(a):
   match a
   | snake(n, w, f): w
-  // error: missing tiger case
+// error: missing tiger case
 
 fun animal_weight(a):
   match a
