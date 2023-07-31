@@ -54,7 +54,7 @@ In the pattern form a syntactic form, @litchar{...} indicates zero or
 more repetitions of the preceding form. The preceding form can be an
 individual term, a group, or an alternative. (Words like @italic{term},
 @italic{group}, and @italic{alternative} are defined as part of the
-specificaiton of shrubbery notation.)
+specification of shrubbery notation.)
 
 @doc(
   ~nonterminal_key: block
@@ -97,9 +97,9 @@ specificaiton of shrubbery notation.)
 @// ------------------------------------------------------------
 @section(~tag: "sec:type"){Types}
 
-Every Shplait expression has a type. When you don't annotation a binding
-or expression with a type, then Shplait infers one that you could have
-written.
+Every Shplait expression has a type. The types come either from
+annotations or from Shplait's type inference, which fills in
+missing annotations for expressions and bindings.
 
 There are some built-in types like @rhombus(Number, ~at shplait/type),
 some built-in type constructors like @rhombus(->, ~at shplait/type),
@@ -193,15 +193,9 @@ and new types can be defined with @rhombus(type).
     rectangle(3, 4)
 )
 
- See the @rhombus(match) form for dispatching on variants of a type with
- pattern matching to extract field values. As an alternative, @rhombus(is_a)
- can be used with the constructor name, and 
- @rhombus(variant_id.field_id) can be used as an accessor function,
- where @rhombus(field_id) is the identifier within a field's
- @rhombus(typed_id); the accessor takes an instance of the variant and
- extracts the corresponding field value, and it raises an exception when
- applied to value (of an expression) of type @rhombus(id) that is not an
- instance of @rhombus(variant_id).
+  The normal way to dispatch on variants of a type and extract
+  their components is using the @rhombus(match) form. See its
+  documentation for more examples:
 
 @examples(
   ~eval: eval
@@ -211,6 +205,20 @@ and new types can be defined with @rhombus(type).
     match c
     | circle(r): 3.14*r*r
     | rectangle(w, h): w*h
+)
+
+  As an alternative, @rhombus(is_a) can identify a variant, and 
+  @rhombus(variant_id.field_id) can be used as an accessor function,
+  where @rhombus(field_id) is the identifier within a field's
+  @rhombus(typed_id).
+  The accessor takes an instance of the variant and
+  extracts the corresponding field value, and it raises an exception when
+  applied to value (of an expression) of type @rhombus(id) that is not an
+  instance of @rhombus(variant_id).
+
+
+@examples(
+  ~eval: eval
   ~repl:
     c is_a circle
     circle.radius(c)
@@ -416,7 +424,7 @@ redefining or shadowing the names could easily create confusion:
  immediately after @rhombus(fun, ~defn), otherwise it's an expression
  form. Each of the @rhombus(typed_id) arguments optionally declares a
  type for the argument, and if @rhombus(maybe_type) is not empty, it
- @rhombus(type) declares the function's result type.
+ declares the function's result type.
 
  A function is called through the expression form
  @rhombus(fun_expr(arg_expr, ...)), where @rhombus(fun_expr) is typically
@@ -986,7 +994,7 @@ redefining or shadowing the names could easily create confusion:
   fun sub1(n :: Number) :: Number
 ){
 
- Functions that add or substract @rhombus(1) from a given number.
+ Functions that add or subtract @rhombus(1) from a given number.
 
 @examples(
   ~eval: eval
