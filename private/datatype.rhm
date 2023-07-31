@@ -143,8 +143,8 @@ decl.macro
                             $var_tmp_id,
                             $var_ty_sym)')
       ...
-      value.macro '$var_id ($'$'arg, $'...')':
-        parse_constructor_app_value('$dty_sym', [arg, $'...'])
+      value.macro '$var_id $('$') tail $('...')':
+        parse_constructor_app_value('$dty_sym', '$('$') tail $('...')')
       ...
       »'
 
@@ -173,14 +173,17 @@ meta:
                      [f.parse_type(arg_g, '', arg_g, tvars_box),
                       ...])
 
-  fun parse_constructor_app_value(dty_sym, [arg, ...]):
-    let dty :: t.Datatype = t_s.syntax_to_type(dty_sym)
-    cond
-    | dty.args.length() != [arg, ...].length():
-        '#false'
-    | ~else:
-        match '($arg, ...)':
-        | '($(v :: value_meta.Parsed), ...)' when all_value_types([v, ...]):
-            dty_sym
-        | ~else:
+  fun parse_constructor_app_value(dty_sym, tail):
+    match tail
+    | '($arg, ...) $tail ...':
+        let dty :: t.Datatype = t_s.syntax_to_type(dty_sym)
+        cond
+        | dty.args.length() != [arg, ...].length():
             '#false'
+        | ~else:
+            match '($arg, ...)':
+            | '($(v :: value_meta.Parsed), ...)' when all_value_types([v, ...]):
+                dty_sym
+            | ~else:
+                '#false'
+    | ~else: '#false'
