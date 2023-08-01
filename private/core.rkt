@@ -1,6 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     rhombus/expand-config ; for workaround
+                     version/utils ; for workaround
                      rhombus/syntax)
          (prefix-in rhombus: rhombus)
          (for-syntax
@@ -8,8 +10,7 @@
          (prefix-in rhombus: rhombus/parse)
          rhombus/private/bounce
          "frame.rhm"
-         "configure.rhm"
-         "local-lift-meta.rkt")
+         "configure.rhm")
 
 (provide (rename-out
           [shplait-module-begin #%module-begin]
@@ -39,24 +40,36 @@
     #:datum-literals (top)
     [(_ (top form-in ...))
      #:with (config (_ form ...)) (parse_and_apply_configure (syntax->list #'(form-in ...)))
-     #`(rhombus:#%module-begin
-        (top
-         ;; relies on first `begin-for-syntax` happening before any other expansion:
-         #,(s-exp->decl-group #`(begin-for-syntax (find_type_definitions #'(block form ...))))
-         form ...
-         ;; relies on last expression being expanded after everything else is expanded:
-         #,(s-exp->expr-group #`(finish-module))))]))
-
-(define-syntax (finish-module stx)
-  ;; Perform let-based polymoprhim inference, now that
-  ;; all definitions and uses are expanded:
-  (finish_current_frame)
-  ;; Add an expand-time call to the end
-  ;; of the module that registers a mapping of gensyms
-  ;; (which are quoted in static info) to rebuilt type objects:
-  (syntax-local-lift-meta-expression
-   #`(rhombus:rhombus-expression #,(extract-group (build_register_defn_types))))
-  #'(void))
+     (define call-as-expand
+       (cond
+         [(version<? (version) "8.10.0.3")
+          ;; workaround for `module` not setting expand config during `#%module-begin`
+          (lambda (thunk)
+            (call-with-parameterization
+             (enter-parameterization)
+             thunk))]
+         [else
+          (lambda (thunk) (thunk))]))
+     (define b
+       (call-as-expand
+        (lambda ()
+          (find_type_definitions #'(block form ...))
+          (begin0
+            (local-expand #'(rhombus:#%module-begin
+                             (top
+                              form ...))
+                          'module-begin
+                          null)
+            (finish_current_frame)))))
+     (syntax-parse b
+       [(#%mb e ...)
+        #`(#%mb e ...
+                (begin-for-syntax
+                  (rhombus:rhombus-expression #,(extract-group (build_register_defn_types))))
+                #,@(map (lambda (sm)
+                          #`(rhombus:rhombus-top #,(extract-group sm)))
+                        (map syntax-local-introduce
+                             (get_configured_submodules #'config))))])]))
 
 (define-syntax (shplait-top-interaction stx)
   (syntax-parse stx
@@ -79,7 +92,7 @@
      (syntax-parse pre-b
        #:literals (begin)
        [(begin e ... e0)
-        ;; trampoline, so earlier definitions in `begin` are
+        ;; trampoline, so earlier definitions ni `begin` are
         ;; available to local-expansion of later forms in `begin`
         #'(begin
             (step-top-interaction #f e)
