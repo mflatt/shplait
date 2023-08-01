@@ -39,22 +39,30 @@ fun call_with_tracing(v, thunk):
         let orig_proc = tr.proc
         fun (arg, ...):
           fun show_call():
-            Printable.render(PrintDesc.concat(
-                               PrintDesc.concat(current_indentation(), "> "),
-                               PrintDesc.list(
-                                 PrintDesc.concat(Printable.describe(tr.name),
-                                                  "("),
-                                 parameterize { current_print_force_all: #false }:
-                                   [Printable.describe(arg, ~mode: #'expr), ...],
-                                 ")"),
-                               "\n"))
+            parameterize { Printable.current_pretty: #true }:
+              Printable.render(PrintDesc.concat(
+                                 PrintDesc.concat(current_indentation(), "> "),
+                                 PrintDesc.align(
+                                   PrintDesc.list(
+                                     PrintDesc.concat(Printable.describe(tr.name),
+                                                      "("),
+                                     parameterize { current_print_force_all: #false }:
+                                       [Printable.describe(arg, ~mode: #'expr), ...],
+                                     ")"
+                                   )
+                                 ),
+                                 "\n"
+                               ))
           fun show_result(result):
-            Printable.render(PrintDesc.concat(
-                               PrintDesc.concat("<", current_indentation(), " "),
-                               parameterize { current_print_force_all: #false }:
-                                 Printable.describe(result, ~mode: #'expr),
-                               "\n"
-                             ))
+            parameterize { Printable.current_pretty: #true }:
+              Printable.render(PrintDesc.concat(
+                                 PrintDesc.concat("<", current_indentation(), " "),
+                                 PrintDesc.align(
+                                   parameterize { current_print_force_all: #false }:
+                                     Printable.describe(result, ~mode: #'expr)
+                                 ),                                   
+                                 "\n"
+                               ))
           Continuation.call_with_immediate_mark(
             tracing_mark,
             fun (v):
