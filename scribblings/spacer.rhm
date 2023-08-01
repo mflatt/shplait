@@ -28,7 +28,7 @@ spacer.bridge fun(self, tail, context, esc):
           match '$post ...'
           | '': ''
           | '$(op && '::') $ty ...':
-              '$op $(spacer.adjust_sequence('$ty ...', #'#{shplait/type}, esc))'
+              '$(literal(op)) $(spacer.adjust_sequence('$ty ...', #'#{shplait/type}, esc))'
           | '$other': other
         let new_self:
           match '$name ...'
@@ -37,6 +37,10 @@ spacer.bridge fun(self, tail, context, esc):
         '$new_self $name ... $new_args $new_post'
     | ~else:
         error("no match: " +& tail)
+
+meta:
+  fun literal(t):
+    spacer.set(t, #'~datum)
 
 spacer.bridge type(self, tail, context, esc):  
   ~in: ~decl
@@ -58,7 +62,7 @@ meta:
   fun adjust_arg(arg, context, esc):
     match arg
     | '$name ... $(op && '::') $ty ...':
-        '$name ... $op $(spacer.adjust_sequence('$ty ...', #'#{shplait/type}, esc))'.relocate(arg)
+        '$name ... $(literal(op)) $(spacer.adjust_sequence('$ty ...', #'#{shplait/type}, esc))'.relocate(arg)
     | ~else:
         arg
 
@@ -79,7 +83,7 @@ meta:
     match tail
     | '$name ... $(op && '=') $rest ...':
         let new_rest = spacer.adjust_sequence('$rest ...', context, esc)
-        '$self $(adjust_arg_maybe_values('$name ...', context, esc)) $op $new_rest'
+        '$self $(adjust_arg_maybe_values('$name ...', context, esc)) $(literal(op)) $new_rest'
     | '$name ... : $(b :: Block)':
         let new_block = spacer.adjust_term(b, context, esc)
         '$self $(adjust_arg_maybe_values('$name ...', context, esc)) $new_block'
