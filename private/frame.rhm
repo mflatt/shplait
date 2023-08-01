@@ -21,8 +21,6 @@ export:
     record_frame_defn_type
     build_register_defn_types
     interaction_type_string
-    register_submodule
-    get_submodules
   relet_frame
 
 meta:
@@ -32,8 +30,7 @@ meta:
               ~parent: mutable parent :: maybe(Frame) = #false,
               mutable children :: List = [],
               ~poly_context: mutable poly_context :: List,
-              ~tvars: mutable tvars :~ IdMap = IdMap{},
-              mutable submods :~ List = []):
+              ~tvars: mutable tvars :~ IdMap = IdMap{}):
     constructor(~parent: parent = #false,
                 ~tvars: tvars = IdMap{}):
       let fr = super(~parent: parent,
@@ -112,20 +109,12 @@ meta:
   fun build_register_defn_types():
     let fr = get_current_frame()
     let [[sym, ty], ...] = fr.final_defn_types    
-    expr_meta.pack_expr('block:
-                           t_s.register_type(#'$sym,
-                                             $(t.to_expression(ty)))
-                           ...
-                           #void')
+    'block:
+       t_s.register_type(#'$sym,
+                         $(t.to_expression(ty)))
+       ...
+       #void'
 
   fun interaction_type_string(stx):
     let ty = t_s.lookup_poly_type(stx, #false)
     t.type_to_string(MutableMap())(ty)
-
-  fun register_submodule(stx):
-    let fr = get_current_frame()
-    fr.submods := [syntax_meta.flip_introduce(stx), & fr.submods]
-
-  fun get_submodules():
-    let fr = get_current_frame()
-    fr.submods.reverse()

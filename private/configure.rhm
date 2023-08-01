@@ -8,7 +8,7 @@ export:
   meta:
     parse_and_apply_configure
     configure_from_saved
-    get_configured_submodules
+    build_submodule_configure
 
 meta:
   // returns a configuration representation to pass to submodules
@@ -96,16 +96,8 @@ meta:
     f.configure_language(saved_lazy, saved_accomodating)
     t.configure_typing(saved_untyped, saved_fuel)
 
-  fun get_configured_submodules(config):
-    let mods :~ List = f.get_submodules()
-    for List:
-      each mod: mods
-      match mod
-      | '$module $name:
-           $body':
-          '$module $name:
-             declare_configure $config
-             $body'
+  fun build_submodule_configure():
+    'declare_configure [$saved_lazy, $saved_accomodating, $saved_untyped, $saved_fuel]'
 
 // ignore extra `declare_configure` forms inserted for submodules
 expr.macro 'declare_configure $_ ...':

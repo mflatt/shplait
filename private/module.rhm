@@ -1,6 +1,6 @@
 #lang rhombus/static/and_meta
 import:
-  "frame.rhm" as f
+  "configure.rhm" as c
 
 export:
   rename:
@@ -8,6 +8,6 @@ export:
 
 decl.macro 'shmodule $(id :: Identifier):
               $body':
-  f.register_submodule('module $id: $body')
-  ''
-  
+  'module $id:
+     $(c.build_submodule_configure())
+     $body'
