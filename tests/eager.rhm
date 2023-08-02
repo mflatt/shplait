@@ -1,0 +1,13 @@
+#lang shplait
+
+check:
+  to_string(map)
+  ~is "#<function:map>"
+
+check:
+  to_string(map2)
+  ~is "#<function:map2>"
+  
+check:
+  to_string(foldr)
+  ~is "#<function:foldr>"

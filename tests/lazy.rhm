@@ -60,3 +60,15 @@ module test:
   check:
     first([1, 1/0])
     ~is 1
+
+check:
+  to_string(map)
+  ~is "#<function:map>"
+
+check:
+  to_string(map2)
+  ~is "#<function:map2>"
+
+check:
+  to_string(filter)
+  ~is "#<function:filter>"

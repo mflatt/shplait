@@ -1,11 +1,13 @@
 #lang shplait/private/core
 ~accomodating
 // when a library function has different behavior
-// as lazy versus eager (e.g., `map`), then use `is_lazy`
-// here and put a copy of the function in "lazy_lib.rhm"
+// as lazy versus eager (e.g., `map`), then implement
+// it in both "eager_lib.rhm" and "lazy_lib.rhm"
+// (probably the same code) and use `lazy_select` here
 
 import:
   open: "lazy_select.rhm"
+  "eager_lib.rhm"
   "lazy_lib.rhm"
 
 type Optionof(?a)
@@ -44,48 +46,17 @@ fun reverse(lst):
       | cons(hd, tl): accum_rev(tl, cons(hd, rev))
     accum_rev(lst, [])
 
-lazy_select map: eager_map lazy_lib.map 
-fun eager_map(f :: ?a -> ?b, lst :: Listof(?a)) :: Listof(?b):
-  match lst
-  | []: []
-  | cons(hd, tl): cons(f(hd), eager_map(f, tl))
-
-lazy_select map2: eager_map2 lazy_lib.map2
-fun eager_map2(f :: (?a, ?b) -> ?c, alst :: Listof(?a), blst :: Listof(?b)) :: Listof(?c):
-  match alst
-  | []:
-      match blst
-      | []: []
-      | ~else: error(#'map2, "too many elements in second list")
-  | cons(ahd, atl):
-      match blst
-      | cons(bhd, btl): cons(f(ahd, bhd), eager_map2(f, atl, btl))
-      | ~else: error(#'map2, "not enough elements in second list")
+lazy_select map: eager_lib.map lazy_lib.map 
+lazy_select map2: eager_lib.map2 lazy_lib.map2
 
 fun member(elem, lst):
   match lst
   | []: #false
   | cons(hd, tl): elem == hd || member(elem, tl)
 
-lazy_select filter: eager_filter lazy_lib.filter
-fun eager_filter(pred, lst):
-  match lst
-  | []: []
-  | cons(hd, tl): if pred(hd)
-                  | cons(hd, eager_filter(pred, tl))
-                  | eager_filter(pred, tl)
-
-lazy_select foldl: eager_foldl lazy.foldl
-fun eager_foldl(f, accum, lst):
-  match lst
-  | []: accum
-  | cons(hd, tl): eager_foldl(f, f(hd, accum), tl)
-
-lazy_select foldr: eager_foldr lazy_lib.foldr
-fun eager_foldr(f, init, lst):
-  match lst
-  | []: init
-  | cons(hd, tl): f(hd, eager_foldr(f, init, tl))
+lazy_select filter: eager_lib.filter lazy_lib.filter
+lazy_select foldl: eager_lib.foldl lazy.foldl
+lazy_select foldr: eager_lib.foldr lazy_lib.foldr
 
 fun fst(tup):
   block:
