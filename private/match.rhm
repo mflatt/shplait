@@ -278,6 +278,8 @@ meta:
       syntax_meta.error("expected a single expression", stx, m)
   syntax_class MustBeIdentifier(stx):
   | '$(id :: Identifier)'
+  | '$(id :: Identifier) $next $tail ...':
+      syntax_meta.error("unexpected term after identifier", stx, next)
   | '$m':
       syntax_meta.error("expected an identifier", stx, m)
 
