@@ -25,6 +25,7 @@ expr.macro 'shArray $(elems && '($(elem :: expr_meta.Parsed), ...)')':
 
 expr.macro
 | '$left shindex $(brackets && '[$(index :: expr_meta.Parsed)]') $(assign && ':=') $rhs_term ...':
+    ~stronger_than: ~other
     let '$(rhs :: expr_meta.Parsed)' = '$rhs_term ...'
     let tv = t.gen_tvar(#false)
     let [left_ty, new_left] = t_s.lookup_type(left, #false)
