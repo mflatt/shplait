@@ -55,17 +55,17 @@ expr.macro 'shMutableMap $(elems && '{ $key_term ...: $(val :: expr_meta.Parsed)
 
 def fail_key = Symbol.gen()
 
-defwrap wrap_map_get_k map_get_k(map :~ Map, key, success, fail):
-  def v = map.get(dynamic_force(key), fail_key)
+defwrap wrap_map_get_k map_get_k(map, key, success, fail):
+  def v = (dynamic_force(map) :~ ReadableMap).get(dynamic_force(key), fail_key)
   if v === fail_key
-  | fail()
-  | success(v)
+  | dynamic_force(fail)()
+  | dynamic_force(success)(v)
 defwrap wrap_map_update map_update(map, key, val):
-  (dynamic_force(map) :~ Map) ++ { dynamic_force(key): dynamic_force(val) } 
+  (dynamic_force(map) :~ Map) ++ { dynamic_force(key): val }
 defwrap wrap_map_set map_set(map, key, val):
   (dynamic_force(map) :~ MutableMap)[dynamic_force(key)] := val
 defwrap wrap_map_remove map_remove(map, key):
-  (dynamic_force(map) :~ Map).remove(key)
+  (dynamic_force(map) :~ Map).remove(dynamic_force(key))
 defwrap wrap_map_delete map_delete(map, key):
   (dynamic_force(map) :~ MutableMap).delete(dynamic_force(key))
 defwrap wrap_map_keys map_keys(map):
