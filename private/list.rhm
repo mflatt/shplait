@@ -56,7 +56,7 @@ defwrap wrap_list_get list_get(l, n):
         error(#'list_get, "index out of range")
     | ~else:
         // must be lazy
-        loop(dynamic_force(l), n)
+        loop(dynamic_force(l), dynamic_force(n))
 
 expr.macro 'first':
   ~op_stx self

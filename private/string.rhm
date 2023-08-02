@@ -13,9 +13,9 @@ export:
   string_length
   string_get
 
-defwrap wrap_string_append string_append(a, b): (dynamic_force(a) :: String) ++ dynamic_force(b)
-defwrap wrap_string_get string_get(a :: String, i): (dynamic_force(a) :: String)[dynamic_force(i)]
-defwrap wrap_string_length string_get(a :: String): String.length(dynamic_force(a))
+defwrap wrap_string_append string_append(a, b): (dynamic_force(a) :~ String) ++ dynamic_force(b)
+defwrap wrap_string_get string_get(a, i): (dynamic_force(a) :~ String)[dynamic_force(i)]
+defwrap wrap_string_length string_length(a): (dynamic_force(a) :~ String).length()
 
 // `to_string` doesn't need to force lazy thunks,
 // because printing already does that
