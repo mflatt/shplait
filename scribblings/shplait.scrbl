@@ -648,11 +648,21 @@ redefining or shadowing the names could easily create confusion:
                | '$pattern': $result_expr
                | ...
                | ~else: $else_expr»'
+  expr.macro '«match $target_expr
+               | $integer_case: $result_expr
+               | ...»'
+  expr.macro '«match $target_expr
+               | $integer_case: $result_expr
+               | ...
+               | ~else: $else_expr»'
+  grammar integer_case:
+    $integer
+    $integer #,(@rhombus(||, ~datum)) $integer_case
 ){
 
  Pattern-matching case dispatch on the result of @rhombus(target_expr),
  either for variants of a type defined with @rhombus(type, ~decl), for
- empty or nonempty lists, or for syntax patterns.
+ empty or nonempty lists, for syntax patterns, or for integer cases.
 
  The most common us of @rhombus(match) is the @rhombus(variant_id) form,
  with or without @rhombus(~else). All of the @rhombus(variant_id)s must
@@ -713,6 +723,24 @@ redefining or shadowing the names could easily create confusion:
  binds the identifier to one part of the input syntax or as a
  @tech{repetition} for multiple parts. See @secref("sec:stxobj") for
  more information and for examples.
+
+ In the integer-case form of @rhombus(match), each clause has an integer
+ or multiple integers separated by @rhombus(||, ~datum).
+
+@examples(
+  ~eval: eval
+  ~defn:
+    fun describe_quantity(n :: Number):
+      match n
+      | 0: "none"
+      | 1: "single"
+      | 2: "pair"
+      | 3 || 4 || 5: "some"
+      | ~else: "many"
+  ~repl:
+    describe_quantity(1)
+    describe_quantity(4)
+)
 
 }
 

@@ -39,7 +39,7 @@ meta:
   syntax_class OneListClause:
   | '[]: $(empty_body :: Group)'
   | '$(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)'
-  
+
   syntax_class SyntaxClauses:
     fields:
       [pat, ...]
@@ -51,6 +51,30 @@ meta:
   | '«| '$pat': $(body :: Group)
       | ...
       | ~else: $(else_body :: Group)»'
+
+  syntax_class.together:
+    syntax_class LiteralPattern:
+      fields:
+        parsed
+      kind: ~sequence
+    | '$(n :: Int)':
+        field parsed = '(#%literal $n)'.relocate_span([n])
+    | '$(n :: Int) $(op && '||') $(lits :: LiteralPattern)':
+        field parsed = '(#%literal $n || $lits.parsed)'.relocate_span([n, op, lits])
+
+  syntax_class CaseClauses:
+    fields:
+      [lits, ...]
+      [body, ...]
+      else_body
+  | '«| $(lits_in :: LiteralPattern): $(body :: Group)
+      | ...»':
+      field else_body = #false
+      field [lits, ...] = [lits_in.parsed, ...]
+  | '«| $(lits_in :: LiteralPattern): $(body :: Group)
+      | ...
+      | ~else: $(else_body :: Group)»':
+      field [lits, ...] = [lits_in.parsed, ...]
 
 expr.macro
 | 'shmatch $expr ...
@@ -76,6 +100,13 @@ expr.macro
                        [scs.pat, ...],
                        [scs.body, ...],
                        scs.else_body)
+| 'shmatch $expr ... $(ccs :: CaseClauses)':
+    ~op_stx self
+    parse_case_match(self,
+                     '$expr ...',
+                     [ccs.lits, ...],
+                     [ccs.body, ...],
+                     ccs.else_body)
 | 'shmatch $expr ...
    | $(ctr :: Identifier) ($(field :: Identifier), ...):
        $(body :: Group)
@@ -169,6 +200,32 @@ meta:
         | ...»'
     t_s.wrap_type(r, tv)
 
+  fun parse_case_match(self,
+                       expr_in,
+                       [lits, ...],
+                       [body, ...],
+                       else_body):
+    let '$(expr :: expr_meta.Parsed)' = expr_in
+    let [expr_ty, new_expr] = t_s.lookup_type(expr, expr.group)
+    t.unify_do(expr_in, expr_ty, t.Num(self))
+    let tv = t.gen_tvar(self)
+    let [else, ...]:
+      if else_body
+      | ['~else:
+            unify ~expr $(t_s.type_to_syntax(tv)):
+              ~body:
+                $else_body']
+      | []
+    let r:
+      '«$('match'.relocate_span([self])) $new_expr
+        | $lits:
+            unify ~expr $(t_s.type_to_syntax(tv)):
+              ~body:
+                $body
+        | ...
+        | $else
+        | ...»'
+    t_s.wrap_type(r, tv)
 
   fun parse_match(self, else_kw,
                   expr_in,
@@ -297,6 +354,8 @@ meta:
            $(body :: MustBeGroup(stx))':
         #void
     | ': «'$pat': $(body :: MustBeGroup(stx))»':
+        #void
+    | ': $(_ :: LiteralPattern): $(body :: MustBeGroup(stx))':
         #void
     | '$_':
         syntax_meta.error("bad clause", stx, clause)
