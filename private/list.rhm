@@ -15,6 +15,7 @@ export:
   first
   rest
   cons
+  list_get
 
 value.macro
 | 'brackets [$(v :: value_meta.Parsed), ...]':
@@ -40,6 +41,23 @@ defwrap wrap_first first(l): Pair.first(dynamic_force(l))
 defwrap wrap_rest rest(l): Pair.rest(dynamic_force(l))
 defwrap wrap_cons cons(a, l): Pair.cons(a, l)
 
+// could be defined in "lib.rhm", but defining it here
+// avoids some redundant `is_a List` checks and takes a faster
+// path when no lazy forcing is needed, so it simulates something
+// closer to a machine primitive
+defwrap wrap_list_get list_get(l, n):
+  recur loop (l = l, n = n):
+    cond
+    | (l is_a Pair):
+        if n == 0
+        | Pair.first(l)
+        | loop(Pair.rest(l), n - 1)
+    | (l === []):
+        error(#'list_get, "index out of range")
+    | ~else:
+        // must be lazy
+        loop(dynamic_force(l), n)
+
 expr.macro 'first':
   ~op_stx self
   let tv = t.gen_tvar(self)
@@ -59,3 +77,9 @@ expr.macro 'cons':
   let ty = t.ListOf(self, tv)
   t_s.wrap_type('wrap_cons'.relocate(self),
                 t.Poly(self, tv, t.Arrow(self, [tv, ty], ty)))
+
+expr.macro 'list_get':
+  ~op_stx self
+  let tv = t.gen_tvar(self)
+  t_s.wrap_type('wrap_list_get'.relocate(self),
+                t.Poly(self, tv, t.Arrow(self, [t.ListOf(self, tv), t.Num(self)], tv)))

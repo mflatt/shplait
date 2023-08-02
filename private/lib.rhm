@@ -31,11 +31,6 @@ fun length(lst):
   | []: 0
   | cons(hd, tl): 1+length(tl)
 
-fun list_get(lst, n):
-  cond
-  | n == 0: first(lst)
-  | ~else: list_get(rest(lst), n-1)
-
 fun append(lst, lst2):
   match lst
   | []: lst2
