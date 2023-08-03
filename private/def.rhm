@@ -122,3 +122,6 @@ defn.macro
 | 'define $(lhs :: LHS): $(rhs :: Group)':
     ~op_stx self
     build_def(self, lhs.mutable_tag, [lhs.id, ...], [lhs.type_seq, ...], rhs)
+| 'define $(name :: Identifier) ($_) $tail ...':
+    ~op_stx self
+    syntax_meta.error("invalid definition syntax, possibly should be `fun`", self)
