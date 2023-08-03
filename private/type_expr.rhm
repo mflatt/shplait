@@ -241,6 +241,8 @@ type_expr.macro 'Mapof ($(key :: ParsedType), $(val :: ParsedType))':
 type_expr.just_macro
 | '#%parens ($(elem :: ParsedType))':
     type_expr_meta.pack(elem.type)
+| '#%parens $(parens && '()')':
+    type_expr_meta.pack(t.TupleOf(parens, []))
 | '#%parens $(args && '($(elem :: ParsedType), ...)')':
     ~op_stx self
     type_expr_meta.pack(t.ParenOf(args, [elem.type, ...]))
@@ -256,6 +258,8 @@ type_expr.macro '$args -> $(result :: type_expr_meta.XAfterInfixParsed('->')) $(
   values(match type_expr_meta.unpack(args)
          | ps :: t.ParenOf:
              type_expr_meta.pack(t.Arrow(self, ps.args, r_ty))
+         | t.TupleOf(_, []):
+             type_expr_meta.pack(t.Arrow(self, [], r_ty))
          | arg:
              type_expr_meta.pack(t.Arrow(self, [arg], r_ty)),
          '$result.tail ...')

@@ -1,0 +1,14 @@
+#lang shplait
+
+check:
+  block:
+    def x :: () = values()
+    x
+  ~is values()
+
+check:
+  block:
+    def x :: () -> Number = (fun (): 1)
+    x()
+  ~is 1
+

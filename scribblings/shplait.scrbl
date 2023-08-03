@@ -919,6 +919,24 @@ redefining or shadowing the names could easily create confusion:
 }
 
 @doc(
+  expr.macro '#%parens ($expr)'
+){
+
+ The @rhombus(#%parens) expression form is generally not written out,
+ but it is implicitly used whenever a Shplait program uses parentheses
+ that are not function-call parentheses.
+
+@examples(
+  ~eval: eval
+  (1 + 2)
+  #%parens (1 + 2)
+)
+
+}
+
+
+
+@doc(
   expr.macro '#%literal $literal'
 ){
 
@@ -1660,11 +1678,18 @@ types. A tuple of one element is equivalent to just the element.
 ){
 
  The type of a tuple whose elements each have the corresponding
- @rhombus(type).
+ @rhombus(type). The type of an empty tuple is written as @rhombus(()).
 
  The @rhombus(*, ~at shplait/type) type operator for tuples has higher
  precedence (i.e., joins more tightly) than the
  @rhombus(->, ~at shplait/type) type operator for functions.
+
+@examples(
+  ~eval: eval
+  values(1, "apple")
+  values()
+  values(1, fun (x :: Number): x)
+)
 
 }
 
@@ -1695,6 +1720,21 @@ types. A tuple of one element is equivalent to just the element.
  second component, respectively.
 
 }
+
+@doc(
+  type '#%parens ()'
+  type '#%parens ($type)'
+){
+
+ The @rhombus(#%parens) type form is generally not written out, but it
+ is implicitly used whenever a Shplait program uses parentheses in a type
+ position.
+
+ Parentheses are normally used for mere grouping, but emprt parentheses
+ form the type of an empty tuple.
+
+}
+
 
 @// ------------------------------------------------------------
 @subsection(~tag: "sec:map"){Maps}
