@@ -234,36 +234,26 @@ meta:
                   else_body):
     Function.pass(blacklist.validate(field, "variable"), ..., ...)
     let '$(expr :: expr_meta.Parsed)' = expr_in
-    let [[dt_id, dt_arg_n, dt_n, pat_id, pat_ctr_ty,], ...]:
+    let [[dt_id, dt_arg_n, pat_id, pat_ctr_ty,], ...]:
       for List:
         each ctr: [ctr, ...]
+        fun fail():
+          syntax_meta.error("expected a variant name", self, ctr)
         match ctr
         | '$(pat :: pattern_meta.Parsed)':
-            pattern_meta.unpack(pat)
-        | ~else syntax_meta.error("expected a variant name", self, ctr)
+            pattern_meta.unpack(pat) || fail()
+        | ~else fail()
     let the_dt_id = [dt_id, ...][0]    
-    let the_dt_arg_n = [dt_arg_n, ...][0]    
-    for values(seen = IdMap{}):
-      each:
-        ctr: [ctr, ...]
-        dt_id: [dt_id, ...]
-      unless syntax_meta.equal_binding(dt_id, the_dt_id)
-      | syntax_meta.error("variant not from the same type as earlier variants", self, ctr)
-      when seen[ctr]
-      | syntax_meta.error("duplicate case for variant", self, ctr)
-      seen ++ IdMap{ ctr: #true }
+    let the_dt_arg_n = [dt_arg_n, ...][0]
+    check_variants_consistent(self, [ctr, ...], [dt_id, ...], the_dt_id)
+    check_variants_complete(self, [ctr, ...], the_dt_id, else_kw)
     let dt_args:
       for List:
         each i: 0..the_dt_arg_n
         t.gen_tvar(expr_in)
     let dt_ty = t.Datatype(self, the_dt_id, dt_args)
     let [expr_ty, new_expr] = t_s.lookup_type(expr, expr.group)
-    t.unify_do(self, expr_ty, dt_ty)
-    if else_body
-    | when [dt_n, ...][0] == [dt_n, ...].length():
-      | syntax_meta.error("else case is unreachable", self, else_kw)
-    | unless [dt_n, ...][0] == [dt_n, ...].length()
-      | syntax_meta.error("missing at least one variant case", self)
+    t.unify_do(self, expr_ty, dt_ty)    
     let [[pat_ty, ...], ...]: [t.Arrow.args(t.instantiate_constructor_at(pat_ctr_ty, dt_ty)), ...]
     let [[arg_id, ...], ...] = [[Syntax.make_temp_id(pat_ty), ...], ...]
     for:
@@ -312,11 +302,13 @@ meta:
 
 expr.macro '$left shis_a $(ctr :: Identifier)':
   ~op_stx self
-  let [dt_id, dt_arg_n, dt_n, pat_id, pat_ctr_ty,]:
+  let [dt_id, dt_arg_n, pat_id, pat_ctr_ty,]:
+    fun fail():
+      syntax_meta.error("expected a variant name", self, ctr)
     match ctr
     | '$(pat :: pattern_meta.Parsed)':
-        pattern_meta.unpack(pat)
-    | ~else syntax_meta.error("expected a variant name", self, ctr)
+        pattern_meta.unpack(pat) || fail()
+    | ~else fail()
   let dt_args:
       for List:
         each i: 0..dt_arg_n
@@ -359,3 +351,32 @@ meta:
         #void
     | '$_':
         syntax_meta.error("bad clause", stx, clause)
+
+  fun check_variants_consistent(self, [ctr, ...], [dt_id, ...], the_dt_id):
+    for values(seen = IdMap{}):
+      each:
+        ctr: [ctr, ...]
+        dt_id: [dt_id, ...]
+      unless syntax_meta.equal_binding(dt_id, the_dt_id)
+      | syntax_meta.error("variant not from the same type as earlier variants", self, ctr)
+      when seen[ctr]
+      | syntax_meta.error("duplicate case for variant", self, ctr)
+      seen ++ IdMap{ ctr: #true }
+
+  fun check_variants_complete(self, [ctr, ...], the_dt_id, else_kw):
+    let dt_variants :~ List.of(Identifier):
+      let '$(dt_pat ::  pattern_meta.Parsed)': the_dt_id
+      pattern_meta.unpack_type(dt_pat)
+    let all_here = [ctr, ...].length() == dt_variants.length()
+    if else_kw
+    | when all_here
+      | syntax_meta.error("else case is unreachable", self, else_kw)
+    | unless all_here
+      | let missing_var:
+          for any:
+            each dt_var: dt_variants
+            !(for any:
+                each ctr: [ctr, ...]
+                syntax_meta.equal_binding(ctr, dt_var))
+              && dt_var
+        syntax_meta.error("missing '" +& missing_var +& "' case", self)
