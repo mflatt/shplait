@@ -35,11 +35,6 @@ space.enforest type_expr:
     parsed_packer _pack
     parsed_unpacker _unpack
     identifier_parser: fun(stx): syntax_meta.error("expected a type", stx)
-    parse_checker: fun (stx, proc):
-                     if _unpack(stx, fun (_): #false)
-                     | stx
-                     | match stx
-                       | '$(t :: type_expr_meta.Parsed)': t
     export:
       pack
       unpack
@@ -65,9 +60,13 @@ meta:
   | '$(id :: Identifier) $xtail ...':
       def t = current_type_lookup()(id)
       match_when t
-      def (xp, tl) = parse_type_from_lookup(id, t, '$xtail ...',
-                                            ~nonempty_tail_ok: #false)
-      field xparsed = xp
+      def (xp, tl) = parse_type_from_lookup(id, t, '$xtail ...')
+      def xp_all: (match tl
+                   | []: xp
+                   | ~else:
+                       let '$(t :: type_expr_meta.Parsed)': '$xp $tl'
+                       t)
+      field xparsed = xp_all
   | '$(t :: type_expr_meta.Parsed)':
       field xparsed = force_type(t)
 
@@ -207,7 +206,7 @@ type_expr.macro 'Syntax':
 
 type_expr.macro 'Void':
   ~op_stx self
-  type_expr_meta.pack(t.Bool(self))
+  type_expr_meta.pack(t.Vd(self))
 
 type_expr.macro '? $(id :: Identifier)':
   ~op_stx self

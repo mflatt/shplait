@@ -12,3 +12,11 @@ check:
     x()
   ~is 1
 
+
+type Foo
+| foo()
+
+def x :: Foo -> Foo:
+  fun (x):
+    foo()
+
