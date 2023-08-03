@@ -46,7 +46,10 @@ defwrap wrap_cons cons(a, l): Pair.cons(a, l)
 // path when no lazy forcing is needed, so it simulates something
 // closer to a machine primitive
 defwrap wrap_list_get list_get(l, n):
-  recur loop (l = l, n = n):
+  // `n` must be forced here to be used immediately in the non-lazy
+  // branch.  This can occur when `l` is a value while `n` isn't in
+  // lazy mode.
+  recur loop (l = l, n = dynamic_force(n)):
     cond
     | (l is_a Pair):
         if n == 0
@@ -56,7 +59,7 @@ defwrap wrap_list_get list_get(l, n):
         error(#'list_get, "index out of range")
     | ~else:
         // must be lazy
-        loop(dynamic_force(l), dynamic_force(n))
+        loop(dynamic_force(l), n)
 
 expr.macro 'first':
   ~op_stx self
