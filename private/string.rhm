@@ -10,12 +10,23 @@ export:
   rename:
     shto_string as to_string
     shstring_append as string_append
+    shsubstring as substring
   string_length
   string_get
 
 defwrap wrap_string_append string_append(a, b): (dynamic_force(a) :~ String) ++ dynamic_force(b)
 defwrap wrap_string_get string_get(a, i): (dynamic_force(a) :~ String)[dynamic_force(i)]
 defwrap wrap_string_length string_length(a): (dynamic_force(a) :~ String).length()
+defwrap wrap_substring substring(a, start, end):
+  let s :~ String = dynamic_force(a)
+  let start = dynamic_force(start)
+  let end = dynamic_force(end)
+  if (start is_a Int) && (end is_a Int) && (start >= 0) && (end >= start) && (end <= s.length())
+  | s.substring(start, end)
+  | error(#'substring, ("bad range for string\n"
+                          +& "  string: " +& to_string(s, ~mode: #'expr) +& "\n"
+                          +& "  start: "  +& start +& "\n"
+                          +& "  end: "  +& end))
 
 // `to_string` doesn't need to force lazy thunks,
 // because printing already does that
@@ -41,3 +52,9 @@ expr.macro 'string_get':
   ~op_stx self
   t_s.wrap_type('wrap_string_get'.relocate(self),
                 t.Arrow(self, [t.Str(self), t.Num(self)], t.Chr(self)))
+
+expr.macro 'shsubstring':
+  ~op_stx self
+  t_s.wrap_type('wrap_substring'.relocate(self),
+                t.Arrow(self, [t.Str(self), t.Num(self), t.Num(self)], t.Str(self)))
+

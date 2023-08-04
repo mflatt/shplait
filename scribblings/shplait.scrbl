@@ -1276,6 +1276,21 @@ These operators have lower precedence than arithmetic operators.
 
 }
 
+@doc(
+  fun substring(str :: String, start :: Number, end :: Number) :: String
+){
+
+ Returns a substring of @rhombus(str) from the character at index
+ @rhombus(start) (inclusive) until the character at index @rhombus(end)
+ (exclusive).
+
+@examples(
+  ~eval: eval
+  substring("apple", 1, 4)
+)
+
+}
+
 
 
 @// ------------------------------------------------------------
