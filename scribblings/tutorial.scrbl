@@ -1548,7 +1548,7 @@ to make imported names visible without a prefix.
   #,(hash_lang()) #,(rhombuslangname(shplait))
 
   def pi = 3.14
-  def  tau = pi + pi
+  def tau = pi + pi
 )
 
 @rhombusblock(

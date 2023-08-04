@@ -748,6 +748,9 @@ redefining or shadowing the names could easily create confusion:
 @section(~tag: "sec:expr"){Other Expression Forms}
 
 @doc(
+  ~nonterminal:
+    expected_expr: block expr
+    string_expr: block expr
   expr.macro 'check:
                 $expr
                 ~is $expected_expr'
@@ -758,9 +761,9 @@ redefining or shadowing the names could easily create confusion:
 
  Checks that @rhombus(expr) produces the same result as
  @rhombus(expected_expr) or raises an exception with an error message
- that contains the string produced by @rhombus($string_expr). Expressions
+ that contains the string produced by @rhombus(string_expr). Expressions
  @rhombus(expr) and @rhombus(expected_expr) must have the same type,
- while @rhombus($string_expr) must have the type
+ while @rhombus(string_expr) must have the type
  @rhombus(String, ~at shplait/type). The result of a @rhombus(check) form
  is @rhombus(#void).
 
@@ -1765,6 +1768,9 @@ normally not written.
 }
 
 @doc(
+  ~nonterminal:
+    key_expr: block expr
+    val_expr: block expr
   expr.macro '#%braces { $key_expr: $val_expr, ... }'  
 ){
 
@@ -1787,6 +1793,9 @@ normally not written.
 
 
 @doc(
+  ~nonterminal:
+    key_expr: block expr
+    val_expr: block expr
   expr.macro 'MutableMap{ $key_expr: $val_expr, ... }'  
 ){
 

@@ -10,6 +10,7 @@ export:
     def
     let
     letrec
+    $
 
 spacer.bridge fun(self, tail, context, esc):  
   ~in: ~expr ~defn
@@ -97,3 +98,9 @@ meta:
         '$vals_id $new_args'.relocate(arg)
     | ~else:
         adjust_arg(arg, context, esc)
+
+// `$` is reexported from Rhombus, but only for error reporting,
+// so don't link it
+spacer.bridge $(self, tail, context, esc):
+  ~in: ~expr ~bind
+  '$(spacer.set(self, #'~datum)) $(spacer.adjust_sequence(tail, context, esc))'
