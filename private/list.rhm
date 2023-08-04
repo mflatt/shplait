@@ -37,8 +37,12 @@ expr.macro 'brackets $(elems && '[$(elem :: expr_meta.Parsed), ...]')':
   t_s.wrap_type('#%brackets [maybe_delay($elem.group, $new_elem), ...]'.relocate_span([elems]),
                 t.ListOf(elems, tv))
 
-defwrap wrap_first first(l): Pair.first(dynamic_force(l))
-defwrap wrap_rest rest(l): Pair.rest(dynamic_force(l))
+defwrap wrap_first first(l): match dynamic_force(l)
+                             | []: error(#'first, "failed on empty list")
+                             | v: Pair.first(v)
+defwrap wrap_rest rest(l): match dynamic_force(l)
+                           | []: error(#'rest, "failed on empty list")
+                           | v: Pair.rest(v)
 defwrap wrap_cons cons(a, l): Pair.cons(a, l)
 
 // could be defined in "lib.rhm", but defining it here
