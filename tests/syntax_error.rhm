@@ -23,7 +23,7 @@ check_eval:
   ~raises "needs to be in a type position or in parentheses"
 
 check:
-  (1 :: Number)
+  (1 :: Int)
   ~is 1
 
 check_eval:

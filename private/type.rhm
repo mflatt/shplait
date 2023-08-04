@@ -292,7 +292,7 @@ fun type_to_string(tmap :: MutableMap):
                 tmap[type] := a
                 a
       | _ :: Bool: "Boolean"
-      | _ :: Num: "Number"
+      | _ :: Num: "Int"
       | _ :: Sym: "Symbol"
       | _ :: Shrub: "Syntax"
       | _ :: Vd: "Void"

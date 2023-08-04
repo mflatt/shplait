@@ -22,6 +22,8 @@ meta:
         syntax_meta.error("literal type not known", lit)  
 
 expr.macro 'literal $(lit :: Term) $tail ...':
+  when (lit.unwrap() is_a Number) && !(lit.unwrap() is_a Int)
+  | syntax_meta.error("non-integer numbers are not allowed", lit)
   values(t_s.wrap_type(Syntax.relocate_span('#%literal $lit', [lit]), type_of_literal(lit)),
          '$tail ...')
 

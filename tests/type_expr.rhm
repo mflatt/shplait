@@ -8,7 +8,7 @@ check:
 
 check:
   block:
-    def x :: () -> Number = (fun (): 1)
+    def x :: () -> Int = (fun (): 1)
     x()
   ~is 1
 

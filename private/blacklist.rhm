@@ -10,7 +10,7 @@ meta:
     #'if, #'cond, #'match,
     #'check, #'try, #'module, #'import,
     #'type, #'is_a,
-    #'Number, #'Boolean, #'Void, #'String, #'Symbol,
+    #'Int, #'Boolean, #'Void, #'String, #'Symbol,
     #'Listof, #'Arrayof, #'Mapof, #'Syntax, #'Boxof,
     #'cons, #'first, #'rest,
     #'values, #'box, #'unbox, #'set_box,

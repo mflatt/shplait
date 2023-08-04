@@ -131,7 +131,7 @@ meta:
     | ~else ty
 
 export:
-  Number
+  Int
   String
   Char
   Boolean
@@ -180,7 +180,7 @@ meta:
         syntax_meta.error("parenthesized types without `->` afterward", tp)
     | ty: ty
 
-type_expr.macro 'Number':
+type_expr.macro 'Int':
   ~op_stx self
   type_expr_meta.pack(t.Num(self))
 

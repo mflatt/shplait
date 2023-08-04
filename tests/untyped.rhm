@@ -12,7 +12,7 @@ check:
   cons(1, base.cons(2, []))
   ~is [1, 2]
 
-fun f(x :: Number):
+fun f(x :: Int):
   if x
   | 1 + "a"
   | "ok"
@@ -23,7 +23,7 @@ check:
 
 // submodule should also be untyped
 module test:
-  fun f2(x :: Number):
+  fun f2(x :: Int):
     if x
     | 1 + "a"
     | "ok"

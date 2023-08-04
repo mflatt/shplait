@@ -20,7 +20,7 @@ export:
   syntax_split
   syntax_join
   syntax_read
-  // more exports macro-generated for `syntax_is_number`, etc.
+  // more exports macro-generated for `syntax_is_integer`, etc.
 
 class SyntaxWrap(raw :: Syntax):
   private implements Printable
@@ -263,7 +263,7 @@ decl.nestable_macro 'extractor $is_x ($unwrap_x, $post_unwrap) ($wrap_x, $pre_wr
        ~op_stx self
        t_s.wrap_type('stx_wrap_x'.relocate(self), t.Arrow(self, [t . $Ty(self)], t.Shrub(self)))
    »'
-extractor syntax_is_number (syntax_to_number, values) (number_to_syntax, values) Num Number "number"
+extractor syntax_is_integer (syntax_to_integer, values) (integer_to_syntax, values) Num Int "integer"
 extractor syntax_is_boolean (syntax_to_boolean, values) (boolean_to_syntax, values) Bool Boolean "boolean"  
 extractor syntax_is_symbol (syntax_to_symbol, values) (symbol_to_syntax, values) Sym Symbol "symbol"
 extractor syntax_is_string (syntax_to_string, values) (string_to_syntax, values) Str String "symbol"

@@ -25,11 +25,11 @@
 #true    // true
 #false   // false
 
-// Numbers
+// Ints
 
 1
-0.5
-1/2      // #{1/2}, which is the exact number one-half
+-42
+1_000_000
 
 // Strings
 
@@ -83,15 +83,15 @@ string_get("a", 0)       // => #{#\a}
 ///////////////////////////////////////////
 // Types
 
-1         // => 1, but says "Number" first
-1 + 1/2   // => #{3/2}, but says "Number" first
+1         // => 1, but says "Int" first
+1 + 1/2   // => #{3/2}, but says "Int" first
 
 "a"       // => "a", but says "String"
 
 string_append // => #<function:string_append>, but says "(String -> String)"
 
 #//
-1 + "1/2"  // error: Number vs String
+1 + "1/2"  // error: Int vs String
 
 ///////////////////////////////////////////
 // Syntax objects
@@ -105,8 +105,8 @@ string_append // => #<function:string_append>, but says "(String -> String)"
 #'a       // => #'a, and says "Symbol" first
 syntax_to_symbol('a')  // => #'a
 
-syntax_to_number('1') // => 1
-number_to_syntax(1)   // => '1'
+syntax_to_integer('1') // => 1
+integer_to_syntax(1)   // => '1'
 
 #//
 syntax_to_string('1') // says "String", but then reports an error
@@ -215,16 +215,16 @@ if 3 < 1
 
 []                     // => []
 
-[1, 2, 3]              // => [1, 2, 3], but shows "Listof(Number)" first
-[1, 2, 3+4]            // => [1, 2, 7], but shows "Listof(Number)" first
+[1, 2, 3]              // => [1, 2, 3], but shows "Listof(Int)" first
+[1, 2, 3+4]            // => [1, 2, 7], but shows "Listof(Int)" first
 
 cons(0, [1, 2, 3])     // => [0, 1, 2, 3]
 
 #//
-[1, "a"]               // error: Number vs String
+[1, "a"]               // error: Int vs String
 
 ["a", "b"]             // ["a", "b"]
-[[1, 2], [3]]          // [[1, 2], [3]], but shows "Listof(Listof(Number))" first
+[[1, 2], [3]]          // [[1, 2], [3]], but shows "Listof(Listof(Int))" first
 
 cons(1, [])            // => [1]
 
@@ -249,7 +249,7 @@ first(syntax_to_list('[1, 2, 3]'))  // => '1', but says "Syntax" first
 
 // Arrays
 
-Array(1, 2, 3, 4)       // => Array(1, 2, 3, 4), but shows "Arrayof(Number)" first
+Array(1, 2, 3, 4)       // => Array(1, 2, 3, 4), but shows "Arrayof(Int)" first
 (Array(1, 2, 3, 4))[0]  // => 1
 
 // Boxes
@@ -259,8 +259,8 @@ unbox(box(1))           // => 1
 
 // Tuples
 
-values(1, 2)   // => values(1, 2), but says "Number * Number" first
-values(1, "a") // => values(1, "a"), but says "Number * String" first
+values(1, 2)   // => values(1, 2), but says "Int * Int" first
+values(1, "a") // => values(1, "a"), but says "Int * String" first
 
 ///////////////////////////////////////////
 // Definitions
@@ -273,12 +273,12 @@ values(1, "a") // => values(1, "a"), but says "Number * String" first
 //
 //   def <id>: <expr>
 
-def PI = 3.14159
-PI * 10                 // => 31.4159
+def PI = 3   // we have only integers; close enough
+PI * 10                 // => 30
 
 def TAU:
   PI * 2
-TAU                     // 6.28
+TAU                     // 6
 
 // Defining functions
 //
@@ -286,7 +286,7 @@ TAU                     // 6.28
 
 fun circle_area(r):
   PI * r * r
-circle_area(10)          // => 314.159
+circle_area(10)          // => 300
 
 fun num_is_odd(x):
   if x == 0
@@ -315,13 +315,13 @@ color  // => #'red
 //
 //   def <id> :: <type> = <expr>
 
-def e :: Number = 2.71828
+def e :: Int = 2
 
 // Declaring argument and result types
 //
 //   fun <fun-id>(<arg-id> :: <arg-type>) :: <result-type>: <expr>
 
-fun circle_perimeter(r :: Number) :: Number:
+fun circle_perimeter(r :: Int) :: Int:
   2 * PI * r
 
 circle_perimeter(10) // => 62.8318
@@ -334,10 +334,10 @@ circle_perimeter(10) // => 62.8318
 
 type Animal
 | snake(name :: Symbol,
-        weight :: Number,
+        weight :: Int,
         food :: Symbol)
 | tiger(name :: Symbol,
-        stripe_count :: Number)
+        stripe_count :: Int)
 
 snake(#'Slimey, 10, #'rats)  // => snake(#'Slimey, 10, #'rats)
 tiger(#'Tony, 12)            // => tiger(#'Tony, 12)
@@ -345,7 +345,7 @@ tiger(#'Tony, 12)            // => tiger(#'Tony, 12)
 [tiger(#'Tony, 12)]          // => [tiger(#'Tony, 12)]
 
 #//
-snake(10, #'Slimey, 5)      // error: Symbol vs Number
+snake(10, #'Slimey, 5)      // error: Symbol vs Int
 
 snake.name(snake(#'Slimey, 10, #'rats)) // => #'Slimey
 tiger.name(tiger(#'Tony, 12))           // => #'Tony
@@ -354,14 +354,14 @@ snake(#'Slimey, 10, #'rats) is_a snake // => #true
 snake(#'Slimey, 10, #'rats) is_a tiger // => #false
 
 #//
-5 is_a snake  // error: Number vs Animal
+5 is_a snake  // error: Int vs Animal
 
 // A type can have any number of variants:
 type Shape
-| square(side :: Number)
-| circle(radius :: Number)
-| triangle(height :: Number,
-           width :: Number)
+| square(side :: Int)
+| circle(radius :: Int)
+| triangle(height :: Int,
+           width :: Int)
 
 fun is_curvy(s :: Shape) :: Boolean:
   s is_a circle
@@ -381,7 +381,7 @@ type Treeof(?a)
 | node(left :: Treeof(?a),
        right :: Treeof(?a))
 
-leaf(10)        // => leaf(10), but says "Treeof(Number)" first
+leaf(10)        // => leaf(10), but says "Treeof(Int)" first
 leaf(circle(8)) // => leaf(circle(8)), but says "Treeof(Shape)" first
 
 ///////////////////////////////////////////
@@ -463,7 +463,7 @@ animal_name(snake(#'Slimey, 10, #'rats)) // => #'Slimey
 animal_name(tiger(#'Tony, 12))  // => #'Tony
 
 #//
-animal_name(10)        // error: Number vs Animal
+animal_name(10)        // error: Int vs Animal
 
 #//
 fun animal_weight(a):
@@ -497,7 +497,7 @@ list_length(["apple", "banana", "coconut"])   // => 3
 // That is, like a function definition, but without the
 // function name
 
-fun (x): x+1              // => #<function>, but shows "Number -> Number" first
+fun (x): x+1              // => #<function>, but shows "Int -> Int" first
 
 (fun (x): x+1)(10)        // => 11
 
@@ -507,7 +507,7 @@ def add_one:
 
 add_one(10)               // => 11
 
-def add_two :: Number -> Number:
+def add_two :: Int -> Int:
   fun (x):
     x+2
 
@@ -573,10 +573,10 @@ cons   // => #<function>, but shows "(?a, Listof(?a) -> Listof(?a)" first
 def b = box([])
 b      // => box([]), but shows "Boxof(Listof(?_a))" first
 set_box(b, [1])
-b      // => box([]), but shows "Boxof(Listof(Number))" first
+b      // => box([]), but shows "Boxof(Listof(Int))" first
 
 #//
-set_box(b, ["a"])     // error: Number vs String
+set_box(b, ["a"])     // error: Int vs String
 
 ///////////////////////////////////////////
 // Testing

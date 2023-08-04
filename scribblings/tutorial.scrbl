@@ -76,7 +76,7 @@ shown in the @onscreen{Racket} menu). In the bottom part of the window, type
 
 @interaction(1)
 
-In other words, the expression @rhombus(1) has type @rhombus(Number),
+In other words, the expression @rhombus(1) has type @rhombus(Int),
 and the value of the expression is @rhombus(1, ~result).
 
 In this tutorial, we will mostly show expressions as if typed in that
@@ -91,19 +91,17 @@ the line. For examples of other comment forms, see @(demo_link).
 @// ----------------------------------------
 @section(~tag: "data-tutorial"){Simple Data}
 
-Shplait supports various kinds of numbers, all with type @rhombus(Number):
+Shplait supports various kinds of integers, all with type @rhombus(Int):
 
 @interaction(
   1
-  0.5
-  1/3
+  -42
+  1_000_000
 )
 
-The result of @rhombus(1/3) prints oddly because it's an exact number,
-not an inexact floating-point number like the result of @rhombus(1.0)
-divided by @rhombus(3.0). The full syntax of numbers is probably not
-important, but it's
-@seclink(~doc: shrubbery_scrbl, "top"){shrubbery number syntax}.
+The full syntax of numbers is probably not important, but it's
+@seclink(~doc: shrubbery_scrbl, "top"){shrubbery number syntax}
+restricted to integers.
 
 The booleans @defterm{true} and @defterm{false} are written
 @rhombus(#true) and @rhombus(#false):
@@ -153,7 +151,6 @@ Shplait includes some of the usual operators and functions on numbers, like
 
 @interaction(
   1 + 2
-  floor(1.2)
   max(3, 5)
   ~error:
     1/0
@@ -170,12 +167,11 @@ argument types appear before the arrow, and the function's result type
 is after the arrow. If a function only has one argument, the argument
 type can be written by itself, otherwise the argument types are
 comma-separated and grouped with parentheses. A function is a value, so
-if you evaluate just @rhombus(floor) or @rhombus(max) without calling
+if you evaluate just @rhombus(max) without calling
 it, then Shplait will show the type and print that the result is a
 function:
 
 @interaction(
-  floor
   max
 )
 
@@ -520,7 +516,7 @@ The @rhombus(def) form defines an identifier to be a synonym for a
 value:
 
 @interaction(
- def pi = 3.14
+ def pi = 3 // close enough, since we only have integers
  pi
  def tau = pi + pi
  tau
@@ -551,7 +547,7 @@ Put these two definitions in the definitions area:
 
 @interaction(
   ~hidden:
-    fun num_is_even(x :: Number): #true
+    fun num_is_even(x :: Int): #true
 )
 
 @interaction(
@@ -577,9 +573,9 @@ are now available in the interactions area:
 
 In our definitions of @rhombus(pi) and @rhombus(tau), Shplait inferred
 that the newly defined names have type
-@rhombus(Number, ~at shplait/type). It also inferred that
+@rhombus(Int, ~at shplait/type). It also inferred that
 @rhombus(num_is_odd) has type
-@rhombus(Number -> Boolean, ~at shplait/type). Programs are often easier
+@rhombus(Int -> Boolean, ~at shplait/type). Programs are often easier
 to read and understand if you write the type that would otherwise be
 inferred. Declaring types can sometimes help improve or localize error
 messages when Shplait's attempt to infer a type fails, since inference
@@ -661,7 +657,7 @@ equivalently written using @rhombus(let):
 @section(~tag: "datatypes-tutorial"){Datatypes}
 
 So far, we have only seen built-in types like
-@rhombus(Number, ~at shplait/type) and
+@rhombus(Int, ~at shplait/type) and
 @rhombus(Listof(String), ~at shplait/type). Sometimes, it's useful to
 define your own name as a shorthand for a type, such as defining
 @rhombus(Groceries) to be equivalent to
@@ -712,9 +708,9 @@ animals that can be either tigers or snakes:
   ~defn:
     type Animal
     | tiger(color :: Symbol,
-            stripe_count :: Number)
+            stripe_count :: Int)
     | snake(color :: Symbol,
-            weight :: Number,
+            weight :: Int,
             food :: String)
 )
 
@@ -945,7 +941,7 @@ string.
 
 @interaction(
   ~defn:
-    fun always_fail(n :: Number) :: Number:
+    fun always_fail(n :: Int) :: Int:
       error(#'always_fail, "we're not actually returning a number")
   ~defn:
     check:
@@ -1076,8 +1072,8 @@ that isn't particularly useful:
 )
 
 Notice that the result has a function type: it's a function that takes a
-@rhombus(Number, ~at shplait/type) and returns a
-@rhombus(Number, ~at shplait/type).
+@rhombus(Int, ~at shplait/type) and returns a
+@rhombus(Int, ~at shplait/type).
 
 An anonymous function created with @rhombus(fun) doesn't have to
 @emph{stay} anonymous. Since you can use a @rhombus(fun) form anywhere
@@ -1209,20 +1205,20 @@ numbers. Clearly, there is a corerspondence bwteen the syntax object
 @rhombus('1') and the number @rhombus(1), the syntax object
 @rhombus('#false') and the boolean @rhombus(#false), and the syntax
 object @rhombus('x') and the symbol @rhombus(#'x). Functions like
-@rhombus(syntax_is_number), @rhombus(syntax_to_number), and
-@rhombus(number_to_syntax) let you move between program representations
+@rhombus(syntax_is_integer), @rhombus(syntax_to_integer), and
+@rhombus(integer_to_syntax) let you move between program representations
 as syntax object and values that you can compute with at the Shplait
 level.
 
 @interaction(
-  syntax_is_number('1')
-  syntax_to_number('1')
-  number_to_syntax(1)
-  syntax_is_number('x')
+  syntax_is_integer('1')
+  syntax_to_integer('1')
+  integer_to_syntax(1)
+  syntax_is_integer('x')
 )
 
 In principle, you can use @rhombus(syntax_split) and conversion
-functions like @rhombus(syntax_is_number) to pull apart syntax objects
+functions like @rhombus(syntax_is_integer) to pull apart syntax objects
 in any way. That quickly gets tedious, however, and Shplait offers
 better support for manipulating syntax objects with patterns and
 templates, as we see in the next section.
@@ -1238,8 +1234,8 @@ escapes only the immediately following term, so a complicated expression
 needs parentheses.
 
 @interaction(
-  '1 + $(number_to_syntax(2 + 3)) + 4'
-  let x = number_to_syntax(2 + 3):
+  '1 + $(integer_to_syntax(2 + 3)) + 4'
+  let x = integer_to_syntax(2 + 3):
     '1 + $x + 4'
 )
 
@@ -1547,7 +1543,7 @@ to make imported names visible without a prefix.
   // math.rhm
   #,(hash_lang()) #,(rhombuslangname(shplait))
 
-  def pi = 3.14
+  def pi = 3 // we still only have integers
   def tau = pi + pi
 )
 
@@ -1598,10 +1594,10 @@ operator.
 
 @interaction(
   ~defn:
-    def mutable gravity = 6.6e-11
+    def mutable gravity = 66
   ~repl:
     gravity
-    gravity := 6.5e-11
+    gravity := 65
     gravity
 )
 

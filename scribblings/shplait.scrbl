@@ -84,7 +84,7 @@ specification of shrubbery notation.)
   @rhombus(def x = 1) or @rhombus(fun f(x): x).}
 
   @item{@rhombus(type) stands for any type, such as
-  @rhombus(Number, ~at shplait/type).}
+  @rhombus(Int, ~at shplait/type).}
 
   @item{@rhombus(typed_id) stands for either an identifier or an
   identifier followed by @rhombus(::) and a declared type. Note that there
@@ -101,7 +101,7 @@ Every Shplait expression has a type. The types come either from
 annotations or from Shplait's type inference, which fills in
 missing annotations for expressions and bindings.
 
-There are some built-in types like @rhombus(Number, ~at shplait/type),
+There are some built-in types like @rhombus(Int, ~at shplait/type),
 some built-in type constructors like @rhombus(->, ~at shplait/type),
 and new types can be defined with @rhombus(type).
 
@@ -167,13 +167,13 @@ and new types can be defined with @rhombus(type).
 @examples(
   ~eval: eval
   ~defn:
-    type NumList = Listof(Number)
+    type NumList = Listof(Int)
   ~repl:
     def ns :: NumList = [1, 2, 3]
   ~defn:
     type Tagged(?a) = (Symbol * ?a)
   ~repl:
-    def now :: Tagged(Number) = values(#'time, 1200)
+    def now :: Tagged(Int) = values(#'time, 1200)
     def who :: Tagged(String) = values(#'name, "Alice")
 )
 
@@ -203,7 +203,7 @@ and new types can be defined with @rhombus(type).
     def c = circle(2)
   ~repl:
     match c
-    | circle(r): 3.14*r*r
+    | circle(r): 3*r*r
     | rectangle(w, h): w*h
 )
 
@@ -308,8 +308,8 @@ and new types can be defined with @rhombus(type).
 @examples(
   ~eval: eval
   ~error:
-    1:: Number
-  (1 :: Number)
+    1:: Int
+  (1 :: Int)
   ~error:
     (1 :: String)
   fun (x, y):
@@ -328,7 +328,7 @@ redefining or shadowing the names could easily create confusion:
 @nodef(def), @nodef(fun), @nodef(block), @nodef(let), @nodef(letrec),
 @nodef(if), @nodef(cond), @nodef(match), @nodef(check), @nodef(try),
 @nodef(module), @nodef(import), @nodef(type), @nodef(is_a),
-@nodef(Number), @nodef(Boolean), @nodef(Void), @nodef(String),
+@nodef(Int), @nodef(Boolean), @nodef(Void), @nodef(String),
 @nodef(Symbol), @nodef(Listof), @nodef(Arrayof), @nodef(Mapof),
 @nodef(Syntax), @nodef(Boxof), @nodef(cons), @nodef(first),
 @nodef(rest), @nodef(values), @nodef(box), @nodef(unbox),
@@ -355,7 +355,7 @@ redefining or shadowing the names could easily create confusion:
   ~eval: eval
   ~defn:
     def x = 1
-    def x2 :: Number = 2
+    def x2 :: Int = 2
   ~repl:
     x
     x2  
@@ -363,7 +363,7 @@ redefining or shadowing the names could easily create confusion:
     ~error:
       def s :: String = 0
   ~defn:
-    def values(x3 :: Number, s2 :: String):
+    def values(x3 :: Int, s2 :: String):
       values(3, "apple")
   ~defn:
     def mutable count = 0
@@ -436,7 +436,7 @@ redefining or shadowing the names could easily create confusion:
 @examples(
   ~eval: eval
   ~defn:
-    fun fib(n :: Number) :: Number:
+    fun fib(n :: Int) :: Int:
       cond
       | n == 0: 1
       | n == 1: 1
@@ -444,7 +444,7 @@ redefining or shadowing the names could easily create confusion:
   ~repl:
     fib(10)
   ~defn:
-    fun on_three(f :: Number -> Number) :: Listof(Number):
+    fun on_three(f :: Int -> Int) :: Listof(Int):
       [f(1), f(2), f(3)]
   ~repl:
     on_three(fun (x): x*10)
@@ -493,12 +493,12 @@ redefining or shadowing the names could easily create confusion:
   ~repl:
     fun (x): x + 1
   ~defn:
-    fun make_adder(n :: Number) :: Number -> Number:
+    fun make_adder(n :: Int) :: Int -> Int:
       fun (x): x + n
   ~repl:
     make_adder
   ~defn:
-    fun apply_adder(adder :: Number -> Number) :: Number:
+    fun apply_adder(adder :: Int -> Int) :: Int:
       adder(10)
   ~repl:
     apply_adder
@@ -681,7 +681,7 @@ redefining or shadowing the names could easily create confusion:
   ~defn:
     fun area(s :: Shape):
       match s
-      | circle(r): 3.14*r*r
+      | circle(r): 3*r*r
       | rectangle(w, h): w*h
   ~repl:
     area(circle(1))
@@ -695,14 +695,14 @@ redefining or shadowing the names could easily create confusion:
 @examples(
   ~eval: eval
   ~defn:
-    fun sum(lst :: Listof(Number)) :: Number:
+    fun sum(lst :: Listof(Int)) :: Int:
       match lst
       | []: 0
       | cons(f, r): f + sum(r)
   ~repl:
     sum([1, 2, 3])
   ~defn:
-    fun max_element(lst :: Listof(Number)) :: Number:
+    fun max_element(lst :: Listof(Int)) :: Int:
       match lst
       | cons(f, r):
           match r
@@ -730,7 +730,7 @@ redefining or shadowing the names could easily create confusion:
 @examples(
   ~eval: eval
   ~defn:
-    fun describe_quantity(n :: Number):
+    fun describe_quantity(n :: Int):
       match n
       | 0: "none"
       | 1: "single"
@@ -964,7 +964,7 @@ redefining or shadowing the names could easily create confusion:
 @subsection(~tag: "sec:number"){Numbers}
 
 @doc(
-  type 'Number'
+  type 'Int'
 ){
 
  The type for expressions that produce numbers.
@@ -981,8 +981,9 @@ redefining or shadowing the names could easily create confusion:
 ){
 
  Arithmetic on @rhombus(expr)s of type
- @rhombus(Number, ~at shplait/type), and the overall arithmetic
- expression also has type @rhombus(Number, ~at shplait/type).
+ @rhombus(Int, ~at shplait/type), and the overall arithmetic
+ expression also has type @rhombus(Int, ~at shplait/type).
+ The integer-division operator @rhombus(/) truncates toward 0.
 
  The usual precedence and associativity rules apply, except that
  @rhombus(/) or @rhombus(mod) cannot appear to the right of @rhombus(*).
@@ -1004,7 +1005,7 @@ redefining or shadowing the names could easily create confusion:
 ){
 
  Numeric comparison on @rhombus(expr)s of type
- @rhombus(Number, ~at shplait/type). The overall comparison expression
+ @rhombus(Int, ~at shplait/type). The overall comparison expression
  has type @rhombus(Boolean, ~at shplait/type).
 
  These operators have lower precedence than arithmetic operators.
@@ -1018,20 +1019,16 @@ redefining or shadowing the names could easily create confusion:
 }
 
 @doc(
-  fun min(n :: Number, m :: Number) :: Number
-  fun max(n :: Number, m :: Number) :: Number
-  fun floor(n :: Number) :: Number
-  fun ceiling(n :: Number) :: Number
+  fun min(n :: Int, m :: Int) :: Int
+  fun max(n :: Int, m :: Int) :: Int
 ){
 
- Functions that compare and select or round.
+ Functions that compare and select.
 
 @examples(
   ~eval: eval
   min(1, 2)
   max(1, 2)
-  floor(1.5)
-  ceiling(1.5)
 )
 
 }
@@ -1039,8 +1036,8 @@ redefining or shadowing the names could easily create confusion:
 
 
 @doc(
-  fun add1(n :: Number) :: Number
-  fun sub1(n :: Number) :: Number
+  fun add1(n :: Int) :: Int
+  fun sub1(n :: Int) :: Int
 ){
 
  Functions that add or subtract @rhombus(1) from a given number.
@@ -1055,8 +1052,8 @@ redefining or shadowing the names could easily create confusion:
 
 
 @doc(
-  fun is_even(n :: Number) :: Boolean
-  fun is_odd(n :: Number) :: Boolean
+  fun is_even(n :: Int) :: Boolean
+  fun is_odd(n :: Int) :: Boolean
 ){
 
  Reports when a number is even or odd, respectively.
@@ -1187,7 +1184,7 @@ These operators have lower precedence than arithmetic operators.
 }
 
 @doc(
-  fun string_length(str :: String) :: Number
+  fun string_length(str :: String) :: Int
 ){
 
  Returns the length of @rhombus(str) in characters.
@@ -1263,7 +1260,7 @@ These operators have lower precedence than arithmetic operators.
 
 
 @doc(
-  fun string_get(str :: String, i :: Number) :: Char
+  fun string_get(str :: String, i :: Int) :: Char
 ){
 
  Returns the @rhombus(i)th character of a string, counting from
@@ -1277,7 +1274,7 @@ These operators have lower precedence than arithmetic operators.
 }
 
 @doc(
-  fun substring(str :: String, start :: Number, end :: Number) :: String
+  fun substring(str :: String, start :: Int, end :: Int) :: String
 ){
 
  Returns a substring of @rhombus(str) from the character at index
@@ -1413,7 +1410,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
-  fun length(lst :: Listof(?a)) :: Number
+  fun length(lst :: Listof(?a)) :: Int
 ){
 
  Returns the number of elements in a list.
@@ -1426,7 +1423,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 }
 
 @doc(
-  fun list_get(lst :: Listof(?a), i :: Number) :: ?a
+  fun list_get(lst :: Listof(?a), i :: Int) :: ?a
 ){
 
  Returns the @rhombus(i)th element of a list, counting from
@@ -1619,7 +1616,7 @@ brackets implicitly uses the @rhombus(#%index) form, but
 
 
 @doc(
-  fun make_array(n :: Number, val :: ?a) :: Arrayof(?a)
+  fun make_array(n :: Int, val :: ?a) :: Arrayof(?a)
 ){
 
  Creates an array with @rhombus(n) elements, all initially @rhombus(val).
@@ -1633,7 +1630,7 @@ brackets implicitly uses the @rhombus(#%index) form, but
 
 
 @doc(
-  fun array_length(arr :: Arrayof(?a)) :: Number
+  fun array_length(arr :: Arrayof(?a)) :: Int
 ){
 
  Returns the number of slots in an array.
@@ -1706,7 +1703,7 @@ types. A tuple of one element is equivalent to just the element.
   ~eval: eval
   values(1, "apple")
   values()
-  values(1, fun (x :: Number): x)
+  values(1, fun (x :: Int): x)
 )
 
 }
@@ -2090,14 +2087,14 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 }
 
 @doc(
-  fun syntax_is_number(stx :: Syntax) :: Boolean
+  fun syntax_is_integer(stx :: Syntax) :: Boolean
   fun syntax_is_boolean(stx :: Syntax) :: Boolean
   fun syntax_is_symbol(stx :: Syntax) :: Boolean
   fun syntax_is_string(stx :: Syntax) :: Boolean
   fun syntax_is_list(stx :: Syntax) :: Boolean
 ){
 
- The @rhombus(syntax_is_number) function checks whether a @tech{syntax
+ The @rhombus(syntax_is_integer) function checks whether a @tech{syntax
   object} has a single term representing a number, returning
  @rhombus(#true) if so and @rhombus(#false) otherwise. Other functions
  check for different kinds of primitive values as representations.
@@ -2108,8 +2105,8 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 
 @examples(
   ~eval: eval
-  syntax_is_number('9')
-  syntax_is_number('apple')
+  syntax_is_integer('9')
+  syntax_is_integer('apple')
   syntax_is_list('[w, x y, z]')
   syntax_is_list('a b c')
 )
@@ -2117,21 +2114,21 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 }
 
 @doc(
-  fun syntax_to_number(stx :: Syntax) :: Number
+  fun syntax_to_integer(stx :: Syntax) :: Int
   fun syntax_to_boolean(stx :: Syntax) :: Boolean
   fun syntax_to_symbol(stx :: Syntax) :: Symbol
   fun syntax_to_string(stx :: Syntax) :: String
   fun syntax_to_list(stx :: Syntax) :: Listof(Syntax)
 ){
 
- The @rhombus(syntax_to_number) function extracts the number that a
- syntax object represents, but only if @rhombus(syntax_is_number) would
+ The @rhombus(syntax_to_integer) function extracts the number that a
+ syntax object represents, but only if @rhombus(syntax_is_integer) would
  return @rhombus(#false); otherwise an exception is raised. Other
  functions similarly extract values from syntax representations.
 
 @examples(
   ~eval: eval
-  syntax_to_number('9')
+  syntax_to_integer('9')
   syntax_to_list('[w, x y, z]')
 )
 
@@ -2139,19 +2136,19 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 
 
 @doc(
-  fun number_to_syntax(n :: Number) :: Syntax
+  fun integer_to_syntax(n :: Int) :: Syntax
   fun boolean_to_syntax(bool :: Boolean) :: Syntax
   fun symbol_to_syntax(sym :: Symbol) :: Syntax
   fun string_to_syntax(str :: String) :: Syntax
   fun list_to_syntax(lst :: Listof(Syntax)) :: Syntax
 ){
 
- The inverse of @rhombus(syntax_to_number), etc., converting a value
+ The inverse of @rhombus(syntax_to_integer), etc., converting a value
  into asyntax representation.
 
 @examples(
   ~eval: eval
-  number_to_syntax(9)
+  integer_to_syntax(9)
   list_to_syntax(['w', 'x y', 'z'])
 )
 
@@ -2307,9 +2304,9 @@ a few small exceptions:
 @itemlist(
 
  @item{Functions can take multiple arguments, instead of requring a @tech{tuple}
-   of arguments. Thus, @rhombus((Number, Number) -> Number, ~at shplait/type) is a different type
-   than either @rhombus((Number * Number) -> Number, ~at shplait/type), which is the tuple
-   variant, or @rhombus(Number -> (Number -> Number), ~at shplait/type), which is the curried
+   of arguments. Thus, @rhombus((Int, Int) -> Int, ~at shplait/type) is a different type
+   than either @rhombus((Int * Int) -> Int, ~at shplait/type), which is the tuple
+   variant, or @rhombus(Int -> (Int -> Int), ~at shplait/type), which is the curried
    variant.}
 
  @item{Since all top-level definitions are in the same

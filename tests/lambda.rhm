@@ -2,13 +2,13 @@
 ~lazy
 
 type Value
-| numV(n :: Number)
+| intV(n :: Int)
 | closV(arg :: Symbol,
         body :: Exp,
         env :: Env)
 
 type Exp
-| numE(n :: Number)
+| intE(n :: Int)
 | idE(s :: Symbol)
 | plusE(l :: Exp,
         r :: Exp)
@@ -53,7 +53,7 @@ fun parse(s :: Syntax) :: Exp:
       parse(e)
   | '$t':
       cond
-      | syntax_is_number(t): numE(syntax_to_number(s))
+      | syntax_is_integer(t): intE(syntax_to_integer(s))
       | syntax_is_symbol(t): idE(syntax_to_symbol(s))
       | ~else:
           error(#'parse, "invalid input")
@@ -61,31 +61,31 @@ fun parse(s :: Syntax) :: Exp:
 module test:
   check:
     parse('2')
-    ~is numE(2)
+    ~is intE(2)
   check:
     parse('x')
     ~is idE(#'x)
   check:
     parse('2 + 1')
-    ~is plusE(numE(2), numE(1))
+    ~is plusE(intE(2), intE(1))
   check:
     parse('3 * 4')
-    ~is multE(numE(3), numE(4))
+    ~is multE(intE(3), intE(4))
   check:
     parse('(3 * 4) + 8')
-    ~is plusE(multE(numE(3), numE(4)),
-              numE(8))
+    ~is plusE(multE(intE(3), intE(4)),
+              intE(8))
   check:
     parse('let x = (1 + 2):
              y')
-    ~is letE(#'x, plusE(numE(1), numE(2)),
+    ~is letE(#'x, plusE(intE(1), intE(2)),
              idE(#'y))
   check:
     parse('fun (x): 9')
-    ~is lamE(#'x, numE(9))
+    ~is lamE(#'x, intE(9))
   check:
     parse('double(9)')
-    ~is appE(idE(#'double), numE(9))
+    ~is appE(idE(#'double), intE(9))
 
   check:
     parse('()')
@@ -94,7 +94,7 @@ module test:
 // interp ----------------------------------------
 fun interp(a :: Exp, env :: Env) :: Value:
   match a
-  | numE(n): numV(n)
+  | intE(n): intV(n)
   | idE(s): lookup(s, env)
   | plusE(l, r): num_plus(interp(l, env), interp(r, env))
   | multE(l, r): num_mult(interp(l, env), interp(r, env))
@@ -114,23 +114,23 @@ fun interp(a :: Exp, env :: Env) :: Value:
 module test:
   check:
     interp(parse('2'), mt_env)
-    ~is numV(2)
+    ~is intV(2)
   check:
     interp(parse('x'), mt_env)
     ~raises "free variable"    
   check:
     interp(parse('x'),
-           extend_env(bind(#'x, numV(9)), mt_env))
-    ~is numV(9)
+           extend_env(bind(#'x, intV(9)), mt_env))
+    ~is intV(9)
   check:
     interp(parse('2 + 1'), mt_env)
-    ~is numV(3)
+    ~is intV(3)
   check:
     interp(parse('2 * 3'), mt_env)
-    ~is numV(6)
+    ~is intV(6)
   check:
     interp(parse('(2 * 3) + (5 + 8)'), mt_env)
-    ~is numV(19)
+    ~is intV(19)
   check:
     interp(parse('fun (x): x + x'),
            mt_env)
@@ -139,23 +139,23 @@ module test:
     interp(parse('let x = 5:
                     x + x'),
            mt_env)
-    ~is numV(10)
+    ~is intV(10)
   check:
     interp(parse('let x = 5:
                     let x = 1 + x:
                       x + x'),
            mt_env)
-    ~is numV(12)
+    ~is intV(12)
   check:
     interp(parse('let x = 5:
                     let y = 6:
                       x'),
            mt_env)
-    ~is numV(5)
+    ~is intV(5)
   check:
     interp(parse('(fun (x): x + x)(8)'),
            mt_env)
-    ~is numV(16)
+    ~is intV(16)
 
   check:
     interp(parse('1(2)'), mt_env)
@@ -181,10 +181,10 @@ module test:
            mt_env)
                
 // num_plus and num_mult ----------------------------------------
-fun num_op(op :: (Number, Number) -> Number, l :: Value, r :: Value) :: Value:
+fun num_op(op :: (Int, Int) -> Int, l :: Value, r :: Value) :: Value:
   cond
-  | l is_a numV && r is_a numV:
-      numV(op(numV.n(l), numV.n( r)))
+  | l is_a intV && r is_a intV:
+      intV(op(intV.n(l), intV.n( r)))
   | ~else:
       error(#'interp, "not a number")
 fun num_plus(l :: Value, r :: Value) :: Value:
@@ -194,11 +194,11 @@ fun num_mult(l :: Value, r :: Value) :: Value:
 
 module test:
   check:
-    num_plus(numV(1), numV(2))
-    ~is numV(3)
+    num_plus(intV(1), intV(2))
+    ~is intV(3)
   check:
-    num_mult(numV(3), numV(2))
-    ~is numV(6)
+    num_mult(intV(3), intV(2))
+    ~is intV(6)
   
 // lookup ----------------------------------------
 fun lookup(n :: Symbol, env :: Env) :: Value:
@@ -216,15 +216,15 @@ module test:
     lookup(#'x, mt_env)
     ~raises "free variable"
   check:
-    lookup(#'x, extend_env(bind(#'x, numV(8)), mt_env))
-    ~is numV(8)
+    lookup(#'x, extend_env(bind(#'x, intV(8)), mt_env))
+    ~is intV(8)
   check:
-    lookup(#'x, extend_env(bind(#'x, numV(9)),
-                           extend_env(bind(#'x, numV(8)),
+    lookup(#'x, extend_env(bind(#'x, intV(9)),
+                           extend_env(bind(#'x, intV(8)),
                                       mt_env)))
-    ~is numV(9)
+    ~is intV(9)
   check:
-    lookup(#'y, extend_env(bind(#'x, numV(9)),
-                           extend_env(bind(#'y, numV(8)),
+    lookup(#'y, extend_env(bind(#'x, intV(9)),
+                           extend_env(bind(#'y, intV(8)),
                                       mt_env)))
-    ~is numV(8)
+    ~is intV(8)

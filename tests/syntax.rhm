@@ -53,19 +53,19 @@ check:
 
 
 check:
-  syntax_is_number('1')
+  syntax_is_integer('1')
   ~is #true
 
 check:
-  syntax_is_number('#true')
+  syntax_is_integer('#true')
   ~is #false
 
 check:
-  syntax_to_number('1')
+  syntax_to_integer('1')
   ~is 1
 
 check:
-  number_to_syntax(1)
+  integer_to_syntax(1)
   ~is '1'
 
 
