@@ -1595,13 +1595,12 @@ brackets implicitly uses the @rhombus(#%index) form, but
     array_expr: block expr
     index_expr: block expr
     val_expr: block expr
-  expr.macro '$array_expr #%index [$index_expr, ...]'
-  expr.macro '$array_expr #%index [$index_expr, ...] := $val_expr'
+  expr.macro '$array_expr #%index [$index_expr]'
+  expr.macro '$array_expr #%index [$index_expr] := $val_expr'
 ){
 
- Accesses of updates an array element. Normally, @rhombus(#%index) is
- omitted, since it's implied when using square brackets as an
- array-access form.
+ Accesses or updates an array element. Writing out @rhombus(#%index)
+ is optional, but be advised that this name will appear in error messages.
 
 @examples(
   ~eval: eval
@@ -1610,6 +1609,8 @@ brackets implicitly uses the @rhombus(#%index) form, but
   a[0] := "z"
   a[0]
   a
+  ~error:
+    a[0, 0]
 )
 
 }
