@@ -3,7 +3,7 @@
 (define collection "shplait")
 
 (define deps '("base"
-               ("rhombus-prototype" #:version "0.11")))
+               ("rhombus-prototype" #:version "0.13")))
 
 (define build-deps '("racket-doc"
                      "sandbox-lib"

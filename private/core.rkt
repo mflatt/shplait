@@ -57,6 +57,9 @@
           (begin0
             (local-expand #'(rhombus:#%module-begin
                              (top
+                              (group rhombus:module #:early configure_runtime #:lang rhombus
+                                     (block
+                                      (group import shplait/runtime_config)))
                               form ...))
                           'module-begin
                           null)
