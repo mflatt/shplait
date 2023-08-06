@@ -25,7 +25,7 @@
 #true    // true
 #false   // false
 
-// Ints
+// Integers
 
 1
 -42
@@ -83,15 +83,15 @@ string_get("a", 0)       // => #{#\a}
 ///////////////////////////////////////////
 // Types
 
-1         // => 1, but says "Int" first
-1 + 1/2   // => #{3/2}, but says "Int" first
+1         // => 1, but says "Int" first when in interactions
+1 + 4/2   // => 3, but says "Int" first when in interactions
 
 "a"       // => "a", but says "String"
 
-string_append // => #<function:string_append>, but says "(String -> String)"
+string_length // => #<function:string_length>, but says "String -> Int"
 
 #//
-1 + "1/2"  // error: Int vs String
+1 + "2"    // error: Int vs String
 
 ///////////////////////////////////////////
 // Syntax objects
