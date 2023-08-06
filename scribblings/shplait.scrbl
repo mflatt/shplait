@@ -19,7 +19,7 @@
 
 @(macro 'nodef($id)': '@rhombus($id, ~datum)')
 
-@title{Shplait}
+@title{Shplait Language}
 
 The Shplait language syntactically resembles the
 @seclink(~doc: rhombus_scrbl, "top"){Rhombus}
