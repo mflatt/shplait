@@ -4,4 +4,4 @@ export:
   tutorial_video_url
 
 def tutorial_video_url:
-  "https://example.com/not/ready/yet"
+  "https://www.youtube.com/playlist?list=PLbdXd8eufjyX42OdF_QnDf4w9NcvWPAZr"
