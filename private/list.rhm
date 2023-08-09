@@ -34,7 +34,7 @@ expr.macro 'brackets $(elems && '[$(elem :: expr_meta.Parsed), ...]')':
   let tv = t.gen_tvar(#false)
   let [[elem_ty, new_elem], ...] = [t_s.lookup_type(elem, elem.group), ...]
   Function.pass(t.unify_do(elem, tv, elem_ty), ...)
-  t_s.wrap_type('#%brackets [maybe_delay($elem.group, $new_elem), ...]'.relocate_span([elems]),
+  t_s.wrap_type('(#%brackets [maybe_delay($elem.group, $new_elem), ...])'.relocate_span([elems]),
                 t.ListOf(elems, tv))
 
 defwrap wrap_first first(l): match dynamic_force(l)

@@ -43,12 +43,12 @@ module convert:
 expr.macro '«shquotes $(quoted_tmpl && '«'$tmpl'»')»':
   ~op_stx self
   let [tmpl_cvt, [[id, tmp_id, depth], ...]] = convert_tmpl(tmpl, #true)
-  t_s.wrap_type('«SyntaxWrap(
-                    block:
-                      def $(nest_rep(tmp_id, depth)) = reference_syntax_pattern_var($id, $depth)
-                      ...
-                      #%quotes '$tmpl_cvt'
-                    )»'.relocate_span([quoted_tmpl]),
+  t_s.wrap_type('«(SyntaxWrap(
+                     block:
+                       def $(nest_rep(tmp_id, depth)) = reference_syntax_pattern_var($id, $depth)
+                       ...
+                       #%quotes '$tmpl_cvt'
+                     ))»'.relocate_span([quoted_tmpl]),
                 t.Shrub(quoted_tmpl))
 
 meta:

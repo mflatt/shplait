@@ -8,4 +8,4 @@ export:
 defn.macro 'lazy_select $id: $(eager :: Name) $(lazy :: Name)':
   '«expr.macro '$id':
       ~op_stx self
-      lazy.lazy_select('$eager', '$lazy').relocate_span([self])»'
+      lazy.lazy_select('($eager)', '($lazy)').relocate_span([self])»'

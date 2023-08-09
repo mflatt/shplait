@@ -14,7 +14,7 @@ export:
 
 expr.macro 'symbol $(id :: Identifier)':
   ~op_stx self
-  t_s.wrap_type('#' $id'.relocate_span([self, id]), t.Sym('$self $id'))
+  t_s.wrap_type('(#' $id)'.relocate_span([self, id]), t.Sym('$self $id'))
 
 value.macro 'symbol $(id :: Identifier)':
   ~op_stx self

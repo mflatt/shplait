@@ -31,7 +31,7 @@ expr.macro 'shvalues $(args && '($(expr :: expr_meta.Parsed), ...)')':
   if [expr, ...].length() == 1
   | [expr, ...][0]
   | let [[ty, new_expr], ...] = [t_s.lookup_type(expr, expr.group), ...]
-    t_s.wrap_type('Tuple([maybe_delay($expr.group, $new_expr), ...])'.relocate_span([self, args]),
+    t_s.wrap_type('(Tuple([maybe_delay($expr.group, $new_expr), ...]))'.relocate_span([self, args]),
                   t.TupleOf('$self $args', [ty, ...]))
 
 value.macro

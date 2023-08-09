@@ -60,12 +60,12 @@ expr.macro 'delay($e)':
 
 expr.macro 'force($e)':  
   if is_accomodating
-  | 'dynamic_force($e)'.relocate_span([e])
+  | '(dynamic_force($e))'.relocate_span([e])
   | e
 
 expr.macro 'force_all($e)':
   if is_accomodating
-  | 'dynamic_force_all($e)'.relocate_span([e])
+  | '(dynamic_force_all($e))'.relocate_span([e])
   | e
 
 // for direct use in primitives that need to work in both

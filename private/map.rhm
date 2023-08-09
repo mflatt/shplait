@@ -44,7 +44,7 @@ meta:
     let [[val_ty, new_val], ...] = [t_s.lookup_type(val, val.group), ...]
     Function.pass(t.unify_do(key, key_tv, key_ty), ...)
     Function.pass(t.unify_do(val, val_tv, val_ty), ...)
-    t_s.wrap_type('$make { force($new_key) : maybe_delay($val.group, $new_val), ... }'.relocate_span([elems]),
+    t_s.wrap_type('($make { force($new_key) : maybe_delay($val.group, $new_val), ... })'.relocate_span([elems]),
                   t.MapOf(elems, key_tv, val_tv))
 
 expr.macro 'braces $(elems && '{ $key_term ...: $(val :: expr_meta.Parsed), ... }')':  

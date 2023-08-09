@@ -20,7 +20,7 @@ expr.macro 'shArray $(elems && '($(elem :: expr_meta.Parsed), ...)')':
   let [[elem_ty, new_elem], ...] = [t_s.lookup_type(elem, elem.group), ...]
   Function.pass(t.unify_do(elem, tv, elem_ty),
                 ...)
-  t_s.wrap_type('Array(maybe_delay($elem.group, $elem), ...)'.relocate_span([elems]),
+  t_s.wrap_type('(Array(maybe_delay($elem.group, $elem), ...))'.relocate_span([elems]),
                 t.ArrayOf(elems, tv))
 
 expr.macro
@@ -35,7 +35,7 @@ expr.macro
     let [rhs_ty, new_rhs] = t_s.lookup_type(rhs, rhs.group)
     t.unify_do(#false, tv, rhs_ty)
     let delay_rhs = 'maybe_delay($rhs_term ..., $new_rhs)'
-    t_s.wrap_type('(force($new_left) :~ Array)[force($new_index)] := $delay_rhs'.relocate_span([left, rhs]),
+    t_s.wrap_type('((force($new_left) :~ Array)[force($new_index)] := $delay_rhs)'.relocate_span([left, rhs]),
                   t.Vd(assign))
 | '$left shindex $(brackets && '[$(index :: expr_meta.Parsed)]') $tail ...':
     let tv = t.gen_tvar(#false)
@@ -43,7 +43,7 @@ expr.macro
     t.unify_do(#false, t.ArrayOf(brackets, tv), left_ty)
     let [index_ty, new_index] = t_s.lookup_type(index, index.group)
     t.unify_do(#false, t.Num(brackets), index_ty)
-    values(t_s.wrap_type('(force($new_left) :~ Array)[force($new_index)]'.relocate_span([left, brackets]),
+    values(t_s.wrap_type('((force($new_left) :~ Array)[force($new_index)])'.relocate_span([left, brackets]),
                          tv),
            '$tail ...')
 
