@@ -16,27 +16,33 @@ expr.macro
      $(left :: expr_meta.Parsed)
      ~is $(right :: expr_meta.Parsed)':
     ~op_stx self
+    ~all_stx stx
     let [left_ty, new_left] = t_s.lookup_type(left, left.group)
     let [right_ty, new_right] = t_s.lookup_type(right, right.group)
     t.unify_do(self, left_ty, right_ty)
     t_s.wrap_type('$('check'.relocate(self)):
                      force_all($new_left)
                      ~is_now force_all($new_right)',
+                  stx,
                   t.Vd(self))
 | 'shcheck:
      $(left :: expr_meta.Parsed)
      ~raises $(right :: expr_meta.Parsed)':
     ~op_stx self
+    ~all_stx stx
     let [right_ty, new_right] = t_s.lookup_type(right, right.group)
     t.unify_do(self, right_ty, t.Str(self))
     t_s.wrap_type('$('check'.relocate(self)):
                      force_all($left)
                      ~raises $new_right',
+                  stx,
                   t.Vd(self))
 
 expr.macro
 | 'time: $(expr :: expr_meta.Parsed)':
+    ~all_stx stx
     let [expr_ty, new_expr] = t_s.lookup_type(expr, expr.group)
     t_s.wrap_type('measure.time:
                      $new_expr',
+                  stx,
                   expr_ty)

@@ -106,7 +106,7 @@ defwrap wrap_max max(a, b): math.max(dynamic_force(a), dynamic_force(b))
 
 expr.macro 'shmin':
   ~op_stx self
-  t_s.wrap_type('wrap_min', t.Arrow(self, [t.Num(self), t.Num(self)], t.Num(self)))
+  t_s.wrap_type('wrap_min', self, t.Arrow(self, [t.Num(self), t.Num(self)], t.Num(self)))
 expr.macro 'shmax':
   ~op_stx self
-  t_s.wrap_type('wrap_max', t.Arrow(self, [t.Num(self), t.Num(self)], t.Num(self)))
+  t_s.wrap_type('wrap_max', self, t.Arrow(self, [t.Num(self), t.Num(self)], t.Num(self)))

@@ -43,8 +43,11 @@ meta:
     [t.at_source(t.poly_instance(lookup_poly_type(expr, orig)), expr),
      expr]
 
-  fun wrap_type(expr :: Syntax, ty):
-    statinfo_meta.wrap(expr, '(($type_key, $(type_to_syntax(ty))))')
+  fun
+  | wrap_type(expr :: Syntax, ty):
+      statinfo_meta.wrap(expr, '(($type_key, $(type_to_syntax(ty))))')
+  | wrap_type(expr :: Syntax, orig_stx :: Syntax, ty):
+      wrap_type('($expr)'.relocate_span([orig_stx]), ty)
 
   fun register_type(sym, ty):
     sym_to_ty[sym] := ty

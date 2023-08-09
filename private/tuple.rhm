@@ -28,10 +28,12 @@ class Tuple(args :~ List):
 
 expr.macro 'shvalues $(args && '($(expr :: expr_meta.Parsed), ...)')':
   ~op_stx self
+  ~all_stx stx
   if [expr, ...].length() == 1
   | [expr, ...][0]
   | let [[ty, new_expr], ...] = [t_s.lookup_type(expr, expr.group), ...]
-    t_s.wrap_type('(Tuple([maybe_delay($expr.group, $new_expr), ...]))'.relocate_span([self, args]),
+    t_s.wrap_type('Tuple([maybe_delay($expr.group, $new_expr), ...])',
+                  stx,
                   t.TupleOf('$self $args', [ty, ...]))
 
 value.macro

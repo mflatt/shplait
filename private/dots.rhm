@@ -10,14 +10,18 @@ export:
 expr.macro
 | '.... $_ ... $()':
     ~op_stx self
+    ~all_stx stx
     t_s.wrap_type('block:
                      $('reached_dots'.relocate(self))('$self')',
+                  stx,
                   t.gen_tvar(#false))
 | '$left .... $_ ... $()':
     ~op_stx self
+    ~all_stx stx
     t_s.wrap_type('block:
                      $('reached_dots'.relocate(self))('$self')
                      $left',
+                  stx,
                   t.gen_tvar(#false))
 
 fun reached_dots(op :: Syntax):  

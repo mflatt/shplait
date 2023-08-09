@@ -15,12 +15,13 @@ expr.macro 'shblock:
               ...
               $expr':
   ~op_stx self
+  ~all_stx stx
   let tv = t.gen_tvar(#false)
   let e:
-    'unify ~expr $(t_s.type_to_syntax(tv)):
-       ~init_tvars: []
-       ~defns:
-         delay($defn)
-         ...           
-       ~body: $expr'
-  t_s.wrap_type(e, tv)
+    '(unify ~expr $(t_s.type_to_syntax(tv)):
+        ~init_tvars: []
+        ~defns:
+          delay($defn)
+          ...           
+        ~body: $expr)'
+  t_s.wrap_type(e.relocate_span([stx]), tv)

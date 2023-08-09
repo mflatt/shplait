@@ -14,6 +14,7 @@ expr.macro 'shif $tst ...
             | $thn ...
             | $els ...':
   ~op_stx self
+  ~all_stx stx
   let '$(tst :: expr_meta.Parsed)' = '$tst ...'
   let '$(thn :: expr_meta.Parsed)' = '$thn ...'
   let '$(els :: expr_meta.Parsed)' = '$els ...'
@@ -24,7 +25,7 @@ expr.macro 'shif $tst ...
   t.unify_do(tst, t.Bool(self), tst_ty)
   t.unify_do(tst, thn_ty, tv)
   t.unify_do(tst, els_ty, tv)
-  t_s.wrap_type('if force($new_tst) | $new_thn | $new_els', tv)
+  t_s.wrap_type('if force($new_tst) | $new_thn | $new_els', stx, tv)
 
 expr.macro
 | 'shcond
@@ -34,6 +35,7 @@ expr.macro
    | ~else:
        $(els :: Group)':
     ~op_stx self
+    ~all_stx stx
     let '[$(tst :: expr_meta.Parsed), ...]' = '[$tst ..., ...]'
     let '[$(body :: expr_meta.Parsed), ...]' = '[$body, ...]'
     let '$(els :: expr_meta.Parsed)' = els
@@ -48,12 +50,14 @@ expr.macro
                    | force($new_tst): $new_body
                    | ...
                    | ~else: $new_els',
+                  stx,
                   tv)
 | 'shcond
    | $tst ...:
        $(body :: Group)
    | ...':
     ~op_stx self
+    ~all_stx stx
     let '[$(tst :: expr_meta.Parsed), ...]' = '[$tst ..., ...]'
     let '[$(body :: expr_meta.Parsed), ...]' = '[$body, ...]'
     let tv = t.gen_tvar(self)
@@ -64,4 +68,5 @@ expr.macro
     t_s.wrap_type('$('cond'.relocate(self))
                    | force($new_tst): $new_body
                    | ...',
+                  stx,
                   tv)

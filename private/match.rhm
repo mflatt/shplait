@@ -80,12 +80,14 @@ expr.macro
 | 'shmatch $expr ...
    | ~else: $(body :: Group)':
     ~op_stx self
-    parse_else_match(self,
+    ~all_stx stx
+    parse_else_match(self, stx,
                      '$expr ...',
                      body)
 | 'shmatch $expr ... $(lcs :: ListClauses)':
     ~op_stx self
-    parse_list_match(self,
+    ~all_stx stx
+    parse_list_match(self, stx,
                      '$expr ...',
                      lcs.empty_body,
                      lcs.f_id, lcs.r_id, lcs.cons_body)
@@ -95,14 +97,16 @@ expr.macro
     syntax_meta.error("incomplete set of list clauses", '$self $tail ...')
 | 'shmatch $expr ... $(scs :: SyntaxClauses)':
     ~op_stx self
-    parse_syntax_match(self,
+    ~all_stx stx
+    parse_syntax_match(self, stx,
                        '$expr ...',
                        [scs.pat, ...],
                        [scs.body, ...],
                        scs.else_body)
 | 'shmatch $expr ... $(ccs :: CaseClauses)':
     ~op_stx self
-    parse_case_match(self,
+    ~all_stx stx
+    parse_case_match(self, stx,
                      '$expr ...',
                      [ccs.lits, ...],
                      [ccs.body, ...],
@@ -114,7 +118,8 @@ expr.macro
    | $(else_kw && '~else'):
        $(else_body :: Group)':
     ~op_stx self
-    parse_match(self, else_kw,
+    ~all_stx stx
+    parse_match(self, stx, else_kw,
                 '$expr ...',
                 [[ctr, [field, ...]], ...],
                 [body, ...],
@@ -124,7 +129,8 @@ expr.macro
        $(body :: Group)
    | ...':
     ~op_stx self
-    parse_match(self, #false,
+    ~all_stx stx
+    parse_match(self, stx, #false,
                 '$expr ...',
                 [[ctr, [field, ...]], ...],
                 [body, ...],
@@ -143,7 +149,7 @@ expr.macro
     syntax_meta.error("bad syntax", '$self $x ...')
 
 meta:
-  fun parse_list_match(self,
+  fun parse_list_match(self, stx,
                        expr_in,
                        empty_body,
                        f_id, r_id, cons_body):
@@ -167,9 +173,9 @@ meta:
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
                 $cons_body»'
-    t_s.wrap_type(r, tv)
+    t_s.wrap_type(r, self, tv)
 
-  fun parse_syntax_match(self,
+  fun parse_syntax_match(self, stx,
                          expr_in,
                          [pat, ...],
                          [body, ...],
@@ -198,9 +204,9 @@ meta:
         | ...
         | $else
         | ...»'
-    t_s.wrap_type(r, tv)
+    t_s.wrap_type(r, stx, tv)
 
-  fun parse_case_match(self,
+  fun parse_case_match(self, stx,
                        expr_in,
                        [lits, ...],
                        [body, ...],
@@ -225,9 +231,9 @@ meta:
         | ...
         | $else
         | ...»'
-    t_s.wrap_type(r, tv)
+    t_s.wrap_type(r, stx, tv)
 
-  fun parse_match(self, else_kw,
+  fun parse_match(self, stx, else_kw,
                   expr_in,
                   [[ctr, [field, ...]], ...],
                   [body, ...],
@@ -287,10 +293,10 @@ meta:
         | ...
         | $else
         | ...»'
-    t_s.wrap_type(r, tv)
+    t_s.wrap_type(r, stx, tv)
 
   // special case for just `~else`, makes no requirements on `expr_in` type
-  fun parse_else_match(self, expr_in, body):
+  fun parse_else_match(self, stx, expr_in, body):
     let '$(expr :: expr_meta.Parsed)' = expr_in
     let tv = t.gen_tvar(#false)
     t_s.wrap_type('block:
@@ -298,6 +304,7 @@ meta:
                      unify ~expr $(t_s.type_to_syntax(tv)):
                        ~body:
                          $body',
+                  stx,
                   tv)
 
 expr.macro '$left shis_a $(ctr :: Identifier)':
