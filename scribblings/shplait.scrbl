@@ -975,6 +975,7 @@ redefining or shadowing the names could easily create confusion:
 @doc(
   expr.macro '$expr + $expr'
   expr.macro '$expr - $expr'
+  expr.macro '- $expr'
   expr.macro '$expr * $expr'
   expr.macro '$expr / $expr'
   expr.macro '$expr mod $expr'
@@ -993,6 +994,7 @@ redefining or shadowing the names could easily create confusion:
   ~repl:
     1 + 2 * 3 + 8 / 2
     3 mod 2
+    4 * -(1 + 2)
 )
 
 }

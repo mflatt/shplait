@@ -11,6 +11,7 @@ decl.macro 'def_binary $name $op $type_constr: $option; ...':
   '«export: rename: $name as $op
     expr.macro '$('$')left $name $('$')right':
       ~op_stx self
+      ~all_stx stx
       $option
       ...
       let [left_ty, new_left] = t_s.lookup_type(left, #false)
@@ -18,18 +19,37 @@ decl.macro 'def_binary $name $op $type_constr: $option; ...':
       t.unify_do(left, left_ty, t.Num(self))
       t.unify_do(right, right_ty, t.Num(self))
       t_s.wrap_type('force($('$')new_left) $('$')('$op'.relocate(self)) force($('$')new_right)',
-                    t. $type_constr ('$('$')left $('$')self $('$')right'))»'
+                    t. $type_constr(stx))»'
 
 def_binary shplus + Num:
   ~weaker_than shtimes shdiv shmod
   ~same_as shminus
-def_binary shminus - Num:
-  ~weaker_than shtimes shdiv shmod
 def_binary shtimes * Num:
   ~same_on_left_as shdiv shmod
 operator n / d: n div d
 def_binary shdiv / Num:«»
 def_binary shmod mod Num:«»
+
+export: rename: shminus as -
+expr.macro
+| '$left shminus $right':
+    ~op_stx self
+    ~all_stx stx
+    ~weaker_than shtimes shdiv shmod
+    let [left_ty, new_left] = t_s.lookup_type(left, #false)
+    let [right_ty, new_right] = t_s.lookup_type(right, #false)
+    t.unify_do(left, left_ty, t.Num(self))
+    t.unify_do(right, right_ty, t.Num(self))
+    t_s.wrap_type('force($new_left) $('-'.relocate(self)) force($new_right)',
+                  t.Num(stx))
+| 'shminus $right':
+    ~op_stx self
+    ~all_stx stx
+    ~weaker_than shtimes shdiv shmod
+    let [right_ty, new_right] = t_s.lookup_type(right, #false)
+    t.unify_do(right, right_ty, t.Num(self))
+    t_s.wrap_type('$('-'.relocate(self)) force($new_right)',
+                  t.Num(stx))
 
 def_binary shlt < Bool:
   ~weaker_than shplus shminus shtimes shdiv shmod
@@ -43,14 +63,16 @@ def_binary shge >= Bool:
 export: rename: _not as !
 expr.macro '_not $right':
   ~op_stx self
+  ~all_stx stx
   let [right_ty, new_right] = t_s.lookup_type(right, #false)
   t.unify_do(right, right_ty, t.Bool(self))
-  t_s.wrap_type('! force($new_right)', t.Bool('$self $right'))
+  t_s.wrap_type('! force($new_right)', t.Bool(stx))
 
 decl.macro 'def_equality $op $as_op':
   '«export: rename: equals as $op
     expr.macro '$('$')left equals $('$')right':
       ~op_stx self
+      ~all_stx stx
       ~weaker_than shplus shminus shtimes shdiv shmod
       let tv = t.gen_tvar(self)
       let [left_ty, new_left] = t_s.lookup_type(left, #false)
