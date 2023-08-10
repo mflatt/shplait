@@ -105,5 +105,5 @@ expr.macro '$fn call $(args && '($(arg :: expr_meta.Parsed), ...)')':
              t.Arrow(fn,
                      [arg_ty, ...],
                      res_tv))
-  let new_call = '(force($new_fn) (maybe_delay($arg.group, $new_arg), ...))'
+  let new_call = '(force($new_fn) $('(maybe_delay($arg.group, $new_arg), ...)'.relocate(args)))'
   t_s.wrap_type(new_call.relocate_span([fn, self, args]), res_tv)
