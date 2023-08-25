@@ -92,3 +92,15 @@ check_eval:
 check_eval:
   1 + String
   ~raises "type form is being used as an expression"
+
+check_eval:
+  fun f(x :: Int):
+    1
+    2
+  ~raises "unexpected term"
+
+check_eval:
+  fun f(x :: Int) :: Int:
+    1
+    2
+  ~raises "unexpected term"
