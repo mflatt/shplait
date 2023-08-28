@@ -1396,12 +1396,13 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
  The @rhombus(cons) function produces a list given its first element
  plus the rest of the elements already in a list. The @rhombus(first)
  function returns the first element of a nonempty list. The
- @rhombus(rest) funrction returns a list containing all but the first
+ @rhombus(rest) function returns a list containing all but the first
  element of a nonempty list. The @rhombus(is_cons) and @rhombus(is_empty)
  functions report whether a list is nonempty or empty, respectively.
 
  The @rhombus(first) and @rhombus(rest) functions raise an exception when
- given an empty list.
+ given an empty list. All of these functions take constant time (i.e.,
+ independent on the length of @rhombus(lst)).
 
 @examples(
   ~eval: eval
@@ -1418,7 +1419,8 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
   fun length(lst :: Listof(?a)) :: Int
 ){
 
- Returns the number of elements in a list.
+ Returns the number of elements in a list. This function takes time
+ proportional to the length of @rhombus(lst).
 
 @examples(
   ~eval: eval
@@ -1432,7 +1434,8 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 ){
 
  Returns the @rhombus(i)th element of a list, counting from
- @rhombus(0).
+ @rhombus(0).  This function takes time
+ proportional to @rhombus(i)
 
 @examples(
   ~eval: eval
@@ -1447,7 +1450,8 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 ){
 
  Produces a list that has the items of the first given list followed by
- the items of the second given list.
+ the items of the second given list. This function takes time proportional
+ to the length of @rhombus(lst1).
 
 @examples(
   ~eval: eval
@@ -1464,7 +1468,8 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 ){
 
  Returns a list that has the same elements as the given one, but in
- reverse order.
+ reverse order. This function takes time proportional
+ to the length of @rhombus(lst).
 
 @examples(
   ~eval: eval
@@ -1639,7 +1644,8 @@ brackets implicitly uses the @rhombus(#%index) form, but
   fun array_length(arr :: Arrayof(?a)) :: Int
 ){
 
- Returns the number of slots in an array.
+ Returns the number of slots in an array. This function takes constant
+ time.
 
 @examples(
   ~eval: eval
