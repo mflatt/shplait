@@ -15,7 +15,7 @@ export:
   LazyParseType TypeConstructor
   gen_tvar
   to_expression
-  create_defn poly_ize as_non_poly get_defn_tvars
+  create_defn poly_ize poly_ize_upto as_non_poly get_defn_tvars
   Poly poly_instance at_source instantiate_constructor_at instantiate_at
   unify_do unify_defn_do
   let_based_poly_do
@@ -499,6 +499,17 @@ fun poly_ize(t :: Type, tvars :: List):
     | [tvar, & tvars]:
         loop(tvars, Poly(t.src, tvar, t))
 
+fun poly_ize_upto(t :: Type, allowed_tvars :: List):
+  let tvars = extract_tvars(t, [], Set())
+  match removeAll(tvars, allowed_tvars)
+  | []: poly_ize(t, tvars)
+  | [t :: TVar, ...]: error(#'type, "unguarded type variables: " +& List.reverse([t.src, ...]))
+
+fun removeAll(as :: List, bs :: List):
+  match bs
+  | []: as
+  | [b, bs, ...]: removeAll(List.remove(as, b), [bs, ...])
+
 fun at_source(t, expr):
   recur loop (t = Type.clone(t)):
     add_srcs_do(t, expr)
@@ -824,7 +835,7 @@ fun extract_tvars(t, poly_context :: List, base_tvars :: Set):
           Set.append(& t.args.map(loop))
       | t :: Poly:
           loop(t.type).remove(t.tvar)
-      | ~else: Set{}     
+      | ~else: Set{}
   tvars.to_list()
 
 fun unify_defn_do(expr, a, b):
