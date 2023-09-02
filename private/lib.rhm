@@ -42,7 +42,7 @@ fun reverse(lst):
   block:
     fun accum_rev(lst, rev):
       match lst
-      | []: []
+      | []: rev
       | cons(hd, tl): accum_rev(tl, cons(hd, rev))
     accum_rev(lst, [])
 
