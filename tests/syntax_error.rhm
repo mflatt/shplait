@@ -114,4 +114,4 @@ check_eval:
 check_eval:
   type BadTriple
   | Triple(fst :: ?a * ?b, snd :: ?c)
-  ~raises "unguarded type variables: ['? a', '? b']"
+  ~raises "unguarded type variables: [\"?_a\", \"?_b\"]"

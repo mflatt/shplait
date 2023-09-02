@@ -499,11 +499,14 @@ fun poly_ize(t :: Type, tvars :: List):
     | [tvar, & tvars]:
         loop(tvars, Poly(t.src, tvar, t))
 
-fun poly_ize_upto(t :: Type, allowed_tvars :: List):
+fun poly_ize_upto(t :: Type, allowed_tvars :: List, orig :: Syntax):
   let tvars = extract_tvars(t, [], Set())
   match removeAll(tvars, allowed_tvars)
   | []: poly_ize(t, tvars)
-  | [t :: TVar, ...]: error(#'type, "unguarded type variables: " +& List.reverse([t.src, ...]))
+  | [t :: TVar, ...]:
+      let context = MutableMap()
+      let tstr = type_to_string(context)
+      syntax_meta.error("unguarded type variables: " +& [tstr(t), ...], orig)
 
 fun removeAll(as :: List, bs :: List):
   match bs

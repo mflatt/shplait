@@ -87,7 +87,7 @@ decl.macro
     Function.pass(f.record_frame_defn_type(var_ty_sym, var_ty), ...)
     let dty_sym = t_s.type_to_syntax(dty)
     f.record_frame_defn_type(dty_sym, dty)
-    let [[var_field_ty, ...], ...] = [[t.poly_ize_upto(t.Arrow(field.id, [dty], field_ty), arg_tys), ...], ...]
+    let [[var_field_ty, ...], ...] = [[t.poly_ize_upto(t.Arrow(field.id, [dty], field_ty), arg_tys, field.type_seq), ...], ...]
     let [[var_field_ty_sym, ...], ...] = [[t_s.type_to_syntax(var_field_ty), ...], ...]
     Function.pass(f.record_frame_defn_type(var_field_ty_sym, var_field_ty), ..., ...)
     let ([[var_tmp_id_x, ...], ...], // workaround nested `...` mismatch
