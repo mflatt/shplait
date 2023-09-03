@@ -506,7 +506,7 @@ fun poly_ize_upto(t :: Type, allowed_tvars :: List, orig :: Syntax):
   | [t :: TVar, ...]:
       let context = MutableMap()
       let tstr = type_to_string(context)
-      syntax_meta.error("unguarded type variables: " +& [tstr(t), ...], orig)
+      syntax_meta.error("unguarded type variable" +& if [] == List.rest([t, ...]) | "" | "s", orig)
 
 fun removeAll(as :: List, bs :: List):
   match bs
