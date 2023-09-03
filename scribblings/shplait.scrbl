@@ -995,9 +995,15 @@ redefining or shadowing the names could easily create confusion:
 @examples(
   ~eval: eval
   ~repl:
-    1 + 2 * 3 + 8 / 2
-    3 mod 2
-    4 * -(1 + 2)
+    ~check:
+      1 + 2 * 3 + 8 / 2
+      ~is 11
+    ~check:
+      3 mod 2
+      ~is 1
+    ~check:
+      4 * -(1 + 2)
+      ~is -12
 )
 
 }
@@ -1018,7 +1024,9 @@ redefining or shadowing the names could easily create confusion:
 @examples(
   ~eval: eval
   ~repl:
-    1 + 2 < 4
+    ~check:
+      1 + 2 < 4
+      ~is #true
 )
 
 }
@@ -1032,8 +1040,12 @@ redefining or shadowing the names could easily create confusion:
 
 @examples(
   ~eval: eval
-  min(1, 2)
-  max(1, 2)
+  ~check:
+    min(1, 2)
+    ~is 1
+  ~check:
+    max(1, 2)
+    ~is 2
 )
 
 }
@@ -1049,8 +1061,12 @@ redefining or shadowing the names could easily create confusion:
 
 @examples(
   ~eval: eval
-  add1(0)
-  sub1(0)
+  ~check:
+    add1(0)
+    ~is 1
+  ~check:
+    sub1(0)
+    ~is -1
 )
 
 }
@@ -1066,8 +1082,12 @@ redefining or shadowing the names could easily create confusion:
 @examples(
   ~eval: eval
   ~repl:
-    is_even(2)
-    is_odd(2)
+    ~check:
+      is_even(2)
+      ~is #true
+    ~check:
+      is_odd(2)
+      ~is #false
 )
 
 }
@@ -1095,7 +1115,9 @@ These operators have lower precedence than arithmetic operators.
 @examples(
   ~eval: eval
   ~repl:
-    !("apple" == "orange")
+    ~check:
+      !("apple" == "orange")
+      ~is #true
 )
 
 }
@@ -1121,9 +1143,13 @@ These operators have lower precedence than arithmetic operators.
     "apple" == "orange"
   ~repl:
     def b = box(1)
-    b == box(1)
+    ~check:
+      b == box(1)
+      ~is #true
     set_box(b, 2)
-    b == box(1)
+    ~check:
+      b == box(1)
+      ~is #false
 )
 
 }
@@ -1145,8 +1171,12 @@ These operators have lower precedence than arithmetic operators.
 @examples(
   ~eval: eval
   ~repl:
-    1 == 1  &&  2 == 2
-    1 == 2  ||  2 != 2
+    ~check:
+      1 == 1  &&  2 == 2
+      ~is #true
+    ~check:
+      1 == 2  ||  2 != 2
+      ~is #false
 )
 
 }
@@ -1183,7 +1213,9 @@ These operators have lower precedence than arithmetic operators.
 
 @examples(
   ~eval: eval
-  string_append("apple", "banana")
+  ~check:
+    string_append("apple", "banana")
+    ~is "applebanana"
 )
 
 }
@@ -1205,9 +1237,15 @@ These operators have lower precedence than arithmetic operators.
 
 @examples(
   ~eval: eval
-  to_string(1)
-  to_string("apple")
-  to_string([1, 2, 3])
+  ~check:
+    to_string(1)
+    ~is "1"
+  ~check:
+    to_string("apple")
+    ~is "apple"
+  ~check:
+    to_string([1, 2, 3])
+    ~is "[1, 2, 3]"
   to_string(fun (x): x)
   to_string('fun (x): x')
 )
@@ -1225,11 +1263,18 @@ These operators have lower precedence than arithmetic operators.
 
 @examples(
   ~eval: eval
-  "a" +& "b"
-  "a" +& 1
-  1 +& "a"
-  "choices are " +& [1, 2, 3]
-
+  ~check:
+    "a" +& "b"
+    ~is "ab"
+  ~check:
+    "a" +& 1
+    ~is "a1"
+  ~check:
+    1 +& "a"
+    ~is "1a"
+  ~check:
+    "choices are " +& [1, 2, 3]
+    ~is "choices are [1, 2, 3]"
 )
 
 }
@@ -1273,7 +1318,9 @@ These operators have lower precedence than arithmetic operators.
 
 @examples(
   ~eval: eval
-  string_get("apple", 0)
+  ~check:
+    string_get("apple", 0)
+    ~is #{#\a}
 )
 
 }
@@ -1288,7 +1335,9 @@ These operators have lower precedence than arithmetic operators.
 
 @examples(
   ~eval: eval
-  substring("apple", 1, 4)
+  ~check:
+    substring("apple", 1, 4)
+    ~is "ppl"
 )
 
 }
@@ -1407,8 +1456,12 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 @examples(
   ~eval: eval
   cons(1, [2, 3])
-  first(["apple", "banana", "coconut"])
-  rest(["apple", "banana", "coconut"])
+  ~check:
+    first(["apple", "banana", "coconut"])
+    ~is "apple"
+  ~check:
+    rest(["apple", "banana", "coconut"])
+    ~is ["banana", "coconut"]
   ~error:
     first([])
 )
@@ -1424,7 +1477,9 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 
 @examples(
   ~eval: eval
-  length(["apple", "banana"])
+  ~check:
+    length(["apple", "banana"])
+    ~is 2
 )
 
 }
@@ -1439,7 +1494,9 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 
 @examples(
   ~eval: eval
-  list_get(["apple", "banana"], 1)
+  ~check:
+    list_get(["apple", "banana"], 1)
+    ~is "banana"
 )
 
 }
@@ -1457,7 +1514,9 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
   ~eval: eval
   def my_list = [1, 2, 3]
   def my_other_list = [3, 4]
-  append(my_list, my_other_list)
+  ~check:
+    append(my_list, my_other_list)
+    ~is [1, 2, 3, 3, 4]
   my_list
 )
 
@@ -1473,7 +1532,9 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 
 @examples(
   ~eval: eval
-  reverse([1, 2, 3])
+  ~check:
+    reverse([1, 2, 3])
+    ~is [3, 2, 1]
 )
 
 }
@@ -1487,8 +1548,12 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 
 @examples(
   ~eval: eval
-  member(2, [1, 2, 3])
-  member(4, [1, 2, 3])
+  ~check:
+    member(2, [1, 2, 3])
+    ~is #true
+  ~check:
+    member(4, [1, 2, 3])
+    ~is #false
 )
 
 }
@@ -1502,8 +1567,12 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 
 @examples(
   ~eval: eval
-  map(add1, [1, 2, 3])
-  map(to_string, [1, 2, 3])
+  ~check:
+    map(add1, [1, 2, 3])
+    ~is [2, 3, 4]
+  ~check:
+    map(to_string, [1, 2, 3])
+    ~is ["1", "2", "3"]
 )
 
 }
@@ -1519,7 +1588,9 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 
 @examples(
   ~eval: eval
-  map2(fun (x, y): x +y, [1, 2, 3], [4, 5, 6])
+  ~check:
+    map2(fun (x, y): x + y, [1, 2, 3], [4, 5, 6])
+    ~is [5, 7, 9]
 )
 
 }
@@ -1533,8 +1604,12 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 
 @examples(
   ~eval: eval
-  filter(is_even, [1, 2, 3, 4])
-  filter(is_odd, [1, 2, 3, 4])
+  ~check:
+    filter(is_even, [1, 2, 3, 4])
+    ~is [2, 4]
+  ~check:
+    filter(is_odd, [1, 2, 3, 4])
+    ~is [1, 3]
 )
 
 }
@@ -1556,9 +1631,15 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 
 @examples(
   ~eval: eval
-  foldl(fun (x, y): x+y, 10, [1, 2, 3])
-  foldl(fun (n, r): cons(to_string(n), r), [], [1, 2, 3])
-  foldr(fun (n, r): cons(to_string(n), r), [], [1, 2, 3])
+  ~check:
+    foldl(fun (x, y): x+y, 10, [1, 2, 3])
+    ~is 16
+  ~check:
+    foldl(fun (n, r): cons(to_string(n), r), [], [1, 2, 3])
+    ~is ["3", "2", "1"]
+  ~check:
+    foldr(fun (n, r): cons(to_string(n), r), [], [1, 2, 3])
+    ~is ["1", "2", "3"]
 )
 
 }
@@ -1649,7 +1730,9 @@ brackets implicitly uses the @rhombus(#%index) form, but
 
 @examples(
   ~eval: eval
-  array_length(Array("a", "b", "c"))
+  ~check:
+    array_length(Array("a", "b", "c"))
+    ~is 3
 )
 
 }
@@ -1684,9 +1767,15 @@ A @deftech{box} is a mutable object that holds a single value.
   ~eval: eval
   def b = box(1)
   b
-  unbox(b)
-  set_box(b, 2)
-  unbox(b)
+  ~check:
+    unbox(b)
+    ~is 1
+  ~check:
+    set_box(b, 2)
+    ~is #void
+  ~check:
+    unbox(b)
+    ~is 2
   ~error:
     set_box(b, "apple")
 )
@@ -1733,7 +1822,9 @@ types. A tuple of one element is equivalent to just the element.
   def tup = values(1, "apple", fun (x): x)
   tup
   def values(n, str, id_func) = tup
-  str
+  ~check:
+    str
+    ~is "apple"
 )
 
 }
@@ -1858,10 +1949,18 @@ normally not written.
 @examples(
   ~eval: eval
   def m = { "a": 1, "b": 2 }
-  map_get(m, "a")
-  map_get(m, "c")
-  map_get_k(m, "a", fun(v): v, fun(): 0)
-  map_get_k(m, "c", fun(v): v, fun(): 0)
+  ~check:
+    map_get(m, "a")
+    ~is some(1)
+  ~check:
+    map_get(m, "c")
+    ~is none()
+  ~check:
+    map_get_k(m, "a", fun(v): v, fun(): 0)
+    ~is 1
+  ~check:
+    map_get_k(m, "c", fun(v): v, fun(): 0)
+    ~is 0
 )
 
 }
@@ -1877,8 +1976,12 @@ normally not written.
 @examples(
   ~eval: eval
   def m = { "a": 1, "b": 2 }
-  map_update(m, "a", 100)
-  map_update(m, "c", 3)
+  ~check:
+    map_update(m, "a", 100)
+    ~is { "a": 100, "b": 2 }
+  ~check:
+    map_update(m, "c", 3)
+    ~is { "a": 1, "b": 2, "c": 3 }
   m
 )
 
@@ -2071,7 +2174,9 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 
  @examples(
   ~eval: eval
-  '1 $(if #true | '2' | 'oops') 3'
+  ~check:
+    '1 $(if #true | '2' | 'oops') 3'
+    ~is '1 2 3'
  )
 
 }
@@ -2117,10 +2222,18 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 
 @examples(
   ~eval: eval
-  syntax_is_integer('9')
-  syntax_is_integer('apple')
-  syntax_is_list('[w, x y, z]')
-  syntax_is_list('a b c')
+  ~check:
+    syntax_is_integer('9')
+    ~is #true
+  ~check:
+    syntax_is_integer('apple')
+    ~is #false
+  ~check:
+    syntax_is_list('[w, x y, z]')
+    ~is #true
+  ~check:
+    syntax_is_list('a b c')
+    ~is #false
 )
 
 }
@@ -2160,8 +2273,12 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 
 @examples(
   ~eval: eval
-  integer_to_syntax(9)
-  list_to_syntax(['w', 'x y', 'z'])
+  ~check:
+    integer_to_syntax(9)
+    ~is '9'
+  ~check:
+    list_to_syntax(['w', 'x y', 'z'])
+    ~is '[w, x y, z]'
 )
 
 }
@@ -2188,13 +2305,23 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 
 @examples(
   ~eval: eval
-  syntax_split('1 2 3')
-  syntax_split('1 2 3
-                4 5')
-  syntax_join(['1', '2', '3'])
-  syntax_join(['1', '2 3', '4'])
-  syntax_join(['1', '2 3', '4
-                            5'])
+  ~check:
+    syntax_split('1 2 3')
+    ~is ['1', '2', '3']
+  ~check:
+    syntax_split('1 2 3
+                  4 5')
+    ~is ['1 2 3', '4 5']
+  ~check:
+    syntax_join(['1', '2', '3'])
+    ~is '1 2 3'
+  ~check:
+    syntax_join(['1', '2 3', '4'])
+    ~is '1; 2 3; 4'
+  ~check:
+    syntax_join(['1', '2 3', '4
+                              5'])
+    ~is '1; 2 3; 4; 5'
 )
 
 }
