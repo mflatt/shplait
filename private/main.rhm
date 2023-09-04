@@ -8,6 +8,7 @@ import:
   "def.rhm"
   "fun.rhm"
   "block.rhm"
+  "begin.rhm"
   "let.rhm"
   "if.rhm"
   "match.rhm"
@@ -37,6 +38,7 @@ export:
   all_from(.def)
   all_from(.fun)
   all_from(.block)
+  all_from(.begin)
   all_from(.let)
   all_from(.if)
   all_from(.match)

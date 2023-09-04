@@ -61,6 +61,7 @@ specification of shrubbery notation.)
   grammar id
   grammar expr
   grammar defn
+  grammar body
   grammar type
 
   grammar typed_id:
@@ -82,6 +83,13 @@ specification of shrubbery notation.)
 
   @item{@rhombus(defn) stands for an definition, such as
   @rhombus(def x = 1) or @rhombus(fun f(x): x).}
+
+  @item{@rhombus(body) stands for a sequences of definitions and
+  expressions that ends with an expression, and where an expression that
+  isn't the ending expression must have type
+  @rhombus(Void, ~at shplait/type); see also @rhombus(block). The last
+  expression in @rhombus(body) provides the type and result value of the
+  @rhombus(body) sequence.}
 
   @item{@rhombus(type) stands for any type, such as
   @rhombus(Int, ~at shplait/type).}
@@ -338,16 +346,16 @@ redefining or shadowing the names could easily create confusion:
 @doc(
   defn.macro 'def $typed_id = $expr'
   defn.macro 'def $typed_id:
-                $expr'
+                $body'
   defn.macro 'def values($typed_id, ...) = $expr'
   defn.macro 'def values($typed_id, ...):
-                $expr'  
+                $body'  
   defn.macro 'def mutable $typed_id = $expr'
   defn.macro 'def mutable $typed_id:
-                $expr'
+                $body'
 ){
 
- A definition of one @rhombus(typed_id) to the result of @rhombus(expr),
+ A definition of one @rhombus(typed_id) to the result of @rhombus(expr) or @rhombus(body),
  or to multiple @rhombus(typed_id)s to the components of the @tech{tuple} result
  of @rhombus(expr). When @rhombus(mutable) is specified, then the defined
  identifier's value can be changed using @rhombus(:=).
@@ -378,21 +386,27 @@ redefining or shadowing the names could easily create confusion:
 
 @doc(
   expr.macro 'block:
-                $defn_or_expr
-                ...
-                $expr'
-
-  grammar defn_or_expr:
-    $defn
-    $expr
+                $body'
 ){
 
  Expression form that allows nested definitions and side-effect
- expressions before a final expression. Names defined by the
- @rhombus(defn)s are visible only within the @rhombus(block) body, and
- they shadow bindings of the same name outside of the @rhombus(block).
- Expressions among the @rhombus(defn_or_expr)s are useful only when they
- have a side effect, since their results are ignored.
+ expressions before a final expression. The @rhombus(body) within
+ @rhombus(block) is a sequence of definitions and expressions anding in
+ an expression. The lasy expression in the @rhombus(body) sequence
+ provides the type and result value of the sequence.
+
+ Any expression in the sequence before the last one must
+ have type @rhombus(Void), and such an expression is useful only when it
+ has a side effect (such as printing), since the result is ignored.
+
+ Names defined by definitions in @rhombus(body) are visible only within
+ the @rhombus(block) body, and they shadow bindings of the same name
+ outside of the @rhombus(block).
+
+ Forms like @rhombus(fun) and @rhombus(match) have @rhombus(body)
+ positions, and you can think of those positions implicitly wrap
+ @rhombus(block) around the @rhombus(body).
+
 
 @examples(
   ~eval: eval
@@ -412,9 +426,9 @@ redefining or shadowing the names could easily create confusion:
     fun_expr: block expr
     arg_expr: block expr  
   defn.macro 'fun $id ($typed_id, ...) $maybe_type:
-                $expr'
+                $body'
   expr.macro 'fun ($typed_id, ...) $maybe_type:
-                $expr'
+                $body'
 
   grammar maybe_type:
     ϵ
@@ -511,9 +525,9 @@ redefining or shadowing the names could easily create confusion:
   ~nonterminal:
     rhs_expr: block expr
   expr.macro 'let $id = $rhs_expr:
-                $expr'
+                $body'
   expr.macro 'letrec $id = $rhs_expr:
-                $expr'
+                $body'
 ){
 
  Shorthands for a @rhombus(block) containing a definition of
@@ -563,16 +577,16 @@ redefining or shadowing the names could easily create confusion:
 @doc(
   ~nonterminal:
     test_expr: block expr
-    then_expr: block expr
-    else_expr: block expr
+    then_body: block body
+    else_body: block body
   expr.macro 'if $test_expr
-              | $then_expr
-              | $else_expr'
+              | $then_body
+              | $else_body'
 ){
 
  A conditional form, where the type of @rhombus(test_expr) must be
- @rhombus(Boolean, ~at shplait/type) and the types of @rhombus(then_expr)
- and @rhombus(else_expr) must be the same.
+ @rhombus(Boolean, ~at shplait/type) and the types of @rhombus(then_body)
+ and @rhombus(else_body) must be the same.
 
 @examples(
   ~eval: eval
@@ -592,20 +606,23 @@ redefining or shadowing the names could easily create confusion:
 @doc(
   ~nonterminal:
     test_expr: block expr
-    then_expr: block expr
-    else_expr: block expr
+    then_body: block body
+    else_body: block body
   expr.macro 'cond
-              | $test_expr: $then_expr
+              | $test_expr: $then_body
               | ...
-              | ~else: $else_expr'
+              | ~else: $else_body'
   expr.macro 'cond
-              | $test_expr: $then_expr
+              | $test_expr: $then_body
               | ...'
 ){
 
  Multi-arm conditional, where @rhombus(test_expr)s are evaluated in
- order until a true result is found. If no @rhombus(~else) case is
- provided and all @rhombus(test_expr)s produce false, an error is
+ order until a true result is found, and then the result of the
+ corersponding @rhombus(then_body) is returned. If @rhombus(~else)
+ is reached, then the result of @rhombus(else_body) is returned.
+ If no @rhombus(~else)
+ case is provided and all @rhombus(test_expr)s produce false, an error is
  reported.
 
 @examples(
@@ -630,34 +647,34 @@ redefining or shadowing the names could easily create confusion:
     first_id: block id
     rest_id: block id
     target_expr: block expr
-    empty_expr: block expr
-    cons_expr: block expr
-    result_expr: block expr
-    else_expr: block expr
+    empty_body: block body
+    cons_body: block body
+    result_body: block body
+    else_body: block body
   expr.macro 'match $target_expr
-              | $variant_id($field_id, ...): $result_expr
+              | $variant_id($field_id, ...): $result_body
               | ...'
   expr.macro 'match $target_expr
-              | $variant_id($field_id, ...): $result_expr
+              | $variant_id($field_id, ...): $result_body
               | ...
-              | ~else: $else_expr'
+              | ~else: $else_body'
   expr.macro 'match $target_expr
-              | []: $empty_expr
-              | cons($first_id, $rest_id): $cons_expr'
+              | []: $empty_body
+              | cons($first_id, $rest_id): $cons_body'
   expr.macro '«match $target_expr
-               | '$pattern': $result_expr
+               | '$pattern': $result_body
                | ...»'
   expr.macro '«match $target_expr
-               | '$pattern': $result_expr
+               | '$pattern': $result_body
                | ...
-               | ~else: $else_expr»'
+               | ~else: $else_body»'
   expr.macro '«match $target_expr
-               | $integer_case: $result_expr
+               | $integer_case: $result_body
                | ...»'
   expr.macro '«match $target_expr
-               | $integer_case: $result_expr
+               | $integer_case: $result_body
                | ...
-               | ~else: $else_expr»'
+               | ~else: $else_body»'
   grammar integer_case:
     $integer
     $integer #,(@rhombus(||, ~datum)) $integer_case
@@ -822,13 +839,13 @@ redefining or shadowing the names could easily create confusion:
 
 @doc(
   expr.macro 'let_cc $id:
-                $expr'
+                $body'
 ){
 
- Returns the same result as @rhombus(expr), but binds @rhombus(id) to a
+ Returns the same result as @rhombus(body), but binds @rhombus(id) to a
  function that represents the @deftech{contination} of @rhombus(let_cc)
  expression. If @rhombus(id) is called, whether before or after
- @rhombus(expr) is returned, the continuation of the call is discarded
+ @rhombus(body) is returned, the continuation of the call is discarded
  and replaced with the continuation represented by @rhombus(id).
 
 @examples(
@@ -840,6 +857,39 @@ redefining or shadowing the names could easily create confusion:
 )
 
 }
+
+@doc(
+  expr.macro 'begin:
+                $expr
+                ...'
+){
+
+ Similar to @rhombus(block) with multiple expressions in its body, but
+ allowing any type for expressions that aren't the last expression. The
+ last expression in @rhombus(begin) provides the type and result for the
+ overall @rhombus(begin) expression. The results of expressions before
+ the last one are ignored, which generally is useful only when those
+ expressions have some side effect.
+
+@examples(
+  ~eval: eval
+  ~repl:
+    begin:
+      1+2 // useless, because result is ignored
+      3+4
+  ~defn:
+    def mutable counter = 0
+    fun bump():
+      counter := counter + 1
+      counter
+  ~repl:
+    begin:
+      bump() // first bump's result ignored
+      bump()
+)
+
+}
+
 
 @doc(
   ~nonterminal:
@@ -2384,11 +2434,12 @@ inside another module.
 }
 
 @doc(
-  ~nonterminal:
-    defn_or_expr: block defn_or_expr ~expr
   decl.macro 'module $id:
                 $defn_or_expr
                 ...'
+  grammar defn_or_expr:
+    $defn
+    $expr
 ){
 
  Adds to the submodule name @rhombus(id) within the enclosing module.

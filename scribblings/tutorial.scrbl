@@ -617,19 +617,20 @@ form.
     approx_cirle_area // not visible outside the block
 )
 
-The @rhombus(block) form is typically used inside a function to define
-a helper function or to avoid a repeated computation involving the
-function arguments.
+The @rhombus(block) could be used inside a function to define a helper
+function or to avoid a repeated computation involving the function
+arguments. In cases like the body of @rhombus(fun), however, there is an
+implciit @rhombus(block), so you can just write local definitions there
+directly.
 
 @interaction(
   ~defn:
     fun discard_first_if_fruit(items):
-      block:
-        def a = first(items)
-        cond
-        | a == "apple": rest(items)
-        | a == "banana": rest(items)
-        | ~else: items
+      def a = first(items)
+      cond
+      | a == "apple": rest(items)
+      | a == "banana": rest(items)
+      | ~else: items
   ~repl:
     discard_first_if_fruit(["apple", "potato"])
     discard_first_if_fruit(["banana", "potato"])
@@ -637,10 +638,9 @@ function arguments.
 )
 
 The @rhombus(let) and @rhombus(letrec) forms are similar to
-@rhombus(block) with just one definition, but they are somewhat more
-compact by avoiding the requirement to write both @rhombus(block) and
-@rhombus(def). The @rhombus(discard_first_if_fruit) example above can be
-equivalently written using @rhombus(let):
+@rhombus(block) with just one definition. The
+@rhombus(discard_first_if_fruit) example above can be equivalently
+written using @rhombus(let):
 
 @interaction(
   ~defn:
@@ -650,6 +650,23 @@ equivalently written using @rhombus(let):
         | a == "apple": rest(items)
         | a == "banana": rest(items)
         | ~else: items
+)
+
+Although you can write multiple expressions in a @rhombus(block), since
+those expressions other than the last one do not contribute to the
+result of the block, those expressions must have type @rhombus(Void).
+The intent is to allow priting or other side-effecting expressions while
+disallowing expressions whose result is ignored.
+
+@interaction(
+  ~repl:
+    block:
+      println("Adding...")
+      1+2
+    ~error:
+      block:
+        3+4 // not ok to ignore Int result
+        1+2
 )
 
 @// ----------------------------------------

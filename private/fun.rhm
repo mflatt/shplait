@@ -11,6 +11,7 @@ import:
   "value.rhm".current_value_tvar_box
   "def.rhm".def as shdef
   "lazy.rhm" open
+  "block.rhm".implicit_block
   "blacklist.rhm"
 
 export:
@@ -48,7 +49,7 @@ meta:
             [arg_id, ...])
 
 value.macro 'function ($arg, ...) $(res_type :: MaybeType):
-               $(body :: Group)':
+               $body':
   ~op_stx self
   let stx = '$self ($arg, ...) $res_type:
                $body'
@@ -58,12 +59,9 @@ value.macro 'function ($arg, ...) $(res_type :: MaybeType):
   t_s.type_to_syntax(arrow_type)
   
 expr.macro 'function ($arg, ...) $(res_type :: MaybeType):
-              $body
-              $more_body
-              ...':
+              $body':
   ~op_stx self
   ~all_stx stx
-  check_no_more(self, '$more_body; ...')
   let tvar_box = Box(IdMap{})
   let (arrow_type :: t.Arrow, [arg_id, ...]):
     parse_function_type(stx, self, tvar_box)
@@ -83,24 +81,19 @@ expr.macro 'function ($arg, ...) $(res_type :: MaybeType):
            ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
            ~defns:«»
            ~body:
-             $body
+             implicit_block:
+               $body
      »'
   t_s.wrap_type(expr, stx, arrow_type)
 
 defn.macro
 | 'function $(id :: Identifier) ($arg, ...) $(res_type :: MaybeType):
-     $body
-     $more_body
-     ...':
+     $body':
     ~op_stx self
-    check_no_more(self, '$more_body; ...')
     'shdef $id: $(self.relocate(id)) ($arg, ...) $res_type: $body'
 | 'function ($arg, ...) $(res_type :: MaybeType):
-     $body
-     $more_body
-     ...':
+     $body':
     ~op_stx self
-    check_no_more(self, '$more_body; ...')
     '($self ($arg, ...) $res_type: $body)'
   
 expr.macro '$fn call $(args && '($(arg :: expr_meta.Parsed), ...)')':

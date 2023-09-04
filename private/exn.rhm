@@ -6,6 +6,7 @@ import:
   "wrap.rhm" open
   "lazy.rhm" open
   "unify.rhm" open
+  "block.rhm".implicit_block
 
 export:
   rename:
@@ -43,7 +44,8 @@ expr.macro 'let_cc $(id :: Identifier):
                       '(($t_s.type_key, $(t_s.type_to_syntax(k_ty))))'                      
                     unify ~expr $(t_s.type_to_syntax(tv)):
                       ~body:
-                        $body»',
+                        implicit_block:
+                          $body»',
                 tv)
 
 defwrap wrap_error error(sym, str): error(dynamic_force(sym),

@@ -410,6 +410,17 @@ fun to_the_fourth(x):
 
 to_the_fourth(10)      // => 10000
 
+fun also_to_the_fourth(x):
+  // function body has an implicit `block`
+  // (as does `if`, `cond`, and more)
+  fun squared(n):
+    n * n
+  squared(squared(x))
+
+also_to_the_fourth(10)      // => 10000
+
+to_the_fourth(10)      // => 10000
+
 block:
   fun num_is_odd(x):
     if x == 0

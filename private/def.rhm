@@ -12,6 +12,7 @@ import:
   "tuple.rhm"!tuple as tu
   "lazy.rhm" open
   "trace.rhm"!traceable.maybe_wrap_traceable
+  "block.rhm".implicit_block
   "blacklist.rhm"
 
 export:
@@ -123,6 +124,9 @@ defn.macro
 | 'define $(lhs :: LHS): $(rhs :: Group)':
     ~op_stx self
     build_def(self, lhs.mutable_tag, [lhs.id, ...], [lhs.type_seq, ...], rhs)
+| 'define $(lhs :: LHS): $rhs_body':
+    ~op_stx self
+    build_def(self, lhs.mutable_tag, [lhs.id, ...], [lhs.type_seq, ...], 'implicit_block: $rhs_body')
 | 'define $(name :: Identifier) ($_) $tail ...':
     ~op_stx self
     syntax_meta.error("invalid definition syntax, possibly should be `fun`", self)

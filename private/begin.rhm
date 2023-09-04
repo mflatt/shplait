@@ -7,12 +7,10 @@ import:
   "lazy.rhm" open
 
 export:
-  rename:
-    shblock as block
-    shblock as implicit_block
+  begin
 
-expr.macro 'shblock:
-              $defn
+expr.macro 'begin:
+              $expr0
               ...
               $expr':
   ~op_stx self
@@ -22,17 +20,7 @@ expr.macro 'shblock:
     '(unify ~expr $(t_s.type_to_syntax(tv)):
         ~init_tvars: []
         ~defns:
-          defn_or_delay_void($defn)
-          ...           
+          delay($expr0)
+          ...
         ~body: $expr)'
   t_s.wrap_type(e.relocate_span([stx]), tv)
-
-defn.macro 'defn_or_delay_void($e)':
-  match e
-  | '$(d :: defn_meta.Group)':
-      e
-  | ~else:
-      '(delay(unify ~expr $(t_s.type_to_syntax(t.Vd(#false))):
-                ~body:
-                  $e))'
-

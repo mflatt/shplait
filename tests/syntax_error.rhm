@@ -30,7 +30,7 @@ check_eval:
   match [] | []: "ok" | cons(x, y):
                           "ok"
                           "oops"
-  ~raises "expected a single expression"
+  ~raises "typecheck failed: Void vs. String"
 
 check_eval:
   match [] | cons(x, y): "oops"
@@ -97,10 +97,16 @@ check_eval:
   fun f(x :: Int):
     1
     2
-  ~raises "unexpected term"
+  ~raises "typecheck failed: Void vs. Int"
 
 check_eval:
   fun f(x :: Int) :: Int:
     1
     2
-  ~raises "unexpected term"
+  ~raises "typecheck failed: Void vs. Int"
+
+check_eval:
+  block:
+    1+2
+    3+3
+  ~raises "typecheck failed: Void vs. Int"

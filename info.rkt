@@ -9,6 +9,6 @@
                      "sandbox-lib"
                      "scribble-lib"))
 
-(define version "0.2")
+(define version "0.3")
 
 (define scribblings '(("scribblings/shplait.scrbl" (multi-page) (language))))

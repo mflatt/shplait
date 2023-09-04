@@ -9,19 +9,21 @@ export:
   letrec
 
 expr.macro 'shlet $(id :: Identifier) = $rhs ...:
-              $(body :: Group)':
+              $body':
   ~all_stx stx
   def tmp = Syntax.make_temp_id(id, ~keep_name: #true)
   '(b.block:
       d.def $tmp = $rhs ...
       $('(b.block:
             d.def $id = $tmp
-            $body)'.relocate_span([stx])))'.relocate_span([stx])
+            b.implicit_block:
+              $body)'.relocate_span([stx])))'.relocate_span([stx])
 
 expr.macro 'letrec $(id :: Identifier) = $rhs ...:
-              $(body :: Group)':
+              $body':
   ~all_stx stx
   '(b.block:
       d.def $id = $rhs ...
-      $body)'.relocate_span([stx])
+      b.implicit_block:
+        $body)'.relocate_span([stx])
 

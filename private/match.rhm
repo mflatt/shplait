@@ -10,6 +10,7 @@ import:
   "syntax.rhm"!convert.convert_pat
   "syntax.rhm"!convert.syntax_def
   "syntax.rhm"!convert.syntax_unwrap
+  "block.rhm".implicit_block
   "lazy.rhm" open
   "blacklist.rhm"
 
@@ -25,32 +26,32 @@ meta:
       f_id
       r_id
       cons_body
-  | '| []: $(empty_body :: Group)
-     | $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)'
-  | '| $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)
-     | []: $(empty_body :: Group)'
-  | '| []: $(empty_body :: Group)
-     | ~else: $(cons_body :: Group)':
+  | '| []: $empty_body
+     | $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $cons_body'
+  | '| $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $cons_body
+     | []: $empty_body'
+  | '| []: $empty_body
+     | ~else: $cons_body':
       field f_id: 'f'
       field r_id: 'r'
-  | '| $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)
-     | ~else: $(empty_body :: Group)'
+  | '| $(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $cons_body
+     | ~else: $empty_body'
 
   syntax_class OneListClause:
-  | '[]: $(empty_body :: Group)'
-  | '$(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $(cons_body :: Group)'
+  | '[]: $empty_body'
+  | '$(bound_as expr_meta.space: 'cons')($(f_id :: Identifier), $(r_id :: Identifier)): $cons_body'
 
   syntax_class SyntaxClauses:
     fields:
       [pat, ...]
       [body, ...]
       else_body
-  | '«| '$pat': $(body :: Group)
+  | '«| '$pat': $body
       | ...»':
       field else_body = #false
-  | '«| '$pat': $(body :: Group)
+  | '«| '$pat': $body
       | ...
-      | ~else: $(else_body :: Group)»'
+      | ~else: $else_body»'
 
   syntax_class.together:
     syntax_class LiteralPattern:
@@ -67,18 +68,18 @@ meta:
       [lits, ...]
       [body, ...]
       else_body
-  | '«| $(lits_in :: LiteralPattern): $(body :: Group)
+  | '«| $(lits_in :: LiteralPattern): $body
       | ...»':
       field else_body = #false
       field [lits, ...] = [lits_in.parsed, ...]
-  | '«| $(lits_in :: LiteralPattern): $(body :: Group)
+  | '«| $(lits_in :: LiteralPattern): $body
       | ...
-      | ~else: $(else_body :: Group)»':
+      | ~else: $else_body»':
       field [lits, ...] = [lits_in.parsed, ...]
 
 expr.macro
 | 'shmatch $expr ...
-   | ~else: $(body :: Group)':
+   | ~else: $body':
     ~op_stx self
     ~all_stx stx
     parse_else_match(self, stx,
@@ -113,10 +114,10 @@ expr.macro
                      ccs.else_body)
 | 'shmatch $expr ...
    | $(ctr :: Identifier) ($(field :: Identifier), ...):
-       $(body :: Group)
+       $body
    | ...
    | $(else_kw && '~else'):
-       $(else_body :: Group)':
+       $else_body':
     ~op_stx self
     ~all_stx stx
     parse_match(self, stx, else_kw,
@@ -126,7 +127,7 @@ expr.macro
                 else_body)
 | 'shmatch $expr ...
    | $(ctr :: Identifier) ($(field :: Identifier), ...):
-       $(body :: Group)
+       $body
    | ...':
     ~op_stx self
     ~all_stx stx
@@ -167,7 +168,8 @@ meta:
       '«match force($new_expr)
         | []: unify ~expr $(t_s.type_to_syntax(tv)):
                 ~body:
-                  $empty_body 
+                  implicit_block:
+                    $empty_body 
         | Pair.cons(first, rest):
             def $f_id = first
             def $r_id = rest
@@ -175,7 +177,8 @@ meta:
             statinfo.macro '$r_id': '(($t_s.type_key, $(t_s.type_to_syntax(t.ListOf(self, elem_tv)))))'
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                $cons_body»'
+                implicit_block:
+                  $cons_body»'
     t_s.wrap_type(r, self, tv)
 
   fun parse_syntax_match(self, stx,
@@ -197,7 +200,8 @@ meta:
       | ['~else:
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                $else_body']
+                implicit_block:
+                  $else_body']
       | []
     let r:
       '«match syntax_unwrap(force($new_expr))
@@ -206,7 +210,8 @@ meta:
             ...
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                $body
+                implicit_block:
+                  $body
         | ...
         | $else
         | ...»'
@@ -229,14 +234,16 @@ meta:
       | ['~else:
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                $else_body']
+                implicit_block:
+                  $else_body']
       | []
     let r:
       '«$('match'.relocate_span([self])) $new_expr
         | $lits:
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                $body
+                implicit_block:
+                  $body
         | ...
         | $else
         | ...»'
@@ -290,7 +297,8 @@ meta:
       | ['~else:
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                $else_body']
+                implicit_block:
+                  $else_body']
       | []
     let r:
       '«match force($new_expr)
@@ -301,7 +309,8 @@ meta:
             ...
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                $body
+                implicit_block:
+                  $body
         | ...
         | $else
         | ...»'
@@ -318,7 +327,8 @@ meta:
                      $expr
                      unify ~expr $(t_s.type_to_syntax(tv)):
                        ~body:
-                         $body',
+                         implicit_block:
+                           $body',
                   stx,
                   tv)
 
@@ -342,11 +352,6 @@ expr.macro '$left shis_a $(ctr :: Identifier)':
                 t.Bool(self))
 
 meta:
-  syntax_class MustBeGroup(stx):
-    kind: ~multi
-  | '$(g :: Group)'
-  | '$m':
-      syntax_meta.error("expected a single expression", stx, m)
   syntax_class MustBeIdentifier(stx):
   | '$(id :: Identifier)'
   | '$(id :: Identifier) $next $tail ...':
@@ -356,20 +361,20 @@ meta:
 
   fun check_clause_shape(clause, stx):
     match clause
-    | ': []: $(body :: MustBeGroup(stx))': #void
+    | ': []: $body': #void
     | ': [] $tail ...':
         syntax_meta.error("bad empty-list clause", stx, clause)
     | ': $(bound_as expr_meta.space: 'cons')($(f_id :: MustBeIdentifier(stx)), $(r_id :: MustBeIdentifier(stx))):
-           $(cons_body :: MustBeGroup(stx))':
+           $cons_body':
         #void
     | ': $(bound_as expr_meta.space: 'cons') $tail ...':
         syntax_meta.error("bad cons clause", stx, clause)
     | ': $(ctr :: Identifier) ($(field :: MustBeIdentifier(stx)), ...):
-           $(body :: MustBeGroup(stx))':
+           $body':
         #void
-    | ': «'$pat': $(body :: MustBeGroup(stx))»':
+    | ': «'$pat': $body»':
         #void
-    | ': $(_ :: LiteralPattern): $(body :: MustBeGroup(stx))':
+    | ': $(_ :: LiteralPattern): $body':
         #void
     | '$_':
         syntax_meta.error("bad clause", stx, clause)
