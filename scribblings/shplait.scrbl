@@ -196,8 +196,8 @@ and new types can be defined with @rhombus(type).
   ~eval: eval
   ~defn:
     type Shape
-    | circle(radius)
-    | rectangle(width, height)
+    | circle(radius :: Int)
+    | rectangle(width :: Int, height :: Int)
   ~repl:
     circle(2)
     rectangle(3, 4)
@@ -270,8 +270,8 @@ and new types can be defined with @rhombus(type).
   ~eval: eval
   ~defn:
     type Shape
-    | circle(radius)
-    | rectangle(width, height)
+    | circle(radius :: Int)
+    | rectangle(width :: Int, height :: Int)
   ~repl:
     circle(2) is_a circle
     circle(2) is_a rectangle
@@ -697,8 +697,8 @@ redefining or shadowing the names could easily create confusion:
   ~eval: eval
   ~defn:
     type Shape
-    | circle(radius)
-    | rectangle(width, height)
+    | circle(radius :: Int)
+    | rectangle(width :: Int, height :: Int)
   ~defn:
     fun area(s :: Shape):
       match s
