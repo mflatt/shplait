@@ -81,10 +81,10 @@ specification of shrubbery notation.)
   expression, such as @rhombus(x, ~datum), @rhombus("hello"),
   @rhombus(1 + 2), or @rhombus(f(3, 4)).}
 
-  @item{@rhombus(defn) stands for an definition, such as
+  @item{@rhombus(defn) stands for a definition, such as
   @rhombus(def x = 1) or @rhombus(fun f(x): x).}
 
-  @item{@rhombus(body) stands for a sequences of definitions and
+  @item{@rhombus(body) stands for a sequence of definitions and
   expressions that ends with an expression, and where an expression that
   isn't the ending expression must have type
   @rhombus(Void, ~at shplait/type); see also @rhombus(block). The last
@@ -391,8 +391,8 @@ redefining or shadowing the names could easily create confusion:
 
  Expression form that allows nested definitions and side-effect
  expressions before a final expression. The @rhombus(body) within
- @rhombus(block) is a sequence of definitions and expressions anding in
- an expression. The lasy expression in the @rhombus(body) sequence
+ @rhombus(block) is a sequence of definitions and expressions ending in
+ an expression. The last expression in the @rhombus(body) sequence
  provides the type and result value of the sequence.
 
  Any expression in the sequence before the last one must
@@ -404,8 +404,8 @@ redefining or shadowing the names could easily create confusion:
  outside of the @rhombus(block).
 
  Forms like @rhombus(fun) and @rhombus(match) have @rhombus(body)
- positions, and you can think of those positions implicitly wrap
- @rhombus(block) around the @rhombus(body).
+ positions, and you can think of those positions as implicitly having
+ a @rhombus(block) around the @rhombus(body).
 
 
 @examples(
@@ -619,7 +619,7 @@ redefining or shadowing the names could easily create confusion:
 
  Multi-arm conditional, where @rhombus(test_expr)s are evaluated in
  order until a true result is found, and then the result of the
- corersponding @rhombus(then_body) is returned. If @rhombus(~else)
+ corresponding @rhombus(then_body) is returned. If @rhombus(~else)
  is reached, then the result of @rhombus(else_body) is returned.
  If no @rhombus(~else)
  case is provided and all @rhombus(test_expr)s produce false, an error is
