@@ -170,8 +170,9 @@ and new types can be defined with @rhombus(type).
  for @rhombus(as_type). If @rhombus(maybe_type_args) is not empty, then
  @rhombus(as_type) can refer to the arguments, and those references are
  replaced with the @rhombus(arg_type)s supplied when @rhombus(id(arg_type, ...))
- is used as a type. Any other type variables references in @rhombus(as_type)
- are unified across all instantiations of the type alias.
+ is used as a type. Other type variables that appear in @rhombus(as_type)
+ are @deftech{unguarded type variables} and lead to an error.
+
 
 @examples(
   ~eval: eval
