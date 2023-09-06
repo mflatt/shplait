@@ -620,7 +620,7 @@ form.
 The @rhombus(block) could be used inside a function to define a helper
 function or to avoid a repeated computation involving the function
 arguments. In cases like the body of @rhombus(fun), however, there is an
-implciit @rhombus(block), so you can just write local definitions there
+implicit @rhombus(block), so you can just write local definitions there
 directly.
 
 @interaction(
@@ -655,8 +655,8 @@ written using @rhombus(let):
 Although you can write multiple expressions in a @rhombus(block), since
 those expressions other than the last one do not contribute to the
 result of the block, those expressions must have type @rhombus(Void).
-The intent is to allow priting or other side-effecting expressions while
-disallowing expressions whose result is ignored.
+The intent is to allow printing or other side-effecting expressions while
+disallowing expressions whose result is ignored (perhaps accidentally).
 
 @interaction(
   ~repl:
