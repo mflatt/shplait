@@ -2,7 +2,7 @@
 ~lazy
 
 type Shape
-| circle(r)
+| circle(r :: Int)
 
 check:
   first([1, 1/0])

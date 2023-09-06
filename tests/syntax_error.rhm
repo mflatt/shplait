@@ -110,3 +110,8 @@ check_eval:
     1+2
     3+3
   ~raises "typecheck failed: Void vs. Int"
+
+check_eval:
+  type BadTriple
+  | Triple(fst :: ?a * ?b, snd :: ?c)
+  ~raises "unguarded type variables"

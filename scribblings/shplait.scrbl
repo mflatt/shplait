@@ -170,8 +170,9 @@ and new types can be defined with @rhombus(type).
  for @rhombus(as_type). If @rhombus(maybe_type_args) is not empty, then
  @rhombus(as_type) can refer to the arguments, and those references are
  replaced with the @rhombus(arg_type)s supplied when @rhombus(id(arg_type, ...))
- is used as a type. Any other type variables references in @rhombus(as_type)
- are unified across all instantiations of the type alias.
+ is used as a type. Other type variables that appear in @rhombus(as_type)
+ are @deftech{unguarded type variables} and lead to an error.
+
 
 @examples(
   ~eval: eval
@@ -195,8 +196,8 @@ and new types can be defined with @rhombus(type).
   ~eval: eval
   ~defn:
     type Shape
-    | circle(radius)
-    | rectangle(width, height)
+    | circle(radius :: Int)
+    | rectangle(width :: Int, height :: Int)
   ~repl:
     circle(2)
     rectangle(3, 4)
@@ -269,8 +270,8 @@ and new types can be defined with @rhombus(type).
   ~eval: eval
   ~defn:
     type Shape
-    | circle(radius)
-    | rectangle(width, height)
+    | circle(radius :: Int)
+    | rectangle(width :: Int, height :: Int)
   ~repl:
     circle(2) is_a circle
     circle(2) is_a rectangle
@@ -696,8 +697,8 @@ redefining or shadowing the names could easily create confusion:
   ~eval: eval
   ~defn:
     type Shape
-    | circle(radius)
-    | rectangle(width, height)
+    | circle(radius :: Int)
+    | rectangle(width :: Int, height :: Int)
   ~defn:
     fun area(s :: Shape):
       match s
