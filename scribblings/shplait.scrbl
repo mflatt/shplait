@@ -1465,6 +1465,11 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 
  The type of a list whose elements have type @rhombus(type).
 
+ A list is either empty or a pair of an element and a smaller list:
+ @itemlist(
+   @item{@rhombus([])}
+   @item{@rhombus(cons(first_elem, rest_list))})
+
 }
 
 @doc(
