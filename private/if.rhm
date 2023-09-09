@@ -16,7 +16,10 @@ expr.macro 'shif $tst ...
             | $els_body':
   ~op_stx self
   ~all_stx stx
-  let '$(tst :: expr_meta.Parsed)' = '$tst ...'
+  let '$(tst :: expr_meta.Parsed)':
+    match '$tst ...'
+    | '': syntax_meta.error("missing test expression", self)
+    | other: other
   let '$(thn :: expr_meta.Parsed)' = 'implicit_block: $thn_body'
   let '$(els :: expr_meta.Parsed)' = 'implicit_block: $els_body'
   let tv = t.gen_tvar(#false)

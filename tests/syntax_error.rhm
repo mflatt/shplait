@@ -115,3 +115,10 @@ check_eval:
   type BadTriple
   | Triple(fst :: ?a * ?b, snd :: ?c)
   ~raises "unguarded type variables"
+
+check_eval:
+  if:
+  | 1 == 1: #true
+  | 1 != 1: #false
+  ~raises "if: missing test expr"
+
