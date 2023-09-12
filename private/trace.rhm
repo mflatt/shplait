@@ -93,7 +93,10 @@ fun call_with_tracing(v, thunk):
 
 expr.macro 'trace $fun_term ...: $(body :: expr_meta.Parsed)':
   ~all_stx stx
-  let '$(expr :: expr_meta.Parsed)' = '$fun_term ...'
+  let '$(expr :: expr_meta.Parsed)':
+    match '$fun_term ...'
+    | '': syntax_meta.error("missing function expression", stx)
+    | other: other
   let [ty, new_body] = t_s.lookup_type(body, body.group)
   t_s.wrap_type('call_with_tracing($expr,
                                    fun ():
