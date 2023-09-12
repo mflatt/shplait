@@ -190,3 +190,8 @@ check_eval:
 check_eval:
   check: 1 ~is 10
   ~raises "possible repair is to start keyword on a new line"
+
+check_eval:
+  trace:
+    length([1,2,3])
+  ~raises "trace: missing function expression"
