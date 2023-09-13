@@ -160,10 +160,10 @@ meta:
       match expr_in
       | '': syntax_meta.error("missing target expr", self)
       | ~else: expr_in
-    let elem_tv = t.gen_tvar(self)
+    let elem_tv = t.gen_tvar(#false)
     let [expr_ty, new_expr] = t_s.lookup_type(expr, expr.group)
     t.unify_do(expr_in, expr_ty, t.ListOf(self, elem_tv))
-    let tv = t.gen_tvar(self)
+    let tv = t.gen_tvar(#false)
     let r:
       '«match force($new_expr)
         | []: unify ~expr $(t_s.type_to_syntax(tv)):
@@ -192,7 +192,7 @@ meta:
       | ~else: expr_in
     let [expr_ty, new_expr] = t_s.lookup_type(expr, expr.group)
     t.unify_do(expr_in, expr_ty, t.Shrub(self))
-    let tv = t.gen_tvar(self)
+    let tv = t.gen_tvar(#false)
     let [[pat_cvt, [[pat_id, pat_cvt_tmpl, pat_depth], ...]], ...]: [convert_pat(pat, #true), ...]
     Function.pass(blacklist.validate(pat_id, "pattern variable"), ..., ...)
     let [else, ...]:
@@ -228,7 +228,7 @@ meta:
       | ~else: expr_in
     let [expr_ty, new_expr] = t_s.lookup_type(expr, expr.group)
     t.unify_do(expr_in, expr_ty, t.Num(self))
-    let tv = t.gen_tvar(self)
+    let tv = t.gen_tvar(#false)
     let [else, ...]:
       if else_body
       | ['~else:
@@ -289,7 +289,7 @@ meta:
         [field, ...]: [[field, ...], ...]
       when [pat_ty, ...].length() != [field, ...].length()
       | syntax_meta.error("wrong field count", self, ctr)
-    let tv = t.gen_tvar(self)
+    let tv = t.gen_tvar(#false)
     let [[field_tv, ...], ...] = [[t.gen_tvar(field), ...], ...]
     Function.pass(t.unify_do(field, field_tv, pat_ty), ..., ...)
     let [else, ...]:
