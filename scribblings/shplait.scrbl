@@ -155,7 +155,7 @@ and new types can be defined with @rhombus(type).
     arg_type: block type
   decl.macro 'type $id $maybe_type_args = $as_type'
   decl.macro 'type $id $maybe_type_args
-              | $variant_id ($typed_id, ...)
+              | $variant_id ($id :: $type, ...)
               | ...'              
   grammar maybe_type_args:
     ϵ
@@ -170,9 +170,8 @@ and new types can be defined with @rhombus(type).
  for @rhombus(as_type). If @rhombus(maybe_type_args) is not empty, then
  @rhombus(as_type) can refer to the arguments, and those references are
  replaced with the @rhombus(arg_type)s supplied when @rhombus(id(arg_type, ...))
- is used as a type. Other type variables that appear in @rhombus(as_type)
- are @deftech{unguarded type variables} and lead to an error.
-
+ is used as a type. Any other type variables references in @rhombus(as_type)
+ are unified across all instantiations of the type alias.
 
 @examples(
   ~eval: eval
@@ -238,8 +237,10 @@ and new types can be defined with @rhombus(type).
  When a @rhombus(id(arg_type, ...)) is defined with @rhombus(variant_id)s, then @rhombus(id) is a
  polymorphic type constructor, and the corresponding field-accessor
  functions are also polymorphic. These are polymorphic only to the degree
- that @rhombus(type) forms in the constructor @rhombus(typed_id)s refer
+ that @rhombus(type) forms in the constructor @rhombus(type)s refer
  to the @rhombus(of_id) type variables in @rhombus(maybe_type_args).
+ Any other type variable that appears in a variant field @rhombus(type)
+ is disallowed as a @deftech{unguarded type variable}.
 
 @examples(
   ~eval: eval

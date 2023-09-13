@@ -3,6 +3,7 @@
 export:
   meta:
     Argument
+    TypedArgument
 
 meta:
   syntax_class Argument:
@@ -14,5 +15,14 @@ meta:
   | '$(id :: Identifier)':
       field type_seq = ''
       field op = ''
+  | '$(id :: Identifier) $(op && '::') $te ...':
+      field type_seq = '$te ...'
+
+  syntax_class TypedArgument:
+    kind ~sequence
+    fields:
+      id
+      op
+      type_seq
   | '$(id :: Identifier) $(op && '::') $te ...':
       field type_seq = '$te ...'

@@ -31,7 +31,7 @@ check_eval:
   ~raises "disallowed"
 
 check_eval:
-  type foo | bar(fun)
+  type foo | bar(fun :: Int)
   ~raises "disallowed"
 
 check_eval:

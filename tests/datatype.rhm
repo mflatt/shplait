@@ -10,24 +10,24 @@ check_eval:
 
 check_eval:
   type Shape
-  | circle(r)
-  | square(w, h)
+  | circle(r :: Int)
+  | square(w :: Int, h :: Int)
   match circle(10)
   | square(w, h): w+h
   ~raises "missing 'circle' case"
 
 check_eval:
   type Shape
-  | circle(r)
-  | square(w, h)
+  | circle(r :: Int)
+  | square(w :: Int, h :: Int)
   match circle(10)
   | circle(r): r
   ~raises "missing 'square' case"
 
 check_eval:
   type Shape
-  | circle(r)
-  | square(w, h)
+  | circle(r :: Int)
+  | square(w :: Int, h :: Int)
   match circle(10)
   | circle(r): r
   | square(w, h): w+h
@@ -36,8 +36,8 @@ check_eval:
 
 check_eval:
   type Shape
-  | circle(r)
-  | square(w, h)
+  | circle(r :: Int)
+  | square(w :: Int, h :: Int)
   match circle(10)
   | circle(r): r
   | square(w, h): w+h
@@ -46,8 +46,8 @@ check_eval:
 
 check_eval:
   type Shape
-  | circle(r)
-  | square(w, h)
+  | circle(r :: Int)
+  | square(w :: Int, h :: Int)
   match circle(10)
   | circle(r): r
   | circle(r): r
@@ -55,8 +55,8 @@ check_eval:
 
 check_eval:
   type Shape
-  | circle(r)
-  | square(w, h)
+  | circle(r :: Int)
+  | square(w :: Int, h :: Int)
   match circle(10)
   | circle(r): r
   | circle(r): r
@@ -67,8 +67,8 @@ check_eval:
   type Point
   | point()
   type Shape
-  | circle(r)
-  | square(w, h)
+  | circle(r :: Int)
+  | square(w :: Int, h :: Int)
   fun f(x):
     match x
     | circle(r): r

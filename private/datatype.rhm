@@ -72,7 +72,7 @@ decl.macro
         '«type_expr.macro '$id':
             type_expr_meta.pack(t_s.syntax_to_type('$ty_sym'))»'
 | 'type $(id :: Identifier) $(args :: MaybeArgs)
-   | $(var_id :: Identifier) ($(field :: Argument), ...)
+   | $(var_id :: Identifier) ($(field :: TypedArgument), ...)
    | ...':
     Function.pass(blacklist.validate(var_id, "variant"), ...)
     Function.pass(blacklist.validate(field.id, "field"), ..., ...)

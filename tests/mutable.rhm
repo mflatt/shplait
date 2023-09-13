@@ -20,7 +20,7 @@ check_eval:
 
 check_eval:
   type Shape
-  | circle(r)
+  | circle(r :: Int)
   circle.r := 2
   ~raises "not a variable that is assignable"
 
