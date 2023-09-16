@@ -13,11 +13,14 @@ import:
   "block.rhm".implicit_block
   "lazy.rhm" open
   "blacklist.rhm"
+  "value.rhm".value
 
 export:
   rename:
     shmatch as match
     shis_a as is_a
+
+value.non_macro shmatch
 
 meta:
   syntax_class ListClauses:

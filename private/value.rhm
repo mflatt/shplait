@@ -17,6 +17,9 @@ space.transform value:
   meta_namespace value_meta:
     parse_syntax_class _Parsed
     export Parsed
+  export non_macro
+  defn.macro 'non_macro $id':
+    '«value.macro '$id $('$')_ $('...')': '#false'»'
 
 meta:
   syntax_class Parsed:

@@ -5,6 +5,7 @@ import:
   "type_statinfo.rhm" as t_s
   "lazy.rhm" open
   "wrap.rhm" open
+  "value.rhm".value
   lib("shrubbery/parse.rkt").#{parse-all}
 
 // Wrap Rhombus's syntax patterns and templates to check
@@ -39,6 +40,8 @@ module convert:
       convert_tmpl
     syntax_def
     syntax_unwrap
+
+value.non_macro shquotes
 
 expr.macro '«shquotes $(quoted_tmpl && '«'$tmpl'»')»':
   ~op_stx self

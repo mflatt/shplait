@@ -3,6 +3,7 @@
 import:
   "syntax.rhm"!convert.convert_pat
   "syntax.rhm"!convert.convert_tmpl
+  "value.rhm".value
 
 export:
   rename:
@@ -13,4 +14,5 @@ defn.macro '«shmacro '$(id :: Identifier) $pat':
   def [c_pat, _] = convert_pat('$pat', #false)
   def [c_tmpl, _] = convert_tmpl(tmpl, #false)
   '«macro '$id $c_pat':
-      '$c_tmpl'»'
+      '$c_tmpl'
+    value.non_macro $id»'

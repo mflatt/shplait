@@ -5,11 +5,14 @@ import:
   "type_statinfo.rhm" as t_s
   "unify.rhm".unify
   "lazy.rhm" open
+  "value.rhm".value
 
 export:
   rename:
     shblock as block
     shblock as implicit_block
+
+value.non_macro shblock
 
 expr.macro 'shblock:
               $defn

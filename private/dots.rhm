@@ -3,9 +3,12 @@ import:
   meta:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
+  "value.rhm".value
 
 export:
   ....
+
+value.non_macro ....
 
 expr.macro
 | '.... $_ ... $()':

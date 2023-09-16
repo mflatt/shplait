@@ -2,11 +2,15 @@
 import:
   "def.rhm" as d
   "block.rhm" as b
+  "value.rhm".value
 
 export:
   rename:
     shlet as let
   letrec
+
+value.non_macro shlet
+value.non_macro letrec
 
 expr.macro 'shlet $(id :: Identifier) = $rhs ...:
               $body':

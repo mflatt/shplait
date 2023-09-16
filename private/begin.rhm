@@ -5,9 +5,12 @@ import:
   "type_statinfo.rhm" as t_s
   "unify.rhm".unify
   "lazy.rhm" open
+  "value.rhm".value
 
 export:
   begin
+
+value.non_macro begin
 
 expr.macro 'begin:
               $expr0

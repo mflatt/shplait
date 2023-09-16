@@ -5,11 +5,15 @@ import:
   "type_statinfo.rhm" as t_s
   "lazy.rhm" open
   "block.rhm".implicit_block
+  "value.rhm".value
 
 export:
   rename:
     shif as if
     shcond as cond
+
+value.non_macro shif
+value.non_macro shcond
 
 expr.macro 'shif $tst ...
             | $thn_body

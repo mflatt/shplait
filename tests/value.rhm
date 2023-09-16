@@ -1,0 +1,84 @@
+#lang shplait
+
+// make sure syntactic forms can be used in a position
+// that is tested for being a value
+
+check:
+  block:
+    def v = (if #true | 1 | 0)
+    v
+  ~is 1
+
+check:
+  block:
+    def v = (cond | #true: 1)
+    v
+  ~is 1
+
+check:
+  block:
+    def v = (match '1' | '1': 1)
+    v
+  ~is 1
+
+check:
+  block:
+    def v = (let x = 1: x)
+    v
+  ~is 1
+
+check:
+  block:
+    def v = (letrec x = 1: x)
+    v
+  ~is 1
+
+check:
+  block:
+    def v = (begin: 0; 1)
+    v
+  ~is 1
+
+check:
+  block:
+    def v = (block: #void; 1)
+    v
+  ~is 1
+
+check:
+  block:
+    def v = '1'
+    v
+  ~is '1'
+
+check:
+  block:
+    def v = box(1)
+    unbox(v)
+  ~is 1
+
+check:
+  block:
+    def v = (check:
+               1
+               ~is 1)
+    v
+  ~is #void
+
+check:
+  block:
+    fun uncalled():
+      def v = (.... ok .....)
+      v
+    1
+  ~is 1
+
+macro 'my_macro 1 2 3':
+  '"ok"'
+
+check:
+  block:
+    def v = (my_macro 1 2 3)
+    v
+  ~is "ok"
+

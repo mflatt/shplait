@@ -5,11 +5,14 @@ import:
     "type.rhm" as t
   "type_statinfo.rhm" as t_s
   "lazy.rhm" open
+  "value.rhm".value
 
 export:
   rename:
     shcheck as check
   time
+
+value.non_macro shcheck
 
 expr.macro
 | 'shcheck:

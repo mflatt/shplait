@@ -95,7 +95,9 @@ defn.macro
      $body':
     ~op_stx self
     '($self ($arg, ...) $res_type: $body)'
-  
+
+value.non_macro call
+
 expr.macro '$fn call $(args && '($(arg :: expr_meta.Parsed), ...)')':
   ~stronger_than: ~other
   ~op_stx self
