@@ -5,7 +5,7 @@ export:
     validate
 
 meta:
-  def blacklist = {
+  def denylist = {
     #'def, #'fun, #'block, #'let, #'letrec,
     #'if, #'cond, #'match,
     #'check, #'try, #'module, #'import,
@@ -18,7 +18,7 @@ meta:
   }
 
   fun validate(id :: Identifier, what):
-    when blacklist[id.unwrap()]
+    when denylist[id.unwrap()]
     | syntax_meta.error("disallowed name for " +& what +& ";\n"
                           +& " to prevent confusion, some predefined names"
                           +& " must not be shadowed or redefined\n",

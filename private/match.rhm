@@ -12,7 +12,7 @@ import:
   "syntax.rhm"!convert.syntax_unwrap
   "block.rhm".implicit_block
   "lazy.rhm" open
-  "blacklist.rhm"
+  "denylist.rhm"
   "value.rhm".value
 
 export:
@@ -157,8 +157,8 @@ meta:
                        expr_in,
                        empty_body,
                        f_id, r_id, cons_body):
-    blacklist.validate(f_id, "variable")
-    blacklist.validate(r_id, "variable")
+    denylist.validate(f_id, "variable")
+    denylist.validate(r_id, "variable")
     let '$(expr :: expr_meta.Parsed)':
       match expr_in
       | '': syntax_meta.error("missing target expr", self)
@@ -197,7 +197,7 @@ meta:
     t.unify_do(expr_in, expr_ty, t.Shrub(self))
     let tv = t.gen_tvar(#false)
     let [[pat_cvt, [[pat_id, pat_cvt_tmpl, pat_depth], ...]], ...]: [convert_pat(pat, #true), ...]
-    Function.pass(blacklist.validate(pat_id, "pattern variable"), ..., ...)
+    Function.pass(denylist.validate(pat_id, "pattern variable"), ..., ...)
     let [else, ...]:
       if else_body
       | ['~else:
@@ -257,7 +257,7 @@ meta:
                   [[ctr, [field, ...]], ...],
                   [body, ...],
                   else_body):
-    Function.pass(blacklist.validate(field, "variable"), ..., ...)
+    Function.pass(denylist.validate(field, "variable"), ..., ...)
     let '$(expr :: expr_meta.Parsed)':
       match expr_in
       | '': syntax_meta.error("missing target expr", self)

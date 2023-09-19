@@ -13,7 +13,7 @@ import:
   "lazy.rhm" open
   "trace.rhm"!traceable.maybe_wrap_traceable
   "block.rhm".implicit_block
-  "blacklist.rhm"
+  "denylist.rhm"
 
 export:
   rename:
@@ -21,7 +21,7 @@ export:
 
 meta:
   fun build_def(self, mutable_tag, [id, ...], [type_seq, ...], rhs):
-    Function.pass(blacklist.validate(id, "definition"), ...)
+    Function.pass(denylist.validate(id, "definition"), ...)
     let tvar_box = Box(IdMap{})
     let poly_context = f.get_current_frame().poly_context
     let base_tvars = f.get_current_frame().all_tvars()

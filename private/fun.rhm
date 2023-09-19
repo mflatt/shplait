@@ -12,7 +12,7 @@ import:
   "def.rhm".def as shdef
   "lazy.rhm" open
   "block.rhm".implicit_block
-  "blacklist.rhm"
+  "denylist.rhm"
 
 export:
   rename:
@@ -42,7 +42,7 @@ meta:
       | '$(arg_form :: Argument)': #void
     let '($(arg_form :: Argument), ...)' = '($arg, ...)'
     let [arg_id, ...] = [arg_form.id, ...]
-    Function.pass(blacklist.validate(arg_id, "argument"), ...)
+    Function.pass(denylist.validate(arg_id, "argument"), ...)
     let [arg_type, ...] = [f.parse_type(arg_form.type_seq, arg_form.op, arg_id, tvar_box), ...]
     let res_ty = f.parse_type(res_type.type_seq, res_type.op, self, tvar_box)
     values (t.Arrow(self, [arg_type, ...], res_ty),
