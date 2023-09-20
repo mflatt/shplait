@@ -16,6 +16,15 @@ value.non_macro shcheck
 
 expr.macro
 | 'shcheck:
+     $(g :: Group)':
+    ~all_stx stx
+    let msg = "missing `~is` or `~raises` line in body after `:`"
+    match g
+    | '$_ ... $(kw && ('~is' || '~raises')) $_ ...':
+        syntax_meta.error(msg +& ";\n possible repair is to start keyword on a new line", stx, kw)
+    | ~else:
+        syntax_meta.error(msg, stx)
+| 'shcheck:
      $(left :: expr_meta.Parsed)
      ~is $(right :: expr_meta.Parsed)':
     ~op_stx self

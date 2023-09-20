@@ -181,3 +181,12 @@ check_eval:
 check_eval:
   (fun () 10)
   ~raises "expected either `::` or `:`"
+
+check_eval:
+  check: 1
+  ~is 10
+  ~raises "missing `~is` or `~raises` line in body after `:`"
+
+check_eval:
+  check: 1 ~is 10
+  ~raises "possible repair is to start keyword on a new line"
