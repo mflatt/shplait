@@ -48,43 +48,59 @@ meta:
     values (t.Arrow(self, [arg_type, ...], res_ty),
             [arg_id, ...])
 
-value.macro 'function ($arg, ...) $(res_type :: MaybeType):
-               $body':
-  ~op_stx self
-  let stx = '$self ($arg, ...) $res_type:
-               $body'
-  let tvar_box = Box(IdMap{})
-  let (arrow_type :: t.Arrow, [arg_id, ...]):
-    parse_function_type(stx, self, current_value_tvar_box())
-  t_s.type_to_syntax(arrow_type)
+value.macro
+| 'function ($arg, ...) $(res_type :: MaybeType):
+     $body':
+    ~op_stx self
+    let stx = '$self ($arg, ...) $res_type:
+                 $body'
+    let tvar_box = Box(IdMap{})
+    let (arrow_type :: t.Arrow, [arg_id, ...]):
+      parse_function_type(stx, self, current_value_tvar_box())
+    t_s.type_to_syntax(arrow_type)
+| 'function $_':
+    '#false'
   
-expr.macro 'function ($arg, ...) $(res_type :: MaybeType):
-              $body':
-  ~op_stx self
-  ~all_stx stx
-  let tvar_box = Box(IdMap{})
-  let (arrow_type :: t.Arrow, [arg_id, ...]):
-    parse_function_type(stx, self, tvar_box)
-  let [arg_type, ...] = arrow_type.args
-  let res_ty = arrow_type.result
-  let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.value)
-  let [arg_tmp, ...] = [Syntax.make_temp_id(arg_id), ...]
-  let expr:                                       
-    '«
-       $('fun'.relocate(self)) ($arg_tmp, ...):
-         def $arg_id = $arg_tmp
-         ...
-         statinfo.macro '$arg_id': '(($t_s.type_key,
-                                      $(t_s.type_to_syntax(arg_type))))'
-         ...
-         unify ~expr $(t_s.type_to_syntax(res_ty)):
-           ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
-           ~defns:«»
-           ~body:
-             implicit_block:
-               $body
-     »'
-  t_s.wrap_type(expr, stx, arrow_type)
+expr.macro
+| 'function ($arg, ...) $(res_type :: MaybeType):
+     $body':
+    ~op_stx self
+    ~all_stx stx
+    let tvar_box = Box(IdMap{})
+    let (arrow_type :: t.Arrow, [arg_id, ...]):
+      parse_function_type(stx, self, tvar_box)
+    let [arg_type, ...] = arrow_type.args
+    let res_ty = arrow_type.result
+    let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.value)
+    let [arg_tmp, ...] = [Syntax.make_temp_id(arg_id), ...]
+    let expr:
+      '«
+         $('fun'.relocate(self)) ($arg_tmp, ...):
+           def $arg_id = $arg_tmp
+           ...
+           statinfo.macro '$arg_id': '(($t_s.type_key,
+                                        $(t_s.type_to_syntax(arg_type))))'
+           ...
+           unify ~expr $(t_s.type_to_syntax(res_ty)):
+             ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
+             ~defns:«»
+             ~body:
+               implicit_block:
+                 $body
+       »'
+    t_s.wrap_type(expr, stx, arrow_type)
+| 'function ($arg, ...) $something $_ ...':
+    ~all_stx stx
+    syntax_meta.error("expected either `::` or `:`", stx, something)
+| 'function ($arg, ...)':
+    ~all_stx stx
+    syntax_meta.error("expected either `::` or `:` after function arguments", stx)
+| 'function ($arg, ...) $_ ...':
+    ~all_stx stx
+    syntax_meta.error("bad syntax", stx)
+| 'function $not_args $_ ...':
+    ~all_stx stx
+    syntax_meta.error("expected parenthesized arguments", stx, not_args)
 
 defn.macro
 | 'function $(id :: Identifier) ($arg, ...) $(res_type :: MaybeType):
@@ -95,6 +111,33 @@ defn.macro
      $body':
     ~op_stx self
     '($self ($arg, ...) $res_type: $body)'
+| 'function $(id :: Identifier) ($_, ...) $something $_ ...':
+    ~all_stx stx
+    syntax_meta.error("expected either `::` or `:`", stx, something)
+| 'function ($_, ...) $something $_ ...':
+    ~all_stx stx
+    syntax_meta.error("expected either `::` or `:`", stx, something)
+| 'function ($arg, ...)':
+    ~all_stx stx
+    syntax_meta.error("expected either `::` or `:` after function arguments", stx)
+| 'function $(id :: Identifier) ($arg, ...)':
+    ~all_stx stx
+    syntax_meta.error("expected either `::` or `:` after function arguments", stx)
+| 'function ($arg, ...) $_ ...':
+    ~all_stx stx
+    syntax_meta.error("bad syntax", stx)
+| 'function $(id :: Identifier) ($arg, ...) $_ ...':
+    ~all_stx stx
+    syntax_meta.error("bad syntax", stx)
+| 'function $(id :: Identifier) $not_args $_ ...':
+    ~all_stx stx
+    syntax_meta.error("expected parenthesized arguments", stx, not_args)
+| 'function $(id :: Identifier)':
+    ~all_stx stx
+    syntax_meta.error("expected parenthesized arguments after the function name", stx)
+| 'function $not_id_or_args $_ ...':
+    ~all_stx stx
+    syntax_meta.error("expected either an identifier or parenthesized arguments", stx, not_id_or_args)
 
 value.non_macro call
 

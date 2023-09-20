@@ -142,3 +142,42 @@ check_eval:
   | 1 != 1: #false
   ~raises "if: missing test expr"
 
+check_eval:
+  fun 1
+  ~raises "expected either an identifier or parenthesized arguments"
+
+check_eval:
+  (fun 1)
+  ~raises "expected parenthesized arguments"
+
+check_eval:
+  fun f
+  ~raises "expected parenthesized arguments after the function name"
+
+check_eval:
+  (fun f)
+  ~raises "expected parenthesized arguments"
+
+check_eval:
+  (fun f ())
+  ~raises "expected parenthesized arguments"
+
+check_eval:
+  fun f ()
+  ~raises "expected either `::` or `:` after function arguments"
+
+check_eval:
+  fun ()
+  ~raises "expected either `::` or `:` after function arguments"
+
+check_eval:
+  (fun ())
+  ~raises "expected either `::` or `:` after function arguments"
+
+check_eval:
+  fun () 10
+  ~raises "expected either `::` or `:`"
+
+check_eval:
+  (fun () 10)
+  ~raises "expected either `::` or `:`"
