@@ -2024,7 +2024,8 @@ normally not written.
 
 
 @doc(
-  fun map_update(map :: Mapof(?a, ?b), key :: ?a, val :: ?b) :: Mapof(?a, ?b)
+  fun map_update(map :: Mapof(?a, ?b), key :: ?a, val :: ?b)
+    :: Mapof(?a, ?b)
 ){
 
  Produces a new map that is like @rhombus(map), but with @rhombus(key)
