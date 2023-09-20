@@ -360,6 +360,7 @@ meta:
   | '$(id :: Identifier) $next $tail ...':
       syntax_meta.error("unexpected term after identifier", stx, next)
   | '$m':
+      match_unless m is_a Identifier
       syntax_meta.error("expected an identifier", stx, m)
 
   fun check_clause_shape(clause, stx):
@@ -379,8 +380,14 @@ meta:
         #void
     | ': $(_ :: LiteralPattern): $body':
         #void
-    | '$_':
+    | ': $_ ... | $body | ...':
+        syntax_meta.error("expected a pattern followed by a `:` block (and not with `|` immediately in the block)", stx, clause)
+    | ': ~else $a ...':
+        syntax_meta.error("expected a `:` immediately after `~else`", stx, '$a ...')
+    | ': $_ ...: $_':
         syntax_meta.error("bad clause", stx, clause)
+    | ~else:
+        syntax_meta.error("expected a pattern followed by a `:` block", stx, clause)
 
   fun check_variants_consistent(self, [ctr, ...], [dt_id, ...], the_dt_id):
     for values(seen = IdMap{}):

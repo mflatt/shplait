@@ -46,7 +46,27 @@ check_eval:
 
 check_eval:
   match [] | 1
-  ~raises "bad clause"
+  ~raises "expected a pattern followed by a `:` block"
+
+check_eval:
+  match [] | x:
+             | y
+  ~raises "expected a pattern followed by a `:` block"
+
+check_eval:
+  match [] | x:
+             | y
+  ~raises "and not with `|` immediately in the block"
+
+check_eval:
+  match []
+  | ~else x: y
+  ~raises "expected a `:` immediately after `~else`"
+
+check_eval:
+  match [] | ~else 10:
+             | y
+  ~raises "and not with `|` immediately in the block"
 
 check_eval:
   match none() | some(1) | ~else: "ok"
