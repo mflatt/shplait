@@ -44,8 +44,7 @@ expr.macro 'let_cc $(id :: Identifier):
                       '(($t_s.type_key, $(t_s.type_to_syntax(k_ty))))'                      
                     unify ~expr $(t_s.type_to_syntax(tv)):
                       ~body:
-                        implicit_block:
-                          $body»',
+                        $(implicit_block(body))»',
                 tv)
 
 defwrap wrap_error error(sym, str): error(dynamic_force(sym),

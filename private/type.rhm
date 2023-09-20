@@ -543,7 +543,7 @@ fun extract_srcs_do(r, ht :: MutableMap):
   match r
   | #false: #void
   | r :: Syntax when #true: // syntax_meta.flip_introduce(r).is_original():
-      let key = [r.unwrap_all(), r.srcloc()]
+      let key = [trim(r.to_source_string()), r.srcloc()]
       ht[key] := ht.get(key, #false) || r
   | r :: Type:
       extract_srcs_do(r.src, ht)
@@ -551,6 +551,13 @@ fun extract_srcs_do(r, ht :: MutableMap):
       r.for_each(fun (i): extract_srcs_do(i, ht))
   | r :: Hide:
       extract_srcs_do(r.v, ht)
+
+fun trim(s :: String):
+  cond
+  | s == "": ""
+  | Char.is_whitespace(s[0]): trim(s.substring(1))
+  | Char.is_whitespace(s[s.length()-1]): trim(s.substring(0, s.length()-1))
+  | ~else: s
 
 fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
                           reason = #false,

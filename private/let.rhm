@@ -20,14 +20,12 @@ expr.macro 'shlet $(id :: Identifier) = $rhs ...:
       d.def $tmp = $rhs ...
       $('(b.block:
             d.def $id = $tmp
-            b.implicit_block:
-              $body)'.relocate_span([stx])))'.relocate_span([stx])
+            $(b.implicit_block(body)))'.relocate_span([stx])))'.relocate_span([stx])
 
 expr.macro 'letrec $(id :: Identifier) = $rhs ...:
               $body':
   ~all_stx stx
   '(b.block:
       d.def $id = $rhs ...
-      b.implicit_block:
-        $body)'.relocate_span([stx])
+      $(b.implicit_block(body)))'.relocate_span([stx])
 

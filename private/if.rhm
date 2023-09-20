@@ -24,8 +24,8 @@ expr.macro 'shif $tst ...
     match '$tst ...'
     | '': syntax_meta.error("missing test expression", self)
     | other: other
-  let '$(thn :: expr_meta.Parsed)' = 'implicit_block: $thn_body'
-  let '$(els :: expr_meta.Parsed)' = 'implicit_block: $els_body'
+  let '$(thn :: expr_meta.Parsed)' = implicit_block(thn_body)
+  let '$(els :: expr_meta.Parsed)' = implicit_block(els_body)
   let tv = t.gen_tvar(#false)
   let [tst_ty, new_tst] = t_s.lookup_type(tst, tst.group)
   let [thn_ty, new_thn] = t_s.lookup_type(thn, thn.group)
@@ -45,8 +45,8 @@ expr.macro
     ~op_stx self
     ~all_stx stx
     let '[$(tst :: expr_meta.Parsed), ...]' = '[$tst ..., ...]'
-    let '[$(body :: expr_meta.Parsed), ...]' = '[implicit_block: $body, ...]'
-    let '$(els :: expr_meta.Parsed)' = 'implicit_block: $els'
+    let '[$(body :: expr_meta.Parsed), ...]' = '[$(implicit_block(body)), ...]'
+    let '$(els :: expr_meta.Parsed)' = implicit_block(els)
     let [[tst_ty, new_tst], ...] = [t_s.lookup_type(tst, tst.group), ...]
     let [[body_ty, new_body], ...] = [t_s.lookup_type(body, body.group), ...]
     let [els_ty, new_els] = t_s.lookup_type(els, els.group)
@@ -67,7 +67,7 @@ expr.macro
     ~op_stx self
     ~all_stx stx
     let '[$(tst :: expr_meta.Parsed), ...]' = '[$tst ..., ...]'
-    let '[$(body :: expr_meta.Parsed), ...]' = '[implicit_block: $body, ...]'
+    let '[$(body :: expr_meta.Parsed), ...]' = '[$(implicit_block(body)), ...]'
     let tv = t.gen_tvar(#false)
     let [[tst_ty, new_tst], ...] = [t_s.lookup_type(tst, tst.group), ...]
     let [[body_ty, new_body], ...] = [t_s.lookup_type(body, body.group), ...]

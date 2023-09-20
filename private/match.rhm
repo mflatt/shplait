@@ -171,8 +171,7 @@ meta:
       '«match force($new_expr)
         | []: unify ~expr $(t_s.type_to_syntax(tv)):
                 ~body:
-                  implicit_block:
-                    $empty_body 
+                  $(implicit_block(empty_body))
         | Pair.cons(first, rest):
             def $f_id = first
             def $r_id = rest
@@ -180,8 +179,7 @@ meta:
             statinfo.macro '$r_id': '(($t_s.type_key, $(t_s.type_to_syntax(t.ListOf(self, elem_tv)))))'
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                implicit_block:
-                  $cons_body»'
+                $(implicit_block(cons_body))»'
     t_s.wrap_type(r, self, tv)
 
   fun parse_syntax_match(self, stx,
@@ -203,8 +201,7 @@ meta:
       | ['~else:
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                implicit_block:
-                  $else_body']
+                $(implicit_block(else_body))']
       | []
     let r:
       '«match syntax_unwrap(force($new_expr))
@@ -213,8 +210,7 @@ meta:
             ...
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                implicit_block:
-                  $body
+                $(implicit_block(body))
         | ...
         | $else
         | ...»'
@@ -237,16 +233,14 @@ meta:
       | ['~else:
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                implicit_block:
-                  $else_body']
+                $(implicit_block(else_body))']
       | []
     let r:
       '«$('match'.relocate_span([self])) $new_expr
         | $lits:
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                implicit_block:
-                  $body
+                $(implicit_block(body))
         | ...
         | $else
         | ...»'
@@ -300,8 +294,7 @@ meta:
       | ['~else:
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                implicit_block:
-                  $else_body']
+                $(implicit_block(else_body))']
       | []
     let r:
       '«match force($new_expr)
@@ -312,8 +305,7 @@ meta:
             ...
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
-                implicit_block:
-                  $body
+                $(implicit_block(body))
         | ...
         | $else
         | ...»'
@@ -330,8 +322,7 @@ meta:
                      $expr
                      unify ~expr $(t_s.type_to_syntax(tv)):
                        ~body:
-                         implicit_block:
-                           $body',
+                         $(implicit_block(body))',
                   stx,
                   tv)
 

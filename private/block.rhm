@@ -10,7 +10,8 @@ import:
 export:
   rename:
     shblock as block
-    shblock as implicit_block
+  meta:
+    implicit_block
 
 value.non_macro shblock
 
@@ -29,6 +30,10 @@ expr.macro 'shblock:
           ...           
         ~body: $expr)'
   t_s.wrap_type(e.relocate_span([stx]), tv)
+
+meta:
+  fun implicit_block(stx):
+    '(shblock: $stx)'.relocate_span([stx])
 
 defn.macro 'defn_or_delay_void($e)':
   match e
