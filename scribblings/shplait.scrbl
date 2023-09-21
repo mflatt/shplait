@@ -2,7 +2,9 @@
 @(import:
     "typeset.rkt" open
     meta_label:
-      shplait open
+      only_meta 0:
+        shplait open
+      shplait.replace_scopes
     "eval.rhm".eval
     "tutorial_url.rhm" open
     "spacer.rhm" open)
@@ -2465,7 +2467,11 @@ inside another module.
 @section(~tag: "sec:macro"){Macros}
 
 @doc(
+  ~nonterminal:
+    local_id: block id
   defn.macro '«macro '$id $pattern':
+                 def $local_id = $expr
+                 ...
                  '$template'»'
 ){
 
@@ -2473,8 +2479,15 @@ inside another module.
  followed by matches to @rhombus(pattern), expanding to
  @rhombus(template). The @rhombus(pattern) and @rhombus(template) can
  included uses of @rhombus($, ~datum) to bind and reference pattern
- variables. In a template, @rhombus($, ~datum) can only be followed by a pattern
- variable.
+ variables.
+
+ In @rhombus(template), @rhombus($, ~datum) can only be followed by a
+ pattern variable or a compile-time expression. A compile-time expression
+ can be any of the locally defined @rhombus(local_id)s, it can be a
+ template written using quotes (which is implicitly a use of
+ @rhombus(#%quotes)), or it can be a @rhombus(replace_scopes) form. The
+ @rhombus(expr) for a @rhombus(local_id) must also be a compile-time
+ expression.
 
 @examples(
   ~eval: eval
@@ -2491,6 +2504,23 @@ inside another module.
       let x = x + 2:
         x
 )
+
+}
+
+@doc(
+  ~nonterminal:
+    stx_expr: block expr
+  expr.macro 'replace_scopes($stx_expr, $stx_expr)'
+){
+
+ Available only in compile-time positions within @rhombus(macro).
+
+ The @rhombus(replace_scopes) form returns a syntax object like the one
+ produced by the first @rhombus(stx_expr), but with the @deftech{scopes}
+ of the syntax object produced by the second @rhombus(stx_expr). A syntax
+ object's scopes correspond to a lexicl conetxt and determine which other
+ identifiers it can be bind or reference. Each @rhombus(stx_expr) is also
+ a compile-time expression.
 
 }
 

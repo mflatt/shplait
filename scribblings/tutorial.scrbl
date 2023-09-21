@@ -3,7 +3,8 @@
     rhombus/runtime_path
     rhombus/meta open
     meta_label:
-      shplait open
+      only_meta 0:
+        shplait open
     "eval.rhm".eval
     "spacer.rhm" open
     scribble/private/typeset_meta

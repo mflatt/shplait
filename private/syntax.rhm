@@ -148,7 +148,9 @@ meta:
   fun convert_tmpl(pat, use_temps):
     convert(pat,
             fun (id, is_before_dots): id,
-            if use_temps | (fun (expr): '(reference_syntax($expr))') | (fun (expr): expr),
+            if use_temps
+            | (fun (expr): '(reference_syntax($expr))')
+            | (fun (expr): expr),
             use_temps)
 
 syntax_class Sequence
