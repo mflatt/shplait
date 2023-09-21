@@ -41,6 +41,11 @@ module convert:
     syntax_def
     syntax_unwrap
 
+module compile_time:
+  export:
+    meta:
+      compile_time
+
 value.non_macro shquotes
 
 expr.macro '«shquotes $(quoted_tmpl && '«'$tmpl'»')»':
@@ -150,8 +155,21 @@ meta:
             fun (id, is_before_dots): id,
             if use_temps
             | (fun (expr): '(reference_syntax($expr))')
-            | (fun (expr): expr),
+            | (fun (expr): compile_time(expr)),
             use_temps)
+
+meta:
+  // A workaround for Racket v8.10.0.4 and earlier
+  // to avoid exporting different phase-0 and phase-1
+  // bindings for the same name
+  fun compile_time(stx):
+    match stx
+    | '«'$tmpl'»':
+         def [c_tmpl, _] = convert_tmpl(tmpl, #false)
+         '«'$c_tmpl'»'
+    | '($exp)':
+        '($(compile_time(exp)))'
+    | ~else: stx
 
 syntax_class Sequence
 | '$(_ :: Term) $(_ :: Term) ...'
@@ -291,4 +309,3 @@ defwrap syntax_read_wrap syntax_read():
 expr.macro 'syntax_read':
   ~op_stx self
   t_s.wrap_type('syntax_read_wrap', t.Arrow(self, [], t.Shrub(self)))
-  

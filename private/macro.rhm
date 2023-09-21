@@ -3,9 +3,11 @@
 import:
   "syntax.rhm"!convert.convert_pat
   "syntax.rhm"!convert.convert_tmpl
+  "syntax.rhm"!compile_time.compile_time
   "value.rhm".value
   meta:
     "syntax.rhm"!convert.convert_tmpl
+    "syntax.rhm"!compile_time.compile_time
     rhombus/and_meta open
   
 export:
@@ -13,8 +15,12 @@ export:
     shmacro as macro
   meta:
     replace_scopes
+    // Exports commented out as part of a workaround for
+    // Racket version before v8.10.0.5
+    #//
     rename:
       quotes as #%quotes
+    #//
     #%parens
 
 defn.macro '«shmacro '$(id :: Identifier) $pat':
@@ -24,14 +30,14 @@ defn.macro '«shmacro '$(id :: Identifier) $pat':
   def [c_pat, _] = convert_pat('$pat', #false)
   def [c_tmpl, _] = convert_tmpl(tmpl, #false)
   '«expr.macro '$id $c_pat':
-      def $local_id = $local_expr
+      def $local_id = $(compile_time(local_expr))
       ...
       '$c_tmpl'
     value.non_macro $id»'
 
 meta:
   expr.macro 'replace_scopes($stx, $like_stx)':
-    'Syntax.replace_scopes($stx, $like_stx)'
+    'Syntax.replace_scopes($(compile_time(stx)), $(compile_time(like_stx)))'
   expr.macro '«quotes '$tmpl'»':
     def [c_tmpl, _] = convert_tmpl(tmpl, #false)
     '«'$c_tmpl'»'
