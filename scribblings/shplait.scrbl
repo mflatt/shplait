@@ -2565,8 +2565,8 @@ inside another module.
  The @rhombus(replace_scopes) form returns a syntax object like the one
  produced by the first @rhombus(stx_expr), but with the @deftech{scopes}
  of the syntax object produced by the second @rhombus(stx_expr). A syntax
- object's scopes correspond to a lexicl conetxt and determine which other
- identifiers it can be bind or reference. Each @rhombus(stx_expr) is also
+ object's scopes correspond to a lexical context and determine which other
+ identifiers it can bind or reference. Each @rhombus(stx_expr) is also
  a compile-time expression.
 
 }
