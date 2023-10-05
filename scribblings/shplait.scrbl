@@ -15,6 +15,7 @@
     typed_id: block
     expr: block
     defn: block
+    body: block
     value: block)
 
 @(def rhombus_scrbl = ModulePath.s_exp(ModulePath 'lib("rhombus/scribblings/rhombus.scrbl")'))
