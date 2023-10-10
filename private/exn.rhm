@@ -7,6 +7,7 @@ import:
   "lazy.rhm" open
   "unify.rhm" open
   "block.rhm".implicit_block
+  lib("racket/base.rkt").#{call/cc}
 
 export:
   rename:
@@ -37,15 +38,17 @@ expr.macro 'let_cc $(id :: Identifier):
   let any_tv = t.gen_tvar(#false)
   let k_ty = t.Poly(#false, any_tv, t.Arrow(id, [tv], any_tv))
   let tmp = Syntax.make_temp_id(id)
-  t_s.wrap_type('«Continuation.capture $tmp:
-                    def $id = dynamic(fun (v):
-                                        Continuation.escape(fun (): $tmp(v)))
+  t_s.wrap_type('«capture_noncomposable $tmp:
+                    def $id = dynamic($tmp)
                     statinfo.macro '$id':
                       '(($t_s.type_key, $(t_s.type_to_syntax(k_ty))))'                      
                     unify ~expr $(t_s.type_to_syntax(tv)):
                       ~body:
                         $(implicit_block(body))»',
                 tv)
+
+expr.macro 'capture_noncomposable $id: $body':
+  '#{call/cc}(fun ($id): $body)'
 
 defwrap wrap_error error(sym, str): error(dynamic_force(sym),
                                           dynamic_force(str))
