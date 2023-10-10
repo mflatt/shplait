@@ -337,7 +337,7 @@ and new types can be defined with @rhombus(type).
 @section(~tag: "sec:defn"){Definitions and Functions}
 
 When defining or locally binding a name, some predefined names must be
-avoided. The following names are blacklisted for binding, since
+avoided. The following names are disallowed for binding, since
 redefining or shadowing the names could easily create confusion:
 @nodef(def), @nodef(fun), @nodef(block), @nodef(let), @nodef(letrec),
 @nodef(if), @nodef(cond), @nodef(match), @nodef(check), @nodef(try),
