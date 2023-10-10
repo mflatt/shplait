@@ -1,0 +1,46 @@
+#lang shplait
+
+macro
+| '$o_expr . $(id :: Identifier) ($arg)':
+    // Extract a method form the second hash table.
+    'let o = $o_expr:
+       map_get_k(snd(o), #' $id,
+                 fun (f): f(#'o, $arg),
+                 fun (): error(#'send, "method_not found"))'
+| '$o_expr . $(id :: Identifier)':
+    // Extract a field form the first list table    
+    'map_get_k(fst($o_expr), #' $id,
+               fun (v): v,
+               fun (): error(#'get, "field not found"))'
+
+def o = values({ #'a: 10, #'b: 12 },
+               { #'a: fun (this, arg): 100, #'b: fun (this, arg): 120 })
+
+
+check: o.a
+       ~is 10
+check: o.b
+       ~is 12
+check: o.a(10)
+       ~is 100
+check: o.b(10)
+       ~is 120
+
+macro '$o_expr ! $(id :: Identifier) ($arg)':
+  'let o = $o_expr:
+     map_get_k(snd(o), #' $id,
+               fun (f): f(#'o, $arg),
+               fun (): error(#'send, "method_not found"))'
+macro '$o_expr ? $(id :: Identifier)':
+  'map_get_k(fst($o_expr), #' $id,
+             fun (v): v,
+             fun (): error(#'get, "field not found"))'
+
+check: o?a
+       ~is 10
+check: o?b
+       ~is 12
+check: o!a(10)
+       ~is 100
+check: o!b(10)
+       ~is 120

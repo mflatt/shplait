@@ -35,6 +35,19 @@ defn.macro
         ...
         '$c_tmpl'
       value.non_macro $id»'
+| '«shmacro '$('$') $(left :: Identifier) $(op :: Operator) $pat':
+      def $(local_id :: Identifier) = $local_expr
+      ...
+      '$tmpl'»':
+    ~all_stx stx
+    def [c_pat, _] = convert_pat('$pat', #false)
+    def [c_tmpl, _] = convert_tmpl(tmpl, #false)
+    '«expr.macro '$('$') $left $op $c_pat':
+        ~stronger_than: ~other
+        def $local_id = $(compile_time(local_expr))
+        ...
+        '$c_tmpl'
+      value.non_macro $op»'
 | '«shmacro
     | '$('$') $(left :: Identifier) $(op :: Operator) $pat':
         def $(local_id :: Identifier) = $local_expr

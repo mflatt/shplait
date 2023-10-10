@@ -2497,6 +2497,10 @@ inside another module.
                  def $local_id = $expr
                  ...
                  '$template'»'
+  defn.macro '«macro '$ $left_id $op $pattern':
+                 def $local_id = $expr
+                 ...
+                 '$template'»'
   defn.macro '«macro
                | '$ $left_id $op $pattern':
                    def $local_id = $expr
