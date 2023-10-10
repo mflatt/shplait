@@ -4,3 +4,28 @@ check:
   match 1
   | ~else: "always"
   ~is "always"
+
+check:
+  match '1 2 3'
+  | '$a $b $c': [a, b, c]
+  ~is ['1', '2', '3']
+
+check:
+  match '1 2 3'
+  | '$a $b': [a, b]
+  ~is ['1 2', '3']
+
+check:
+  match 'a b c'
+  | '$(a :: Identifier) $b': [a, b]
+  ~is ['a', 'b c']
+
+check:
+  match 'a b c'
+  | '$(a :: Identifier) ... $b': '[$a, ...] $b'
+  ~is '[a, b] c'
+
+check:
+  match 'a b 3 c'
+  | '$(a :: Identifier) ... $b': '[$a, ...] $b'
+  ~is '[a, b] 3 c'

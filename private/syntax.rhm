@@ -61,7 +61,7 @@ expr.macro '«shquotes $(quoted_tmpl && '«'$tmpl'»')»':
                 t.Shrub(quoted_tmpl))
 
 meta:
-  fun convert(pat, handle_id, handle_escape, use_temps):
+  fun convert(pat, extract_escape_id, handle_id, handle_escape, use_temps):
     fun group(pat, depth, is_before_dots):
       fun dots(hd, tl):
         let [tm_pat_cvt, tm_ids] = group(hd, depth+1, #true)
@@ -79,13 +79,11 @@ meta:
       | '$(op && '$') $expr $tail ...' when handle_escape && (depth == 0):
           let [pat_cvt, ids] = group('$tail ...', depth, is_before_dots)
           ['$(Syntax.relocate('$', op)) $(handle_escape(expr)) $pat_cvt', ids]
-      | '$(op && '$') $id $tail ...':
-          unless id is_a Identifier
-          | syntax_meta.error("expected an identifier after `$` at ellipsis depth " +& depth,
-                              id)
+      | '$(op && '$') $id_esc $tail ...':
+          def id = extract_escape_id(id_esc, depth)
           let [pat_cvt, ids] = group('$tail ...', depth, is_before_dots)
           let tmpl = if use_temps | Syntax.make_temp_id(id) | id
-          ['$(Syntax.relocate('$', op)) $(handle_id(tmpl, is_before_dots)) $pat_cvt',
+          ['$(Syntax.relocate('$', op)) $(handle_id(tmpl, id_esc, is_before_dots)) $pat_cvt',
            [[id, tmpl, depth], &ids]]
       | '$(op && '$') $_ ...':
           syntax_meta.error("misplaced escape", op)
@@ -144,15 +142,30 @@ meta:
     | ~else multi(pat, 0)
   fun convert_pat(pat, use_temps):
     convert(pat,
-            fun (id, is_before_dots):
-              if is_before_dots
-              | id
-              | '($id :: Sequence)',
+            fun (id_esc, depth):
+              match id_esc
+              | '($(id :: Identifier) :: Identifier)':
+                  id
+              | ~else:
+                  unless id_esc is_a Identifier
+                  | syntax_meta.error("expected an identifier after `$` (possibly in parentheses with `:: Identifier`)",
+                                      id_esc)
+                  id_esc,
+            fun (id, id_esc, is_before_dots):
+              cond
+              | !(id_esc is_a Identifier): '($id :: Identifier)'
+              | is_before_dots: id
+              | ~else: '($id :: Sequence)',
             #false,
             use_temps)
   fun convert_tmpl(pat, use_temps):
     convert(pat,
-            fun (id, is_before_dots): id,
+            fun (id, depth):
+              unless id is_a Identifier
+              | syntax_meta.error("expected an identifier after `$` at ellipsis depth " +& depth,
+                                  id)
+              id,
+            fun (id, id_esc, is_before_dots): id,
             if use_temps
             | (fun (expr): '(reference_syntax($expr))')
             | (fun (expr): compile_time(expr)),

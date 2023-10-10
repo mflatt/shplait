@@ -2148,7 +2148,11 @@ Rules for @rhombus($, ~datum) and @litchar{...} in patterns:
 @nested(~style: #'inset){
 
  When @rhombus($, ~datum) appears in a pattern, then it must be followed
- by an identifier. In the simple case that the pattern has no ellipses
+ by either (1) an identifier, or (2) parentheses containing an identifier
+ followed by @rhombus(:: Identifier, ~datum).
+
+ In the simple case that the identifier is not annotated with
+ @rhombus(:: Identifier, ~datum) and the pattern has no ellipses
  (written as @litchar{...}), then the identifier is bound to a non-empty
  sequence of terms from the corresponding part of the input syntax
  object. Sequences are matched greedily, meaning that as many terms are
@@ -2163,6 +2167,20 @@ Rules for @rhombus($, ~datum) and @litchar{...} in patterns:
   ~repl:
     match 'a b c d'
     | '$x $y': [x, y]
+ )
+
+ An identifier annotated with @rhombus(:: Identifier, ~datum) after
+ @rhombus($, ~datum) can only match an individual identifier in the
+ input.
+
+ @examples(
+  ~repl:
+    match 'a b c d'
+    | '$(x :: Identifier) $y': [x, y]
+  ~repl:
+    match '1 2'
+    | '$(x :: Identifier) $y': [x, y]
+    | '$z': [z]
  )
 
  When an ellipsis @litchar{...} appears in a pattern, then it greedily matches 0 or more
@@ -2504,6 +2522,9 @@ inside another module.
  @rhombus(#%quotes)), or it can be a @rhombus(replace_scopes) form. The
  @rhombus(expr) for a @rhombus(local_id) must also be a compile-time
  expression.
+
+ See @secref("sec:stxobj") for general information about patterns and
+ templates.
 
 @examples(
   ~eval: eval

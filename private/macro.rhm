@@ -48,7 +48,8 @@ defn.macro
       | syntax_meta.error("operator does not match the first case's operator", stx, op)
     def [[c_pat, _], ...] = [convert_pat('$pat', #false), ...]
     def [[c_tmpl, _], ...] = [convert_tmpl(tmpl, #false), ...]
-    '«expr.macro
+    '«expr.macro $op0:
+        ~stronger_than: ~other
       | '$('$') $left $op $c_pat':
           def $local_id = $(compile_time(local_expr))
           ...
