@@ -62,6 +62,7 @@ specification of shrubbery notation.)
 @doc(
   ~nonterminal_key: block
   grammar id
+  grammar op
   grammar expr
   grammar defn
   grammar body
@@ -79,6 +80,9 @@ specification of shrubbery notation.)
 
   @item{@rhombus(id) (or a name that ends in @rhombus(id)) stands for an
   identifier, such as @rhombus(x, ~datum) or @rhombus(interp, ~datum).}
+
+  @item{@rhombus(op) (or a name that ends in @rhombus(op)) stands for an
+  operator, such as @rhombus(+, ~datum) or @rhombus(==, ~datum).}
 
   @item{@rhombus(expr) (or a name that ends in ...) stands for an
   expression, such as @rhombus(x, ~datum), @rhombus("hello"),
@@ -2470,17 +2474,28 @@ inside another module.
 @doc(
   ~nonterminal:
     local_id: block id
+    op: block op
   defn.macro '«macro '$id $pattern':
                  def $local_id = $expr
                  ...
                  '$template'»'
+  defn.macro '«macro
+               | '$ $left_id $op $pattern':
+                   def $local_id = $expr
+                   ...
+                   '$template'
+               | ...»'
 ){
 
  Defines @rhombus(id) as a macro that matches uses of @rhombus(id)
- followed by matches to @rhombus(pattern), expanding to
- @rhombus(template). The @rhombus(pattern) and @rhombus(template) can
- included uses of @rhombus($, ~datum) to bind and reference pattern
- variables.
+ followed by matches to @rhombus(pattern), or defined @rhombus(op)
+ as a macro that matches an expression followed by @rhombus(op)
+ and followed by a macro to one of the @rhombus(patterns). In each
+ case, the expansion of the macro is given by 
+ @rhombus(template). A @rhombus(pattern) or @rhombus(template) can
+ include uses of @rhombus($, ~datum) to bind and reference pattern
+ variables, including @rhombus(left_id) as a pattern variable for
+ a case of defining @rhombus(op).
 
  In @rhombus(template), @rhombus($, ~datum) can only be followed by a
  pattern variable or a compile-time expression. A compile-time expression

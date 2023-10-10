@@ -23,17 +23,38 @@ export:
     #//
     #%parens
 
-defn.macro '«shmacro '$(id :: Identifier) $pat':
-               def $(local_id :: Identifier) = $local_expr
-               ...      
-               '$tmpl'»':
-  def [c_pat, _] = convert_pat('$pat', #false)
-  def [c_tmpl, _] = convert_tmpl(tmpl, #false)
-  '«expr.macro '$id $c_pat':
-      def $local_id = $(compile_time(local_expr))
-      ...
-      '$c_tmpl'
-    value.non_macro $id»'
+defn.macro
+| '«shmacro '$(id :: Identifier) $pat':
+      def $(local_id :: Identifier) = $local_expr
+      ...      
+      '$tmpl'»':
+    def [c_pat, _] = convert_pat('$pat', #false)
+    def [c_tmpl, _] = convert_tmpl(tmpl, #false)
+    '«expr.macro '$id $c_pat':
+        def $local_id = $(compile_time(local_expr))
+        ...
+        '$c_tmpl'
+      value.non_macro $id»'
+| '«shmacro
+    | '$('$') $(left :: Identifier) $(op :: Operator) $pat':
+        def $(local_id :: Identifier) = $local_expr
+        ...
+        '$tmpl'
+    | ...»':
+    ~all_stx stx
+    def [op0, _, ...] = [op, ...]
+    for (op: [op, ...]):
+      unless (op.unwrap_op() == op0.unwrap_op())
+      | syntax_meta.error("operator does not match the first case's operator", stx, op)
+    def [[c_pat, _], ...] = [convert_pat('$pat', #false), ...]
+    def [[c_tmpl, _], ...] = [convert_tmpl(tmpl, #false), ...]
+    '«expr.macro
+      | '$('$') $left $op $c_pat':
+          def $local_id = $(compile_time(local_expr))
+          ...
+          '$c_tmpl'
+      | ...
+      value.non_macro $op0»'
 
 meta:
   expr.macro 'replace_scopes($stx, $like_stx)':
