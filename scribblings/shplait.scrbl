@@ -2502,6 +2502,12 @@ inside another module.
                  ...
                  '$template'»'
   defn.macro '«macro
+               | '$id $pattern':
+                   def $local_id = $expr
+                   ...
+                   '$template'
+               | ...»'
+  defn.macro '«macro
                | '$ $left_id $op $pattern':
                    def $local_id = $expr
                    ...

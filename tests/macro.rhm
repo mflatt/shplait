@@ -1,6 +1,21 @@
 #lang shplait
 
 macro
+| 'object ($fid = $fval, ...):
+     method $mid($this, $arg): $body
+     ...':
+    'values({ #' $fid: $fval, ... },
+            { #' $mid: fun ($this, $arg): $body, ... })'
+| 'object ($fid = $fval, ...)':
+    'values({ #' $fid: $fval, ... },
+            {})'
+
+def o = (object (a = 10, b = 12):
+           method a(this, arg): 100
+           method b(this, arg): 120)
+def p = object (a = -10, b = -12)
+
+macro
 | '$o_expr . $(id :: Identifier) ($arg)':
     // Extract a method form the second hash table.
     'let o = $o_expr:
@@ -13,14 +28,12 @@ macro
                fun (v): v,
                fun (): error(#'get, "field not found"))'
 
-def o = values({ #'a: 10, #'b: 12 },
-               { #'a: fun (this, arg): 100, #'b: fun (this, arg): 120 })
-
-
 check: o.a
        ~is 10
 check: o.b
        ~is 12
+check: p.b
+       ~is -12
 check: o.a(10)
        ~is 100
 check: o.b(10)

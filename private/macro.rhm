@@ -49,6 +49,26 @@ defn.macro
         '$c_tmpl'
       value.non_macro $op»'
 | '«shmacro
+    | '$(id :: Identifier) $pat':
+        def $(local_id :: Identifier) = $local_expr
+        ...      
+        '$tmpl'
+    | ...»':
+    ~all_stx stx
+    def [id0, _, ...] = [id, ...]
+    for (id: [id, ...]):
+      unless (id.unwrap() == id0.unwrap())
+      | syntax_meta.error("identifier does not match the first case's identifier", stx, id)
+    def [[c_pat, _], ...] = [convert_pat('$pat', #false), ...]
+    def [[c_tmpl, _], ...] = [convert_tmpl(tmpl, #false), ...]
+    '«expr.macro
+      | '$id $c_pat':
+          def $local_id = $(compile_time(local_expr))
+          ...
+          '$c_tmpl'
+      | ...
+      value.non_macro $id0»'
+| '«shmacro
     | '$('$') $(left :: Identifier) $(op :: Operator) $pat':
         def $(local_id :: Identifier) = $local_expr
         ...
