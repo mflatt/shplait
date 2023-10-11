@@ -154,15 +154,17 @@ and new types can be defined with @rhombus(type).
 }
 
 @doc(
+  // To avoid shadowing, don't use `type` as a nonterminal
   ~nonterminal:
     variant_id: block id
     field_id: block id
     of_id: block id
     as_type: block type
     arg_type: block type
+    field_type: block type
   decl.macro 'type $id $maybe_type_args = $as_type'
   decl.macro 'type $id $maybe_type_args
-              | $variant_id ($id :: $type, ...)
+              | $variant_id($field_id :: $field_type, ...)
               | ...'              
   grammar maybe_type_args:
     ϵ
@@ -195,7 +197,7 @@ and new types can be defined with @rhombus(type).
 
  When @rhombus(type) is used with @rhombus(variant_id) cases,
  each @rhombus(variant_id) is defined as a constructor function, which
- takes arguments according to the @rhombus(typed_id) field declarations
+ takes arguments according to the @rhombus(field_id) field declarations
  and produces a value of type @rhombus(id) or @rhombus(id(arg_type, ...)).
 
 @examples(
@@ -224,9 +226,7 @@ and new types can be defined with @rhombus(type).
 )
 
   As an alternative, @rhombus(is_a) can identify a variant, and 
-  @rhombus(variant_id.field_id) can be used as an accessor function,
-  where @rhombus(field_id) is the identifier within a field's
-  @rhombus(typed_id).
+  @rhombus(variant_id.field_id) can be used as an accessor function.
   The accessor takes an instance of the variant and
   extracts the corresponding field value, and it raises an exception when
   applied to value (of an expression) of type @rhombus(id) that is not an
@@ -244,9 +244,9 @@ and new types can be defined with @rhombus(type).
  When a @rhombus(id(arg_type, ...)) is defined with @rhombus(variant_id)s, then @rhombus(id) is a
  polymorphic type constructor, and the corresponding field-accessor
  functions are also polymorphic. These are polymorphic only to the degree
- that @rhombus(type) forms in the constructor @rhombus(type)s refer
+ that the variant @rhombus(field_type)s refer
  to the @rhombus(of_id) type variables in @rhombus(maybe_type_args).
- Any other type variable that appears in a variant field @rhombus(type)
+ Any other type variable that appears in a variant @rhombus(field_type)
  is disallowed as a @deftech{unguarded type variable}.
 
 @examples(
@@ -1247,7 +1247,7 @@ These operators have lower precedence than arithmetic operators.
   type 'Void'
 ){
 
- The type of an expression that has a side effect and produces the value
+ The type for an expression that has a side effect and produces the value
  @rhombus(#void). For example, the result type of @rhombus(println) is
  @rhombus(Void, ~at shplait/type).
 
@@ -1363,7 +1363,7 @@ These operators have lower precedence than arithmetic operators.
   type 'Char'
 ){
 
- The type for a character within a string.
+ The type of a character within a string.
 
 }
 
@@ -1476,7 +1476,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
  A list is either empty or a pair of an element and a smaller list:
  @itemlist(
    @item{@rhombus([])}
-   @item{@rhombus(cons(first_elem, rest_list))})
+   @item{@rhombus(cons(#,(@rhombus(first_elem, ~var)), #,(@rhombus(rest_list, ~var))))})
 
 }
 
@@ -1812,7 +1812,7 @@ A @deftech{box} is a mutable object that holds a single value.
   type 'Boxof($type)'
 ){
 
- The type for a box that holds a @rhombus(type) value.
+ The type of a box that holds a @rhombus(type) value.
 
 }
 
@@ -2434,7 +2434,7 @@ inside another module.
 @doc(
   defn.macro 'import:
                 $import_spec
-                ....'
+                ...'
 
   grammar import_spec:
     $module_path
@@ -2491,6 +2491,7 @@ inside another module.
 
 @doc(
   ~nonterminal:
+    left_id: block id
     local_id: block id
     op: block op
   defn.macro '«macro '$id $pattern':
@@ -2515,10 +2516,10 @@ inside another module.
                | ...»'
 ){
 
- Defines @rhombus(id) as a macro that matches uses of @rhombus(id)
- followed by matches to @rhombus(pattern), or defined @rhombus(op)
- as a macro that matches an expression followed by @rhombus(op)
- and followed by a macro to one of the @rhombus(patterns). In each
+ Defines @rhombus(id) as a macro that matches a use of @rhombus(id)
+ followed by a match to one of the @rhombus(pattern)s, or defines @rhombus(op)
+ as a macro that matches an expression followed by a use of @rhombus(op)
+ and a match to one of the @rhombus(pattern)s. In each
  case, the expansion of the macro is given by 
  @rhombus(template). A @rhombus(pattern) or @rhombus(template) can
  include uses of @rhombus($, ~datum) to bind and reference pattern
