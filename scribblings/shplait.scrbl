@@ -291,23 +291,6 @@ and new types can be defined with @rhombus(type).
 }
 
 @doc(
-  type 'Optionof(?a)'
-  fun none() :: Optionof(?a)
-  fun some(v :: ?a) :: Optionof(?a)
-){
-
- A type and constructors to represent ``success'' with a value and
- ``failure'' without a value, defined as
-
-@rhombusblock(
-  type Optionof(?a)
-  | none()
-  | some(val :: ?a)
-)
-
-}
-
-@doc(
   expr.macro '$expr :: $type'
 ){
 
@@ -1847,6 +1830,35 @@ A @deftech{box} is a mutable object that holds a single value.
 }
 
 @// ------------------------------------------------------------
+@subsection(~tag: "sec:option"){Options}
+
+An @deftech{option} encapsulates the idea of a computation that may
+fail.
+
+@doc(
+  type 'Optionof($type)'){
+
+ The type of an option that optionally holds a @rhombus(type) value.
+
+ An option is either a ``failure'' without a value or ``success'' with
+ a value:
+
+ @itemlist(
+   @item{@rhombus(none())}
+   @item{@rhombus(some(#,(@rhombus(val, ~var))))})
+
+}
+
+@doc(
+  fun none() :: Optionof(?a)
+  fun some(v :: ?a) :: Optionof(?a)
+){
+
+ Produces a ``failure'' or ``success'' option.
+
+}
+
+@// ------------------------------------------------------------
 @subsection(~tag: "sec:tuple"){Tuples}
 
 A @deftech{tuple} is similar to a list, but its type reflects a fixed
@@ -2674,7 +2686,7 @@ for more information.
 
 @// ------------------------------------------------------------
 
-@section(~tag: "sec:option"){Language Options}
+@section(~tag: "sec:lang_option"){Language Options}
 
 Keyword @deftech{language options} written immediately after
 @rhombus(#,(hash_lang()) #,(@rhombuslangname(shplait))) change the
