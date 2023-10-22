@@ -148,6 +148,7 @@ export:
     #%parens
     #%literal
     *
+    ....
 
 module define:
   export:
@@ -220,6 +221,10 @@ type_expr.macro '? $(id :: Identifier)':
             tvars_box.value := tvars ++ IdMap{id: tv}
             tv)
   type_expr_meta.pack(tv)
+
+type_expr.macro '....':
+  ~op_stx self
+  type_expr_meta.pack(t.Datatype(self, Syntax.make_temp_id("....", ~keep_name: #true), []))
 
 type_expr.macro 'Listof ($(elem :: ParsedType))':
   ~op_stx self

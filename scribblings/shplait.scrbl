@@ -934,6 +934,7 @@ redefining or shadowing the names could easily create confusion:
 @doc(
   expr.macro '.... $anything ...'
   expr.macro '$expr .... $anything ...'
+  type '....'
 ){
 
  The @rhombus(....) operator (with four dots) can be used as a prefix,
@@ -942,6 +943,10 @@ redefining or shadowing the names could easily create confusion:
  @rhombus(....) (in the same shrubbery group) is effectively commented
  out. Furthermore, the overall @rhombus(....) expression can have any
  type.
+
+ The @rhombus(....) operator also can be used as an ``Unknown'' type
+ that is incompatible with any other type, including another
+ use of @rhombus(....) as a type.
 
 @examples(
   ~eval: eval
@@ -955,6 +960,17 @@ redefining or shadowing the names could easily create confusion:
       maybe call error?
 )    
 
+
+ The @rhombus(....) operator also can be used as an ``unknown'' type
+ that is incompatible with any other type, including another
+ use of @rhombus(....) as a type.
+
+@examples(
+  ~eval: eval
+  ~error:
+    def x :: .... = 1
+)
+    
 }
 
 @doc(
