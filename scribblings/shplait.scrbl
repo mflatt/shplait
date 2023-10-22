@@ -963,6 +963,7 @@ redefining or shadowing the names could easily create confusion:
 
  Returns the result of @rhombus(expr), but before returning, prints
  information about how time passed when evaluating @rhombus(expr).
+ Reported times are in milliseconds.
 
 }
 
