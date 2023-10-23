@@ -8,15 +8,34 @@ import:
   "lazy.rhm" open
 
 export:
-  box
+  rename:
+    make_box as box
   unbox
   set_box
 
-defwrap box_wrap box(v): Box(v)
-defwrap unbox_wrap unbox(b): (dynamic_force(b) :~ Box).value
-defwrap set_box_wrap set_box(b, v): (dynamic_force(b) :~ Box).value := v
+class box (mutable val):
+  implements: Forceable
+  field lazy_forced = #false
 
-expr.macro 'box':
+  property
+  | value:
+      val
+  | value := rhs:
+      lazy_forced := #false
+      val := rhs
+
+  override force_all():
+    unless lazy_forced
+    | lazy_forced := box(#false)
+      (lazy_forced :~ box).lazy_forced := lazy_forced
+      (lazy_forced :~ box).val := dynamic_force_all(val)
+    lazy_forced
+
+defwrap box_wrap box(v): box(v)
+defwrap unbox_wrap unbox(b): (dynamic_force(b) :~ box).value
+defwrap set_box_wrap set_box(b, v): (dynamic_force(b) :~ box).value := v
+
+expr.macro 'make_box':
   ~op_stx self
   let tv = t.gen_tvar(self)
   t_s.wrap_type('box_wrap'.relocate(self),

@@ -72,3 +72,15 @@ check:
 check:
   to_string(filter)
   ~is "#<function:filter>"
+
+check:
+  box(1)
+  ~is box(1)
+
+check:
+  box(none())
+  ~is box(none())
+
+check:
+  box(none()) == box(some(1))
+  ~is #false

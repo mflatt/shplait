@@ -30,3 +30,20 @@ module test:
   check:
     f2(#false)
     ~is "ok"
+
+check:
+  let b = box(none()):
+    set_box(b, some(b))
+    b
+  ~is (let b = box(some(box(none()))):
+         set_box(b, some(b))
+         b)
+
+check:
+  let b = box(none()):
+    set_box(b, some(b))
+    b
+  ~is (let b0 = box(none()):
+         let b = box(some(b0)):
+           set_box(b0, some(b))
+           b)
