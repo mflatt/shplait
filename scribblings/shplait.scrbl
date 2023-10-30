@@ -944,10 +944,6 @@ redefining or shadowing the names could easily create confusion:
  out. Furthermore, the overall @rhombus(....) expression can have any
  type.
 
- The @rhombus(....) operator also can be used as an ``Unknown'' type
- that is incompatible with any other type, including another
- use of @rhombus(....) as a type.
-
 @examples(
   ~eval: eval
   ~error:
