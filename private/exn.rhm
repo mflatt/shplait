@@ -8,6 +8,7 @@ import:
   "unify.rhm" open
   "block.rhm".implicit_block
   lib("racket/base.rkt").#{call/cc}
+  "value.rhm".value
 
 export:
   rename:
@@ -16,6 +17,9 @@ export:
     shprint as print
     shprintln as println
   let_cc
+
+value.non_macro shtry
+value.non_macro let_cc
 
 expr.macro 'shtry:
               $body
