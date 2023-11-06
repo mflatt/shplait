@@ -9,11 +9,11 @@ export:
   rename:
     assign as :=
 
-expr.macro '$left assign $right_t ...':
+expr.macro '$left assign $right_t0 $right_t ...':
   ~op_stx self
   ~all_stx stx
   ~weaker_than: ~other
-  let '$(right :: expr_meta.Parsed)' = '$right_t ...'
+  let '$(right :: expr_meta.Parsed)' = '$right_t0 $right_t ...'
   cond
   | statinfo_meta.lookup(left, '#%assignable'):
       let [left_ty, new_left] = t_s.lookup_type(left, #false)
