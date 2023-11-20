@@ -738,7 +738,7 @@ fun let_based_poly_do(env :~ List.of(Pair)):
              | fuel > 0: #false
              | ~else:
                  raise_typecheck_error(Pair.rest(p), orig_a, orig_b,
-                                       "possible cycle in type constraints; increase #:fuel to try more")):
+                                       "possible cycle in type constraints; increase ~fuel to try more")):
           new_defn_types
       | ~else loop(new_defn_types, fuel-1)
   resolve_defn_types(env, #true)
