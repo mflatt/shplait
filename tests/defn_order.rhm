@@ -1,0 +1,12 @@
+#lang shplait
+
+// test is just to check that this passes the type checker
+
+type Alpha
+| a(x :: Int * Int * Beta(Int))
+
+type Beta(?a)
+| b()
+
+// make sure grouping of `*` is right
+def tup :: Int * Int * Int = values(1, 2, 3)

@@ -277,7 +277,7 @@ type_expr.macro '$init * $(next :: type_expr_meta.XAfterInfixParsed('*')) $()':
               tail = '$next.tail ...'):
     match tail:
     | ('$op $tail ...' where '$(bound_as type_expr_meta.space: '*')' = op):
-        let '$(next :: type_expr_meta.AfterInfixParsed('*'))' = '$tail ...'
+        let '$(next :: type_expr_meta.XAfterInfixParsed('*'))' = '$tail ...'
         loop([extract_parsed(next), & args],
              '$src $op $next',
              '$next.tail ...')
