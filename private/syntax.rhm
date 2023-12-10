@@ -26,7 +26,7 @@ export:
 class SyntaxWrap(raw :: Syntax):
   private implements Printable
   private override describe(mode, recur):
-    recur(raw, mode)
+    recur(raw, ~mode: mode)
   private implements Equatable
   private override equals(other :~ SyntaxWrap, recur):
     recur(raw.unwrap_all(), other.raw.unwrap_all())
