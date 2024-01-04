@@ -7,6 +7,7 @@ import:
   "type_statinfo.rhm" as t_s
   "unify.rhm".unify
   "list.rhm".cons
+  "list.rhm"!rep.SPair
   "syntax.rhm"!convert.convert_pat
   "syntax.rhm"!convert.syntax_def
   "syntax.rhm"!convert.syntax_unwrap
@@ -172,9 +173,9 @@ meta:
         | []: unify ~expr $(t_s.type_to_syntax(tv)):
                 ~body:
                   $(implicit_block(empty_body))
-        | Pair.cons(first, rest):
+        | SPair(first, rest):
             def $f_id = first
-            def $r_id = rest
+            def $r_id = dynamic(rest)
             statinfo.macro '$f_id': '(($t_s.type_key, $(t_s.type_to_syntax(elem_tv))))'
             statinfo.macro '$r_id': '(($t_s.type_key, $(t_s.type_to_syntax(t.ListOf(self, elem_tv)))))'
             unify ~expr $(t_s.type_to_syntax(tv)):

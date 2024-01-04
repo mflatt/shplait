@@ -6,6 +6,8 @@ import:
   "lazy.rhm" open
   "wrap.rhm" open
   "value.rhm".value
+  "list.rhm"!rep.to_slist
+  "list.rhm"!rep.from_slist
   lib("shrubbery/parse.rkt").#{parse-all}
 
 // Wrap Rhombus's syntax patterns and templates to check
@@ -255,11 +257,11 @@ fun oops(who, stx, what):
 defwrap wrap_syntax_split syntax_split(s):
   let s = SyntaxWrap.raw(dynamic_force(s))
   if s is_a Group
-  | Syntax.unwrap_group(s).map(SyntaxWrap)
-  | Syntax.unwrap_sequence(s).map(SyntaxWrap)
+  | to_slist(Syntax.unwrap_group(s).map(SyntaxWrap))
+  | to_slist(Syntax.unwrap_sequence(s).map(SyntaxWrap))
 
 defwrap wrap_syntax_join syntax_join(lst):
-  let [s :: Syntax, ...] = List.map(dynamic_force_all(lst), SyntaxWrap.raw)
+  let [s :: Syntax, ...] = List.map(dynamic_force_all(from_slist(lst)), SyntaxWrap.raw)
   cond
   | (for all:
        each s: [s, ...]
@@ -307,11 +309,11 @@ extractor syntax_is_string (syntax_to_string, values) (string_to_syntax, values)
 extractor syntax_is_list (syntax_to_list, list_post) (list_to_syntax, add_brackets) ListOfShrub ListShaped "list"
 
 fun list_post(los):
-  List.rest(los).map(SyntaxWrap)
+  to_slist(List.rest(los).map(SyntaxWrap))
 
 annot.macro 'ListShaped':
   'matching(['brackets', _, $'...'])'
-fun add_brackets(lst :~ List): [#'brackets, & lst.map(fun (elem): SyntaxWrap.raw(elem))]
+fun add_brackets(lst): [#'brackets, & from_slist(lst).map(fun (elem): SyntaxWrap.raw(elem))]
 
 
 defwrap syntax_read_wrap syntax_read():
