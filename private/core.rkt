@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      rhombus/expand-config ; for workaround
                      version/utils ; for workaround
-                     rhombus/syntax)
+                     rhombus/syntax
+                     rhombus/private/treelist)
          (prefix-in rhombus: rhombus)
          (for-syntax
           (prefix-in rhombus: rhombus/parse))
@@ -39,7 +40,10 @@
   (syntax-parse stx
     #:datum-literals (top)
     [(_ (top form-in ...))
-     #:with (config (_ form ...)) (parse_and_apply_configure (syntax->list #'(form-in ...)))
+     #:with (config (_ form ...)) (treelist->list
+                                   (parse_and_apply_configure
+                                    (list->treelist
+                                     (syntax->list #'(form-in ...)))))
      (define call-as-expand
        (cond
          [(version<? (version) "8.10.0.3")
@@ -72,7 +76,8 @@
                 #,@(map (lambda (sm)
                           #`(rhombus:rhombus-top #,(extract-group sm)))
                         (map syntax-local-introduce
-                             (get_configured_submodules #'config))))])]))
+                             (treelist->list
+                              (get_configured_submodules #'config)))))])]))
 
 (define-syntax (shplait-top-interaction stx)
   (syntax-parse stx
