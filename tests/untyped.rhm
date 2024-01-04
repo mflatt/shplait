@@ -9,8 +9,8 @@ check:
   ~is 1
 
 check:
-  cons(1, base.cons(2, []))
-  ~is [1, 2]
+  rest(cons(1, base.cons(2, [])))
+  ~is base.cons(2, [])
 
 fun f(x :: Int):
   if x

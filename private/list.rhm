@@ -7,6 +7,7 @@ import:
   "value.rhm".value_meta
   "wrap.rhm" open
   "lazy.rhm" open
+  "lazy.rhm".force_all as lazy_force_all    
   "value.rhm".all_value_types
 
 export:
@@ -16,6 +17,39 @@ export:
   rest
   cons
   list_get
+
+class SPair(first, rest):
+  implements Printable
+  override describe(mode, recur):
+    recur(from_slist(this))
+    
+  implements Equatable
+  override equals(other :~ SPair, recur):
+    recur(dynamic_force(first), dynamic_force(other.first))
+      && recur(dynamic_force(rest), dynamic_force(other.rest))
+  override hash_code(recur):
+    Equatable.hash_code_combine(recur(first), recur(rest))
+
+  implements Forceable
+  override force_all():
+    SPair(lazy_force_all(first), lazy_force_all(rest))
+
+fun | to_slist([]): []
+    | to_slist([a, x, ...]): SPair(a, to_slist([x, ...]))
+                             
+fun | from_slist([]) :~ List: []
+    | from_slist(SPair(f, r)) :~ List: List.cons(f, from_slist(r))
+    | from_slist(v) :~ List:
+        let fv = dynamic_force(v)
+        if fv === v
+        | error(#'from_slist, "bad: " +& v)
+        | from_slist(fv)
+
+module rep:
+  export:
+    SPair
+    to_slist
+    from_slist
 
 value.macro
 | 'brackets [$(v :: value_meta.Parsed), ...]':
@@ -34,17 +68,17 @@ expr.macro 'brackets $(elems && '[$(elem :: expr_meta.Parsed), ...]')':
   let tv = t.gen_tvar(#false)
   let [[elem_ty, new_elem], ...] = [t_s.lookup_type(elem, elem.group), ...]
   Function.pass(t.unify_do(elem, tv, elem_ty), ...)
-  t_s.wrap_type('#%brackets $('[maybe_delay($elem.group, $new_elem), ...]'.relocate(elems))',
+  t_s.wrap_type('to_slist(#%brackets $('[maybe_delay($elem.group, $new_elem), ...]'.relocate(elems)))',
                 elems,
                 t.ListOf(elems, tv))
 
 defwrap wrap_first first(l): match dynamic_force(l)
                              | []: error(#'first, "failed on empty list")
-                             | v: Pair.first(v)
+                             | SPair(f, r): f
 defwrap wrap_rest rest(l): match dynamic_force(l)
                            | []: error(#'rest, "failed on empty list")
-                           | v: Pair.rest(v)
-defwrap wrap_cons cons(a, l): Pair.cons(a, l)
+                           | SPair(f, r): r
+defwrap wrap_cons cons(a, l): SPair(a, l)
 
 // could be defined in "lib.rhm", but defining it here
 // avoids some redundant `is_a List` checks and takes a faster
@@ -54,13 +88,13 @@ defwrap wrap_list_get list_get(l, n):
   // `n` must be forced here to be used immediately in the non-lazy
   // branch.  This can occur when `l` is a value while `n` isn't in
   // lazy mode.
-  recur loop (l = l, n = dynamic_force(n)):
+  recur loop (l = from_slist(l), n = dynamic_force(n)):
     cond
     | (l is_a Pair):
         if n == 0
         | Pair.first(l)
         | loop(Pair.rest(l), n - 1)
-    | (l === []):
+    | (l === PairList[]):
         error(#'list_get, "index out of range")
     | ~else:
         // must be lazy
