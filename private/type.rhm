@@ -593,7 +593,7 @@ fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
                                                 & ["\n    " +& expr.to_source_string(),
                                                    ...])),
                         Continuation.current_marks(),
-                        all_exprs)
+                        for PairList (e: all_exprs): e)
 
 fun mismatch_explanation(a, b, is_function_call):
   cond
