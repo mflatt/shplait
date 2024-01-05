@@ -13,7 +13,7 @@ class IdMap(table :~ Map):
     Appendable
 
   fun build([[key :~ Identifier, val], ...]):
-    for values (table = {}):
+    for values (table :~ Map = {}):
       each:
         key: [key, ...]
         val: [val, ...]
@@ -29,7 +29,7 @@ class IdMap(table :~ Map):
       syntax_meta.equal_binding(key, index) && val
 
   private override append(other :: IdMap) :~ IdMap:
-    _IdMap(for values(table = table):
+    _IdMap(for values(table :~ Map = table):
              each (sym, candidates :~ List): other.table
              table ++ { sym: candidates ++ table.get(sym, []) })
 

@@ -382,7 +382,7 @@ meta:
         syntax_meta.error("expected a pattern followed by a `:` block", stx, clause)
 
   fun check_variants_consistent(self, [ctr, ...], [dt_id, ...], the_dt_id):
-    for values(seen = IdMap{}):
+    for values(seen :~ IdMap = IdMap{}):
       each:
         ctr: [ctr, ...]
         dt_id: [dt_id, ...]

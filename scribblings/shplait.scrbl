@@ -18,7 +18,7 @@
     body: block
     value: block)
 
-@(def rhombus_scrbl = ModulePath.s_exp(ModulePath 'lib("rhombus/scribblings/rhombus.scrbl")'))
+@(def rhombus_scrbl = ModulePath 'lib("rhombus/scribblings/rhombus.scrbl")')
 
 @(macro 'nodef($id)': '@rhombus($id, ~datum)')
 
@@ -42,9 +42,9 @@ language, but the type system is close to that of
 
 Shplait syntax is based on @deftech{shrubbery} syntax, which is
 described at
-@secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top").
+@secref(~doc: ModulePath 'lib("shrubbery/scribblings/shrubbery.scrbl")', "top").
 Superficially, Shplait resembles
-@secref(~doc: [#'lib, "rhombus/scribblings/rhombus.scrbl"], "top"),
+@secref(~doc: rhombus_scrbl, "top"),
 which also uses shrubbery notation, but Shplait is statically typed,
 much smaller, and has a different set of constructs overall.
 

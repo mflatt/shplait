@@ -7,7 +7,7 @@
                      syntax/parse/pre
                      shrubbery/property)
          rhombus/parse
-         (only-in scribble/rhombus
+         (only-in scribble/rhombus/manual
                   rhombusblock_etc)
          scribble/private/typeset-doc)
 

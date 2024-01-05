@@ -29,7 +29,7 @@ space.transform type_defn:
       | '($id, $ty_sym, [($tv_id, $tv_ty_sym), ...])':          
           values(id,
                  t_s.syntax_to_type(ty_sym),
-                 for values(tvars = IdMap{}):
+                 for values(tvars :~ IdMap = IdMap{}):
                    each:
                      tv_id: [tv_id, ...]
                      tv_ty_sym: [tv_ty_sym, ...]
