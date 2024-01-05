@@ -16,14 +16,14 @@
 @(def defterm = italic)
 
 @(def ref_scrbl = ModulePath 'lib("scribblings/reference/reference.scrbl")')
-@(def shrubbery_scrbl = ModulePath.s_exp(ModulePath 'lib("shrubbery/scribblings/shrubbery.scrbl")'))
+@(def shrubbery_scrbl = ModulePath 'lib("shrubbery/scribblings/shrubbery.scrbl")')
 
 @(fun pink(e):
-    elem(~style: s_core.style(#false, [s_core.#{background-color-property}("pink")], e)))
+    elem(~style: s_core.style(#false, PairList[s_core.#{background-color-property}("pink")], e)))
 
 @(runtime_path.def demo_rhm: "demo.rhm")
 @(def demo_link:
-    @elem(~style: s_core.style(#false, [html_prop.#{link-resource}(demo_rhm)])){@filepath{demo.rhm}})
+    @elem(~style: s_core.style(#false, PairList[html_prop.#{link-resource}(demo_rhm)])){@filepath{demo.rhm}})
 
 @(macro 'interaction($term, ...)': 'examples(~eval: eval, $term, ...)')
 
@@ -1047,7 +1047,7 @@ the @rhombus(....) reports an error if it is reached during evaluation.
 
 After we define a function, the name of the function can be used as a
 value without calling it. If you just evaluate the function name, then
-Shplait will print something like @nonbreaking{@racketresultfont{#<function>}}.
+Shplait will print something like @nonbreaking{@racketresultfont("#<function>")}.
 
 @interaction(
   ~defn:
