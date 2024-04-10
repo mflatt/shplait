@@ -7,8 +7,16 @@ import:
   "lazy.rhm" open
   "wrap.rhm" open
 
-decl.macro 'def_binary $name $op $type_constr: $option; ...':
-  '«export: rename: $name as $op
+decl.macro 'def_binary
+              $name
+              $(pattern:
+                  kind ~sequence
+                | '$rhm_op as $sh_op'
+                | '$(rhm_op && sh_op)')
+              $type_constr:
+                $option
+                ...':
+  '«export: rename: $name as $sh_op
     expr.macro '$('$')left $name $('$')right':
       ~op_stx self
       ~all_stx stx
@@ -18,7 +26,7 @@ decl.macro 'def_binary $name $op $type_constr: $option; ...':
       let [right_ty, new_right] = t_s.lookup_type(right, #false)
       t.unify_do(left, left_ty, t.Num(self))
       t.unify_do(right, right_ty, t.Num(self))
-      t_s.wrap_type('force($('$')new_left) $('$')('$op'.relocate(self)) force($('$')new_right)',
+      t_s.wrap_type('force($('$')new_left) $('$')('$rhm_op'.relocate(self)) force($('$')new_right)',
                     t. $type_constr(stx))»'
 
 def_binary shplus + Num:
@@ -51,13 +59,13 @@ expr.macro
     t_s.wrap_type('$('-'.relocate(self)) force($new_right)',
                   t.Num(stx))
 
-def_binary shlt < Bool:
+def_binary shlt .< as < Bool:
   ~weaker_than shplus shminus shtimes shdiv shmod
-def_binary shgt > Bool:
+def_binary shgt .> as > Bool:
   ~weaker_than shplus shminus shtimes shdiv shmod
-def_binary sgle <= Bool:
+def_binary shle .<= as <= Bool:
   ~weaker_than shplus shminus shtimes shdiv shmod
-def_binary shge >= Bool:
+def_binary shge .>= as >= Bool:
   ~weaker_than shplus shminus shtimes shdiv shmod
 
 export: rename: _not as !
