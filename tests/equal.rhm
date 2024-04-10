@@ -9,6 +9,19 @@ check:
   box(1) == box(1)
   ~is #true
 
+check:
+  box(1) == box(2)
+  ~is #false
+
+// `!=` is Rhombus's `is_now`, but negated
+check:
+  box(1) != box(1)
+  ~is #false
+
+check:
+  box(1) != box(2)
+  ~is #true
+
 // `~is` is Rhombus's `~is_now`
 check:
   box(1)
