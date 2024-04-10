@@ -371,7 +371,7 @@ fun non_poly_do(t :: Type, poly_context :: List):
                     | loop(lnew - 1, lold - 1,
                            List.rest(poly_context), List.rest(pc),
                            #true)
-                | lnew > lold:
+                | lnew .> lold:
                     loop(lnew-1, lold,
                          List.rest(poly_context), pc,
                          #false)

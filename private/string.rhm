@@ -19,9 +19,9 @@ defwrap wrap_string_get string_get(a, i): (dynamic_force(a) :~ String)[dynamic_f
 defwrap wrap_string_length string_length(a): (dynamic_force(a) :~ String).length()
 defwrap wrap_substring substring(a, start, end):
   let s :~ String = dynamic_force(a)
-  let start = dynamic_force(start)
-  let end = dynamic_force(end)
-  if (start is_a Int) && (end is_a Int) && (start >= 0) && (end >= start) && (end <= s.length())
+  let start :~ Int = dynamic_force(start)
+  let end :~ Int = dynamic_force(end)
+  if (start >= 0) && (end >= start) && (end <= s.length())
   | s.substring(start, end)
   | error(#'substring, ("bad range for string\n"
                           +& "  string: " +& to_string(s, ~mode: #'expr) +& "\n"
