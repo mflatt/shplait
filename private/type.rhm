@@ -822,7 +822,7 @@ fun extract_tvars(t, poly_context :: List, base_tvars :: Set):
               let non_poly :: List = t.non_poly
               let c1 = poly_context.length()
               let c2 = non_poly.length()
-              if (c1 < c2) && (poly_context == non_poly.drop_left(c2-c1))
+              if (c1 < c2) && (poly_context == non_poly.drop(c2-c1))
               | {t}
               | Set{}
           | base_tvars[t]:
