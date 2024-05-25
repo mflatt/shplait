@@ -203,7 +203,7 @@ fun get_defn_tvars(t :: Type) :: Set:
   | t :: NonPolyDefn: t.tvars
   | ~else: []
 
-fun to_expression(type :: Type,  tvar_names :: Map = {}): // FIXME: `tvar_names` should be `===`-based
+fun to_expression(type :: Type,  tvar_names :: Map = Map.by(===){}):
   recur loop (type = type):
     match type
     | type :: Defn:
@@ -504,7 +504,7 @@ fun poly_ize_upto(t :: Type, allowed_tvars :: List, orig :: Syntax):
   match removeAll(tvars, allowed_tvars)
   | []: poly_ize(t, tvars)
   | [t :: TVar, ...]:
-      let context = MutableMap()
+      let context = MutableMap.by(===)()
       let tstr = type_to_string(context)
       syntax_meta.error("unguarded type variable" +& if [] == List.rest([t, ...]) | "" | "s", orig)
 
@@ -572,7 +572,7 @@ fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
     if main_expr
     | [main_expr, & exprs.remove(main_expr)]
     | exprs
-  let context = MutableMap()
+  let context = MutableMap.by(===)()
   throw Exn.Fail.Syntax((if base.#{error-print-source-location}() && main_expr
                          | let loc = Syntax.srcloc(main_expr)
                            let s :~ String = if loc | Srcloc.to_report_string(loc) | ""
@@ -824,9 +824,9 @@ fun extract_tvars(t, poly_context :: List, base_tvars :: Set):
               let c2 = non_poly.length()
               if (c1 < c2) && (poly_context == non_poly.drop(c2-c1))
               | {t}
-              | Set{}
+              | Set.by(===){}
           | base_tvars[t]:
-              Set{}
+              Set.by(===){}
           | ~else:
               {t}
       | t :: Arrow:
@@ -845,7 +845,7 @@ fun extract_tvars(t, poly_context :: List, base_tvars :: Set):
           Set.append(& t.args.map(loop))
       | t :: Poly:
           loop(t.type).remove(t.tvar)
-      | ~else: Set{}
+      | ~else: Set.by(===){}
   tvars.to_list()
 
 fun unify_defn_do(expr, a, b):
