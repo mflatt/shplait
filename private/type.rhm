@@ -840,9 +840,9 @@ fun extract_tvars(t, poly_context :: List, base_tvars :: Set):
       | t :: ParameterOf:
           loop(t.element)
       | t :: TupleOf:
-          Set.append(& t.args.map(loop))
+          Set.append(Set{}, & t.args.map(loop))
       | t :: Datatype:
-          Set.append(& t.args.map(loop))
+          Set.append(Set{}, & t.args.map(loop))
       | t :: Poly:
           loop(t.type).remove(t.tvar)
       | ~else: Set.by(===){}
