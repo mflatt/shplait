@@ -5,7 +5,7 @@
       only_meta 0:
         shplait open
       shplait.replace_scopes
-    "eval.rhm".eval
+    "eval.rhm" open
     "tutorial_url.rhm" open
     "spacer.rhm" open)
 
@@ -21,6 +21,9 @@
 @(def rhombus_scrbl = ModulePath 'lib("rhombus/scribblings/rhombus.scrbl")')
 
 @(macro 'nodef($id)': '@rhombus($id, ~datum)')
+
+@(def eval = make_eval())
+@(def check_eval = make_eval(~attach: #false))
 
 @title{Shplait Language}
 
@@ -783,7 +786,7 @@ redefining or shadowing the names could easily create confusion:
  printed, but evaluation continues.
 
 @examples(
-  ~eval: eval
+  ~eval: check_eval
   check:
     1+2
     ~is 3
@@ -2768,3 +2771,8 @@ Use @rhombus(~fuel #,(@rhombus(amount, ~var))) as a @tech{language option} to
 specify how much effort should be spent resolving potentially cyclic
 dependencies due to inference of polymorphic recursion. The default fuel
 amount is @rhombus(100).
+
+@// ------------------------------------------------------------
+
+@(close_eval(eval))
+@(close_eval(check_eval))

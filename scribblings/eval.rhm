@@ -5,12 +5,14 @@ import:
   lib("racket/sandbox.rkt").#{call-in-sandbox-context}
 
 export:
+  make_eval
+  s.close_eval
+
+fun make_eval(~attach: attach = #true):
+  let eval = s.make_rhombus_eval(~lang: #'shplait,
+                                 ~attach: attach)
+  #{call-in-sandbox-context}(eval,
+                             fun ():
+                               racket.#{error-print-context-length}(0)
+                               racket.#{error-print-source-location}(#false))
   eval
-
-def eval = s.make_rhombus_eval(~lang: #'shplait)
-          
-#{call-in-sandbox-context}(eval,
-                           fun ():
-                             racket.#{error-print-context-length}(0)
-                             racket.#{error-print-source-location}(#false))
-
