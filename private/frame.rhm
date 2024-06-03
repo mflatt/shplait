@@ -50,9 +50,9 @@ meta:
     method all_tvars() :: Set:
       let base:
         if parent
-        | Frame.all_tvars(parent)
-        | Set{}
-      (base :~ Set) ++ tvars.val_set()
+        | (parent :~ Frame).all_tvars()
+        | Set.by(===){}
+      base ++ tvars.val_set()
 
 syntax_parameter.bridge frame: Frame()
 

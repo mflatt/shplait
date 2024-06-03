@@ -13,7 +13,7 @@ class IdMap(table :~ Map):
     Appendable
 
   fun build([[key :~ Identifier, val], ...]):
-    for values (table :~ Map = {}):
+    for values (table :~ Map = Map.by(===){}):
       each:
         key: [key, ...]
         val: [val, ...]
@@ -34,13 +34,13 @@ class IdMap(table :~ Map):
              table ++ { sym: candidates ++ table.get(sym, []) })
 
   method flatten() :: Map:
-    for Map:
+    for Map.by(===):
       each (k, ps :~ List): table
       each Pair(key, val): ps
       values(key, val)
 
   method val_set() :: Set:
-    for Set:
+    for Set.by(===):
       each (k, ps :~ List): table
       each Pair(_, val): ps
       val

@@ -15,7 +15,7 @@ export:
   LazyParseType TypeConstructor
   gen_tvar
   to_expression
-  create_defn poly_ize poly_ize_upto as_non_poly get_defn_tvars
+  create_defn poly_ize poly_ize_upto as_non_poly
   Poly poly_instance at_source instantiate_constructor_at instantiate_at
   unify_do unify_defn_do
   let_based_poly_do
@@ -197,13 +197,7 @@ class Hide(v):
   override describe(mode, recur):
     "Hide"
 
-fun get_defn_tvars(t :: Type) :: Set:
-  match t
-  | t :: Defn: t.tvars
-  | t :: NonPolyDefn: t.tvars
-  | ~else: []
-
-fun to_expression(type :: Type,  tvar_names :: Map = Map.by(===){}):
+fun to_expression(type :: Type, tvar_names :: Map = Map.by(===){}):
   recur loop (type = type):
     match type
     | type :: Defn:
@@ -489,7 +483,7 @@ fun create_defn(t :: Type, poly_context, base_tvars, tvars):
        tvars)
 
 fun poly_ize_wrt(t :: Type, poly_context, base_tvars):
-  poly_ize(t, extract_tvars(t, poly_context, base_tvars))
+  poly_ize(t, extract_tvars(t, poly_context, base_tvars).to_list())
 
 fun poly_ize(t :: Type, tvars :: List):
   recur loop (tvars = tvars.reverse(),
@@ -500,18 +494,13 @@ fun poly_ize(t :: Type, tvars :: List):
         loop(tvars, Poly(t.src, tvar, t))
 
 fun poly_ize_upto(t :: Type, allowed_tvars :: List, orig :: Syntax):
-  let tvars = extract_tvars(t, [], Set())
-  match removeAll(tvars, allowed_tvars)
-  | []: poly_ize(t, tvars)
-  | [t :: TVar, ...]:
-      let context = MutableMap.by(===)()
-      let tstr = type_to_string(context)
-      syntax_meta.error("unguarded type variable" +& if [] == List.rest([t, ...]) | "" | "s", orig)
-
-fun removeAll(as :: List, bs :: List):
-  match bs
-  | []: as
-  | [b, bs, ...]: removeAll(List.remove(as, b), [bs, ...])
+  let tvars = extract_tvars(t)
+  let free_tvars :~ Set:
+    for values(tvars :~ Set = tvars) (tvar: allowed_tvars):
+      tvars.remove(tvar)
+  unless free_tvars.length() == 0
+  | syntax_meta.error("unguarded type variable" +& if free_tvars.length() == 1 | "" | "s", orig)
+  poly_ize(t, tvars.to_list())
 
 fun at_source(t, expr):
   recur loop (t = Type.clone(t)):
@@ -563,7 +552,7 @@ fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
                           reason = #false,
                           ~is_function_call: is_function_call = #false):
   let exprs :: List:
-    let ht = MutableMap()
+    let ht = MutableMap{}
     extract_srcs_do(main_expr, ht)
     extract_srcs_do(a, ht)
     extract_srcs_do(b, ht)
@@ -572,7 +561,7 @@ fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
     if main_expr
     | [main_expr, & exprs.remove(main_expr)]
     | exprs
-  let context = MutableMap.by(===)()
+  let context = MutableMap.by(===){}
   throw Exn.Fail.Syntax((if base.#{error-print-source-location}() && main_expr
                          | let loc = Syntax.srcloc(main_expr)
                            let s :~ String = if loc | Srcloc.to_report_string(loc) | ""
@@ -812,41 +801,39 @@ fun occurs(a :: Type, b :: Type):
         occurs(a, arg)
   | ~else #false
 
-fun extract_tvars(t, poly_context :: List, base_tvars :: Set):
-  let tvars:
-    recur loop(t = t) :~ Set:
-      match t
-      | t :: TVar:
-          cond
-          | t.non_poly:
-              let non_poly :: List = t.non_poly
-              let c1 = poly_context.length()
-              let c2 = non_poly.length()
-              if (c1 < c2) && (poly_context == non_poly.drop(c2-c1))
-              | {t}
-              | Set.by(===){}
-          | base_tvars[t]:
-              Set.by(===){}
-          | ~else:
-              {t}
-      | t :: Arrow:
-          loop(t.result).append(& t.args.map(loop))
-      | t :: ListOf:
-          loop(t.element)
-      | t :: BoxOf:
-          loop(t.element)
-      | t :: MapOf:
-          loop(t.key) ++ loop(t.val)
-      | t :: ParameterOf:
-          loop(t.element)
-      | t :: TupleOf:
-          Set.append(Set{}, & t.args.map(loop))
-      | t :: Datatype:
-          Set.append(Set{}, & t.args.map(loop))
-      | t :: Poly:
-          loop(t.type).remove(t.tvar)
-      | ~else: Set.by(===){}
-  tvars.to_list()
+fun extract_tvars(t, poly_context :: List = [], base_tvars :: Set = Set.by(===){}) :~ Set:
+  recur loop(t = t) :~ Set:
+    match t
+    | t :: TVar:
+        cond
+        | t.non_poly:
+            let non_poly :: List = t.non_poly
+            let c1 = poly_context.length()
+            let c2 = non_poly.length()
+            if (c1 < c2) && (poly_context == non_poly.drop(c2-c1))
+            | Set.by(===){t}
+            | Set.by(===){}
+        | base_tvars[t]:
+            Set.by(===){}
+        | ~else:
+            Set.by(===){t}
+    | t :: Arrow:
+        loop(t.result).append(& t.args.map(loop))
+    | t :: ListOf:
+        loop(t.element)
+    | t :: BoxOf:
+        loop(t.element)
+    | t :: MapOf:
+        loop(t.key) ++ loop(t.val)
+    | t :: ParameterOf:
+        loop(t.element)
+    | t :: TupleOf:
+        Set.by(===){}.append(& t.args.map(loop))
+    | t :: Datatype:
+        Set.by(===){}.append(& t.args.map(loop))
+    | t :: Poly:
+        loop(t.type).remove(t.tvar)
+    | ~else: Set.by(===){}
 
 fun unify_defn_do(expr, a, b):
   match a
