@@ -467,15 +467,15 @@ fun instantiate_at(t :: Type, args :: List.of(Type)):
   recur loop (t = t, orig_poly :~ List = []):
     match t
     | t :: Poly:
-        loop(t.type, [t.tvar, & orig_poly])
+        loop(t.type, orig_poly.add(t.tvar))
     | ~else:
         unless orig_poly.length() == args.length()
         | error("constructor abstraction mismatch")
-        recur loop (t = t, orig = orig_poly.reverse(), new = args):
+        recur loop (t = t, orig = orig_poly, new :~ List = args):
           match orig
           | []: t
           | [o, & orig]:
-              loop(instance(o, List.first(new))(t), orig, List.rest(new))
+              loop(instance(o, new.first)(t), orig, new.rest)
 
 fun create_defn(t :: Type, poly_context, base_tvars, tvars):
   let p = poly_ize_wrt(t, poly_context, base_tvars)
@@ -492,12 +492,12 @@ fun poly_ize_wrt(t :: Type, poly_context, base_tvars):
   poly_ize(t, extract_tvars(t, poly_context, base_tvars))
 
 fun poly_ize(t :: Type, tvars :: List):
-  recur loop (tvars = tvars.reverse(),
-              t :~ Type = t):
+  let src = t.src
+  recur loop(tvars = tvars):
     match tvars
     | []: t
     | [tvar, & tvars]:
-        loop(tvars, Poly(t.src, tvar, t))
+        Poly(src, tvar, loop(tvars))
 
 fun poly_ize_upto(t :: Type, allowed_tvars :: List, orig :: Syntax):
   let tvars = extract_tvars(t, [], Set())
