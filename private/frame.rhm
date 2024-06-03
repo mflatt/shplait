@@ -124,8 +124,8 @@ meta:
 
   fun register_submodule(stx):
     let fr = get_current_frame()
-    fr.submods := [syntax_meta.flip_introduce(stx), & fr.submods]
+    fr.submods := fr.submods.add(syntax_meta.flip_introduce(stx))
 
   fun get_submodules():
     let fr = get_current_frame()
-    fr.submods.reverse()
+    fr.submods
