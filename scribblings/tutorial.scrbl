@@ -5,7 +5,7 @@
     meta_label:
       only_meta 0:
         shplait open
-    "eval.rhm".eval
+    "eval.rhm" open
     "spacer.rhm" open
     scribble/private/typeset_meta
     lib("scribble/core.rkt") as s_core
@@ -25,7 +25,11 @@
 @(def demo_link:
     @elem(~style: s_core.style(#false, PairList[html_prop.#{link-resource}(demo_rhm)])){@filepath{demo.rhm}})
 
-@(macro 'interaction($term, ...)': 'examples(~eval: eval, $term, ...)')
+@(def eval = make_eval())
+@(def check_eval = make_eval(~attach: #false))
+@(macro
+  | 'interaction(~eval: $eval, $g, ...)': 'examples(~eval: $eval, $g, ...)'
+  | 'interaction($g, ...)': 'examples(~eval: eval, $g, ...)')
 
 @(def quotes = @elem{@litchar{'}…@litchar{'}})
 @(def brackets = @elem{@litchar{[}…@litchar{]}})
@@ -932,6 +936,7 @@ the second expression is the expected result of the call. The
 message (and then continues, anyway) if the test fails.
 
 @interaction(
+  ~eval: check_eval
   ~defn:
     fun taste(s):
       cond
@@ -957,6 +962,7 @@ The test checks that the exception's error message contains the
 string.
 
 @interaction(
+  ~eval: check_eval
   ~defn:
     fun always_fail(n :: Int) :: Int:
       error(#'always_fail, "we're not actually returning a number")
@@ -1686,3 +1692,6 @@ by position.
 )
 
 @// ----------------------------------------
+
+@(close_eval(eval))
+@(close_eval(check_eval))
