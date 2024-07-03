@@ -1263,7 +1263,7 @@ needs parentheses.
 )
 
 This kind of @quotes form is called a @defterm{template}, because it is
-instantiated to a synatx object each time it is evaluated. If the
+instantiated to a syntax object each time it is evaluated. If the
 template is put inside a function, it can generate a different syntax
 object each time.
 
@@ -1308,7 +1308,7 @@ that assignment of variables allows @rhombus('3 * 4') to match
 @rhombus('$left * $right'). The two matched syntax objects were then
 returned in a list with @rhombus([left, right]), but @rhombus(left) and
 @rhombus(right) could be used in other ways. Another way to use them,
-for example, is to put them back into a new synatx object through a
+for example, is to put them back into a new syntax object through a
 template.
 
 @interaction(
@@ -1397,6 +1397,22 @@ the same as a list, but it corresponds to a list. Use the function
   ~repl:
     get_call_args('f(1, 2, 3 + 4)')
     get_call_args('f()')
+)
+
+A pattern can have multiple @rhombus($) escapes for the same
+@rhombus(...), and variables bound by the escapes can be used separately
+in templates; they don't have to be used in exactly the same way they
+appear in the pattern. For example, after matching repetitions of
+@rhombus('$arg :: $ty'), the @rhombus(arg) and @rhombus(ty) variables
+separately stand for a sequence of parts before @rhombus(::) and a
+sequence of parts after @rhombus(::).
+
+@interaction(
+  ~repl:
+    match 'fun(x :: Int, y :: Boolean)'
+    | 'fun ($arg :: $ty, ...)':
+        [syntax_to_list('[$arg, ...]'),
+         syntax_to_list('[$ty, ...]')]
 )
 
 @// ----------------------------------------
