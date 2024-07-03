@@ -40,7 +40,7 @@ defn.macro 'defn_or_delay_void($e)':
   | '$(d :: defn_meta.Group)':
       e
   | ~else:
-      '(delay(unify ~expr $(t_s.type_to_syntax(t.Vd(#false))):
+      '(delay(unify ~expr $(t_s.type_to_syntax(t.BodyVd(#false))):
                 ~body:
                   $e))'
 

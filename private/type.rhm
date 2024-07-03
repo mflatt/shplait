@@ -7,7 +7,7 @@ import:
 export:
   Type
   TVar
-  Bool Num Sym Shrub Vd Str Chr
+  Bool Num Sym Shrub Vd BodyVd Str Chr
   Arrow ListOf BoxOf TupleOf ArrayOf
   Datatype OpaqueDatatype MapOf ParameterOf
   ParenOf
@@ -93,9 +93,11 @@ class_c Bool(): extends Type
 class_c Num(): extends Type
 class_c Sym(): extends Type
 class_c Shrub(): extends Type
-class_c Vd(): extends Type
+class_c Vd(): nonfinal; extends Type
 class_c Str(): extends Type
 class_c Chr(): extends Type
+
+class_c BodyVd(): extends Vd
 
 class Arrow(args :: List.of(Type), result :: Type):
   extends Type
@@ -210,6 +212,7 @@ fun to_expression(type :: Type, tvar_names :: Map = Map.by(===){}):
     | _ :: Num: 'Num(#false)'
     | _ :: Sym: 'Sym(#false)'
     | _ :: Shrub: 'Shrub(#false)'
+    | _ :: BodyVd: 'BodyVd(#false)'
     | _ :: Vd: 'Vd(#false)'
     | _ :: Str: 'Str(#false)'
     | _ :: Chr: 'Chr(#false)'
@@ -575,6 +578,11 @@ fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
                           +& type_to_string(context)(a)
                           +& " vs. "
                           +& type_to_string(context)(b)
+                          +& (if (a is_a BodyVd) || (b is_a BodyVd)
+                              | "\n  possible reason:"
+                                  ++ "\n   expression that's intended as a result is"
+                                  ++ "\n   not at the end of a function or block body"
+                              | "")
                           +& (match base.#{error-print-source-location}() && all_exprs
                               | [] || #false: ""
                               | [expr :~ Syntax, ...]:

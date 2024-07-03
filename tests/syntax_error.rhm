@@ -195,3 +195,17 @@ check_eval:
   trace:
     length([1,2,3])
   ~raises "trace: missing function expression"
+
+check_eval:
+  def x =
+  ~raises "expression missing after `=` for definition"
+
+check_eval:
+  def x = y = 2
+  ~raises "cannot have second `=` for definition"
+
+check_eval:
+  fun f(x):
+    x + 1
+    x + 2
+  ~raises "not at the end of a function or block body"
