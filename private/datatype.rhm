@@ -144,7 +144,7 @@ decl.macro
                             $var_ty_sym)')
       ...
       value.macro '$var_id $('$') tail $('...')':
-        parse_constructor_app_value('$dty_sym', '$('$') tail $('...')')
+        parse_constructor_app_value('$dty_sym', '$('$') tail $('...')', $([field.id, ...].length()))
       ...
       »'
 
@@ -173,12 +173,12 @@ meta:
                      [f.parse_type(arg_g, '', arg_g, tvars_box),
                       ...])
 
-  fun parse_constructor_app_value(dty_sym, tail):
+  fun parse_constructor_app_value(dty_sym, tail, arg_n):
     match tail
     | '($arg, ...) $tail ...':
         let dty :: t.Datatype = t_s.syntax_to_type(dty_sym)
         cond
-        | dty.args.length() != [arg, ...].length():
+        | arg_n != [arg, ...].length():
             '#false'
         | ~else:
             match '($arg, ...)':

@@ -1,0 +1,62 @@
+#lang shplait
+
+// https://belle.sourceforge.net/doc/okasaki-phd.pdf
+// * fig 8.2 Implicit Deque
+
+fun force(thk):
+  thk()
+
+type D(?a):
+| zero()
+| one(a :: ?a)
+| two(a :: ?a, b :: ?a)
+| three(a :: ?a, b :: ?a, c :: ?a)
+
+type DQ(?a):
+| shallow(a :: D(?a))
+| deep(f :: D(?a), m :: () -> DQ(?a * ?a), r :: D(?a))
+
+def mt_id = shallow(zero())
+
+fun dcons(x, dd):
+  match dd
+  | zero(): one(x)
+  | one(a): two(x, a)
+  | two(a, b): three(x, a, b)
+  | three(a, b, c): error(#'dcons, "invariant")
+
+fun dhead(dd):
+  match dd
+  | zero(): error(#'dhead, "empty")
+  | one(a): a
+  | two(a, b): a
+  | three(a, b, c): a
+
+fun id_cons(x :: ?a, id :: DQ(?a)) :: DQ(?a):
+  error(#'cons, "oops")
+  match id:
+  | shallow(dd):
+      match dd
+      | three(a, b, c): deep(two(x, a),
+                             error(#'cons, "x"),
+                             #//
+                             fun (): mt_id,
+                             two(b, c))
+      | ~else: shallow(dcons(x, dd))
+  | deep(f, m, r):
+      match f
+      | three(a, b, c):
+          deep(two(x, a),
+               (fun ():
+                  def arg :: ?a * ?a = values(b, c)
+                  def d1 :: DQ(?a * ?a) = force(m)
+                  def d2 :: DQ(?a * ?a) = id_cons(arg, d1)
+                  d2),
+               r)
+      | ~else: deep(dcons(x, f), m, r)
+
+fun id_head(id):
+  match id
+  | shallow(dd): dhead(dd)
+  | deep(f, m, r): dhead(f)
+

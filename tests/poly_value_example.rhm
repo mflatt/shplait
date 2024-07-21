@@ -1,0 +1,9 @@
+#lang shplait
+
+type D(?a):
+| zero()
+
+def z = zero()
+
+def a :: D(Int) = z
+def b :: D(String) = z
