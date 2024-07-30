@@ -1,15 +1,15 @@
 #lang racket/base
 
-;; `scribble/rhombus` needs to provide support for implementing this
+;; `rhombus/scribble` needs to provide support for implementing this
 ;; in Rhombus
 
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/property)
          rhombus/parse
-         (only-in scribble/rhombus/manual
+         (only-in rhombus/scribble/manual
                   rhombusblock_etc)
-         scribble/private/typeset-doc)
+         rhombus/scribble/private/typeset-doc)
 
 (provide (for-space rhombus/doc
                     type))

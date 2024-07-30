@@ -1,7 +1,7 @@
 #lang rhombus/static/and_meta
 
 import:
-  scribble/rhombus/spacer
+  rhombus/scribble/spacer
 
 export:
   only_space spacer.typeset:

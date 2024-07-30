@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 @(import:
     rhombus/runtime_path
     rhombus/meta open
@@ -7,7 +7,7 @@
         shplait open
     "eval.rhm" open
     "spacer.rhm" open
-    scribble/private/typeset_meta
+    rhombus/scribble/private/typeset_meta
     lib("scribble/core.rkt") as s_core
     lib("scribble/html-properties.rkt") as html_prop
     "tutorial_url.rhm" open

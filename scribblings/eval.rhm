@@ -1,6 +1,6 @@
 #lang rhombus/static/and_meta
 import:
-  scribble/rhombus/manual as s
+  rhombus/scribble/manual as s
   lib("racket/base.rkt") as racket
   lib("racket/sandbox.rkt").#{call-in-sandbox-context}
 
