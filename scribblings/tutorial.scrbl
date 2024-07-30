@@ -7,7 +7,6 @@
         shplait open
     "eval.rhm" open
     "spacer.rhm" open
-    rhombus/scribble/private/typeset_meta
     lib("scribble/core.rkt") as s_core
     lib("scribble/html-properties.rkt") as html_prop
     "tutorial_url.rhm" open
@@ -35,11 +34,8 @@
 @(def brackets = @elem{@litchar{[}…@litchar{]}})
 
 @(defn.macro 'meta_var $id':
-    'meta.bridge $(typeset_meta.in_space(id)):
-       typeset_meta.make_Transformer(
-         fun (stx):
-           'elem(rhombus($id, ~var))'
-       )')
+    '«rhombus_typeset '$id':
+        'elem(rhombus($id, ~var))'»')
 @(meta_var variant_name_1)
 @(meta_var variant_name_2)
 @(meta_var field_name_1)
