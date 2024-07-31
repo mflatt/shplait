@@ -1513,8 +1513,10 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
  functions report whether a list is nonempty or empty, respectively.
 
  The @rhombus(first) and @rhombus(rest) functions raise an exception when
- given an empty list. All of these functions take constant time (i.e.,
- independent on the length of @rhombus(lst)).
+ given an empty list. The @rhombus(cons), @rhombus(first), and
+ @rhombus(rest) functions take @math{O(log n)} time for a list of length
+ @math{n}, and @rhombus(is_cons) and @rhombus(is_empty) take constant
+ time.
 
 @examples(
   ~eval: eval
@@ -1535,8 +1537,7 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
   fun length(lst :: Listof(?a)) :: Int
 ){
 
- Returns the number of elements in a list. This function takes time
- proportional to the length of @rhombus(lst).
+ Returns the number of elements in a list. This function takes constant time.
 
 @examples(
   ~eval: eval
@@ -1552,8 +1553,8 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 ){
 
  Returns the @rhombus(i)th element of a list, counting from
- @rhombus(0).  This function takes time
- proportional to @rhombus(i)
+ @rhombus(0). This function takes @math{O(log n)} time for a list of length
+ @math{n}.
 
 @examples(
   ~eval: eval
@@ -1570,8 +1571,8 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 ){
 
  Produces a list that has the items of the first given list followed by
- the items of the second given list. This function takes time proportional
- to the length of @rhombus(lst1).
+ the items of the second given list. This function takes
+ takes @math{O(log n)} time for a result list of length @math{n}.
 
 @examples(
   ~eval: eval
@@ -1590,8 +1591,8 @@ Using square brackets implicitly uses the @rhombus(#%brackets) form, but
 ){
 
  Returns a list that has the same elements as the given one, but in
- reverse order. This function takes time proportional
- to the length of @rhombus(lst).
+ reverse order. This function takes @math{O(n)} time for a list of
+ length @math{n}.
 
 @examples(
   ~eval: eval

@@ -413,10 +413,9 @@ creating a new list with all of the elements:
   cons("apple", ["banana"])
 )
 
-The @rhombus(cons) operation is constant-time, because a list is
-internally represented as a singly linked list, and @rhombus(cons)
-simply creates a new cell that contains the new value and then points
-to the existing list.
+The @rhombus(cons) operation takes @math{O(log n)} time, because a list is
+internally represented as a tree, and @rhombus(cons)
+creates a new tree that shares parts of the existing one.
 
 If you have two lists, instead of one element and a list, you can
 combine the lists with @rhombus(append):
