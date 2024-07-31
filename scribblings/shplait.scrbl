@@ -2475,6 +2475,7 @@ inside another module.
     $id
     $id / $module_path
     lib($module_string)
+    $relative_path_string
     file($path_string)
 
   impo.macro 'open: $module_path; ...'
@@ -2493,6 +2494,18 @@ inside another module.
  @rhombus(open, ~impo) is used for the module, then its exported names
  can be used directly, without a prefix.
 
+ The @rhombus(relative_path_string) form allows only characters in a
+ file name that are especially portable: @litchar{a}-@litchar{z},
+ @litchar{A}-@litchar{Z}, @litchar{0}-@litchar{9}, @litchar{-},
+ @litchar{+}, @litchar{_}, @litchar{/}, and @litchar{.}. Use the
+ @rhombus(file(path_string)) form when a more general, platform-specific
+ @rhombus(path_string) is needed.
+
+ Some operating systems, such as Windows or macOS, may hide file
+ extensions when listing files. A @rhombus(relative_path_string) or
+ @rhombus(path_string) must include a file's extension, if any, which is
+ typically @filepath{.rhm}.
+ 
 }
 
 @doc(
