@@ -317,7 +317,7 @@ fun add_brackets(lst): [#'brackets, & from_slist(lst).map(fun (elem): SyntaxWrap
 
 
 defwrap syntax_read_wrap syntax_read():
-  let stx = #{parse-all}(Port.current_input())
+  let stx = #{parse-all}(Port.Input.current())
   // need to remove `top`
   SyntaxWrap(Syntax.make_sequence(List.rest(Syntax.unwrap(stx))))
   
