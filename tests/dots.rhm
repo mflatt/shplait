@@ -1,0 +1,8 @@
+#lang shplait
+
+fun f():
+  ....
+
+check:
+  f()
+  ~raises "reached an incomplete expression"

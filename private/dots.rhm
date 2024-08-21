@@ -30,4 +30,4 @@ expr.macro
 fun reached_dots(op :: Syntax):  
   throw Exn.Fail.Syntax("reached an incomplete expression",
                         Continuation.current_marks(),
-                        [op.relocate_span([op])])
+                        PairList[op.relocate_span([op])])
