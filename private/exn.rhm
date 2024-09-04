@@ -54,7 +54,7 @@ expr.macro 'let_cc $(id :: Identifier):
 expr.macro 'capture_noncomposable $id: $body':
   '#{call/cc}(fun ($id): $body)'
 
-defwrap wrap_error error(sym, str): error(dynamic_force(sym),
+defwrap wrap_error error(sym, str): error(~who: dynamic_force(sym),
                                           dynamic_force(str))
 // `print` and `println` don't need forcing wrappers of lazy thunks,
 // because printing already does that

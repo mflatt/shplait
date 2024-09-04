@@ -42,7 +42,7 @@ fun | from_slist([]) :~ List: []
     | from_slist(v) :~ List:
         let fv = dynamic_force(v)
         if fv === v
-        | error(#'from_slist, "bad: " +& v)
+        | error(~who: #'from_slist, "bad: " +& v)
         | from_slist(fv)
 
 module rep:
@@ -73,10 +73,10 @@ expr.macro 'brackets $(elems && '[$(elem :: expr_meta.Parsed), ...]')':
                 t.ListOf(elems, tv))
 
 defwrap wrap_first first(l): match dynamic_force(l)
-                             | []: error(#'first, "failed on empty list")
+                             | []: error(~who: #'first, "failed on empty list")
                              | SPair(f, r): f
 defwrap wrap_rest rest(l): match dynamic_force(l)
-                           | []: error(#'rest, "failed on empty list")
+                           | []: error(~who: #'rest, "failed on empty list")
                            | SPair(f, r): r
 defwrap wrap_cons cons(a, l): SPair(a, l)
 

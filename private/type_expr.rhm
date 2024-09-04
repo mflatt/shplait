@@ -43,7 +43,7 @@ space.enforest type_expr:
     fun pack(t :: t.Type):
       let pk = _pack(t_s.type_to_syntax(t))
       if t.src is_a Syntax
-      | Syntax.relocate(pk, t.src)
+      | Syntax.relocate_span(pk, [t.src])
       | pk
     fun unpack(stx):
       t_s.syntax_to_type(_unpack(stx))

@@ -202,8 +202,8 @@ expr.macro 'reference_syntax($(arg :: expr_meta.Parsed))':
 fun check_single_group(stx_in):
   let stx = SyntaxWrap.raw(stx_in)
   unless stx is_a Group
-  | error("syntax object does not have a single group\n"
-            +& "  syntax object: " +& stx) // FIXME: print syntax object as value
+  | error("syntax object does not have a single group",
+          error.val(~label: "syntax object", stx))
   stx
 
 space.transform syntax_var:
@@ -251,8 +251,9 @@ expr.macro 'reference_syntax_pattern_var($id, $depth)':
                         id)
 
 fun oops(who, stx, what):
-  error(who, "syntax object does not wrap a " +& what +& "\n"
-               +& "  syntax object: " +& stx)
+  error(~who: who,
+        "syntax object does not wrap a " +& what,
+        error.val(~label: "syntax object", stx))
 
 defwrap wrap_syntax_split syntax_split(s):
   let s = SyntaxWrap.raw(dynamic_force(s))

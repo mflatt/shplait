@@ -251,7 +251,7 @@ fun to_expression(type :: Type, tvar_names :: Map = Map.by(===){}):
                 'Datatype(#false, 'unknown', [])')
     | type :: NonPolyDefn:
         loop(type.base)
-    | ~else: error(#'to_expression,
+    | ~else: error(~who: #'to_expression,
                    "got confused, trying to generate an expression for " +& type)
 
 fun gen_tvar(src, is_arrow = #false):
@@ -340,7 +340,7 @@ fun type_to_string(tmap :: MutableMap):
           | ~else loop(type.base)
       | type :: NonPolyDefn:
           loop(type.base)
-      | ~else: error(#'to_string,
+      | ~else: error(~who: #'to_string,
                      "got confused, trying to generate a string for " +& type)
 
 fun non_poly_do(t :: Type, poly_context :: List):

@@ -38,8 +38,8 @@
 
 (define-syntax (shplait-module-begin stx)
   (syntax-parse stx
-    #:datum-literals (top)
-    [(_ (top form-in ...))
+    #:datum-literals (multi)
+    [(_ (multi form-in ...))
      #:with (config (_ form ...)) (treelist->list
                                    (parse_and_apply_configure
                                     (list->treelist
@@ -60,7 +60,7 @@
           (find_type_definitions #'(block form ...))
           (begin0
             (local-expand #'(rhombus:#%module-begin
-                             (top
+                             (multi
                               (group rhombus:module #:early configure_runtime #:lang rhombus
                                      (block
                                       (group import shplait/runtime_config)))
@@ -81,8 +81,8 @@
 
 (define-syntax (shplait-top-interaction stx)
   (syntax-parse stx
-    #:datum-literals (top)
-    [(_ . (top form ...))
+    #:datum-literals (multi)
+    [(_ . (multi form ...))
      (configure_from_saved)
      (find_type_definitions #'(block form ...))
      ;; trampoline to deal with `begin` sequences and `local-expand`:
@@ -90,7 +90,7 @@
          (step-top-interaction
           #t
           (rhombus:#%top-interaction
-           . (top form ...))))]))
+           . (multi form ...))))]))
 
 (define-syntax (step-top-interaction stx)
   (syntax-parse stx

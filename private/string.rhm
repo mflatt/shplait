@@ -23,10 +23,11 @@ defwrap wrap_substring substring(a, start, end):
   let end :~ Int = dynamic_force(end)
   if (start >= 0) && (end >= start) && (end <= s.length())
   | s.substring(start, end)
-  | error(#'substring, ("bad range for string\n"
-                          +& "  string: " +& to_string(s, ~mode: #'expr) +& "\n"
-                          +& "  start: "  +& start +& "\n"
-                          +& "  end: "  +& end))
+  | error(~who: #'substring,
+          "bad range for string",
+          error.val(~label: "string", s),
+          error.val(~label: "start", start),
+          error.val(~label: "end", end))
 
 // `to_string` doesn't need to force lazy thunks,
 // because printing already does that

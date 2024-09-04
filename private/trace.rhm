@@ -89,7 +89,7 @@ fun call_with_tracing(v, thunk):
         ~finally:
           swap()
   | ~else:
-      error(#'trace, "not a traceable procedure: " +& to_string(v, ~mode: #'expr))
+      error(~who: #'trace, "not a traceable procedure: " +& to_string(v, ~mode: #'expr))
 
 expr.macro 'trace $fun_term ...: $(body :: expr_meta.Parsed)':
   ~all_stx stx

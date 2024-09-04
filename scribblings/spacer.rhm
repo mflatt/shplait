@@ -63,7 +63,7 @@ meta:
   fun adjust_arg(arg, context, esc):
     match arg
     | '$name ... $(op && '::') $ty ...':
-        '$name ... $(literal(op)) $(spacer.adjust_sequence('$ty ...', #'#{shplait/type}, esc))'.relocate(arg)
+        '$name ... $(literal(op)) $(spacer.adjust_sequence('$ty ...', #'#{shplait/type}, esc))'.relocate_group(arg)
     | ~else:
         arg
 
@@ -95,7 +95,7 @@ meta:
     match arg
     | '$(vals_id && 'values') $(parens && '($val_arg, ...)')':
         let new_args = '($(adjust_arg(val_arg, context, esc)), ...)'.relocate(parens)
-        '$vals_id $new_args'.relocate(arg)
+        '$vals_id $new_args'.relocate_group(arg)
     | ~else:
         adjust_arg(arg, context, esc)
 
