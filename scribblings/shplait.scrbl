@@ -168,7 +168,7 @@ and new types can be defined with @rhombus(type).
   decl.macro 'type $id $maybe_type_args = $as_type'
   decl.macro 'type $id $maybe_type_args
               | $variant_id($field_id :: $field_type, ...)
-              | ...'              
+              | ...'
   grammar maybe_type_args:
     ϵ
     (? $of_id, ? $of_id, ...)
@@ -228,7 +228,7 @@ and new types can be defined with @rhombus(type).
     | rectangle(w, h): w*h
 )
 
-  As an alternative, @rhombus(is_a) can identify a variant, and 
+  As an alternative, @rhombus(is_a) can identify a variant, and
   @rhombus(variant_id.field_id) can be used as an accessor function.
   The accessor takes an instance of the variant and
   extracts the corresponding field value, and it raises an exception when
@@ -344,7 +344,7 @@ redefining or shadowing the names could easily create confusion:
                 $body'
   defn.macro 'def values($typed_id, ...) = $expr'
   defn.macro 'def values($typed_id, ...):
-                $body'  
+                $body'
   defn.macro 'def mutable $typed_id = $expr'
   defn.macro 'def mutable $typed_id:
                 $body'
@@ -362,7 +362,7 @@ redefining or shadowing the names could easily create confusion:
     def x2 :: Int = 2
   ~repl:
     x
-    x2  
+    x2
   ~defn:
     ~error:
       def s :: String = 0
@@ -419,7 +419,7 @@ redefining or shadowing the names could easily create confusion:
 @doc(
   ~nonterminal:
     fun_expr: block expr
-    arg_expr: block expr  
+    arg_expr: block expr
   defn.macro 'fun $id ($typed_id, ...) $maybe_type:
                 $body'
   expr.macro 'fun ($typed_id, ...) $maybe_type:
@@ -485,7 +485,7 @@ redefining or shadowing the names could easily create confusion:
 
 @doc(
   ~nonterminal:
-    arg_type: block type    
+    arg_type: block type
     result_type: block type
   type '$arg_type -> $result_type'
   type '($arg_type, ...) -> $result_type'
@@ -728,7 +728,7 @@ redefining or shadowing the names could easily create confusion:
                 if f > r_max | f | r_max
       | []: error(#'max_element, "empty list")
   ~repl:
-    max_element([1, 20, 3])      
+    max_element([1, 20, 3])
 )
 
  In the syntax-pattern form of @rhombus(match), @rhombus(target_expr)
@@ -838,7 +838,7 @@ redefining or shadowing the names could easily create confusion:
 ){
 
  Returns the same result as @rhombus(body), but binds @rhombus(id) to a
- function that represents the @deftech{contination} of @rhombus(let_cc)
+ function that represents the @deftech{continuation} of @rhombus(let_cc)
  expression. If @rhombus(id) is called, whether before or after
  @rhombus(body) is returned, the continuation of the call is discarded
  and replaced with the continuation represented by @rhombus(id).
@@ -848,7 +848,7 @@ redefining or shadowing the names could easily create confusion:
   let_cc k:
     1 + k(2)
   10 + (let_cc k:
-          1 + k(2))  
+          1 + k(2))
 )
 
 }
@@ -929,7 +929,7 @@ redefining or shadowing the names could easily create confusion:
     trace nontail_sum:
       nontail_sum([1, 2, 3])
     trace tail_sum:
-      nontail_sum([1, 2, 3])                                
+      nontail_sum([1, 2, 3])
 )
 
 }
@@ -957,7 +957,7 @@ redefining or shadowing the names could easily create confusion:
     ....:
       maybe return []?
       maybe call error?
-)    
+)
 
 
  The @rhombus(....) operator also can be used as an ``unknown'' type
@@ -969,7 +969,7 @@ redefining or shadowing the names could easily create confusion:
   ~error:
     def x :: .... = 1
 )
-    
+
 }
 
 @doc(
@@ -1715,7 +1715,7 @@ Like a @tech{list}, an @deftech{array} has a sequence of elements of a
 uniform type. Unlike a list, any element of the array can be accessed in
 constant time using square-bracket indexing, as in @rhombus(a[0]).
 Further unlike a list, an array is mutable, and an array element can be
-changed by commbining square brackets with @rhombus(:=) for assignment,
+changed by combining square brackets with @rhombus(:=) for assignment,
 as in @rhombus(a[0] = 1).
 
 An array is created with @rhombus(Array), such as
@@ -1853,7 +1853,8 @@ An @deftech{option} encapsulates the idea of a computation that may
 fail.
 
 @doc(
-  type 'Optionof($type)'){
+  type 'Optionof($type)'
+){
 
  The type of an option that optionally holds a @rhombus(type) value.
 
@@ -1941,7 +1942,7 @@ types. A tuple of one element is equivalent to just the element.
  is implicitly used whenever a Shplait program uses parentheses in a type
  position.
 
- Parentheses are normally used for mere grouping, but emprt parentheses
+ Parentheses are normally used for mere grouping, but empty parentheses
  form the type of an empty tuple.
 
 }
@@ -1979,7 +1980,7 @@ normally not written.
   ~nonterminal:
     key_expr: block expr
     val_expr: block expr
-  expr.macro '#%braces { $key_expr: $val_expr, ... }'  
+  expr.macro '#%braces { $key_expr: $val_expr, ... }'
 ){
 
  Produces an immutable @tech{map} whose keys are the values produced by
@@ -2004,7 +2005,7 @@ normally not written.
   ~nonterminal:
     key_expr: block expr
     val_expr: block expr
-  expr.macro 'MutableMap{ $key_expr: $val_expr, ... }'  
+  expr.macro 'MutableMap{ $key_expr: $val_expr, ... }'
 ){
 
  Produces a mutable @tech{map} whose keys and values are initially the
@@ -2218,7 +2219,7 @@ Rules for @rhombus($, ~datum) and @litchar{...} in patterns:
  to a single syntax object, but it is instead bound as a
  @deftech{repetition} that holds each matched term. A repetition can only
  be referenced through a corresponding escape in a @tech{template}.
- Ellipses can be nested in a pattern, and a repettion must be used in a
+ Ellipses can be nested in a pattern, and a repetition must be used in a
  template with the same amount of nesting as in its pattern.
 
  @examples(
@@ -2329,7 +2330,7 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
  check for different kinds of primitive values as representations.
 
  The @rhombus(syntax_is_list) function checks whether a syntax object
- would match the pattern @rhombus('[$elem ..., ...]'), returning 
+ would match the pattern @rhombus('[$elem ..., ...]'), returning
  @rhombus(#true) if so and @rhombus(#false) otherwise.
 
 @examples(
@@ -2505,7 +2506,7 @@ inside another module.
  extensions when listing files. A @rhombus(relative_path_string) or
  @rhombus(path_string) must include a file's extension, if any, which is
  typically @filepath{.rhm}.
- 
+
 }
 
 @doc(
@@ -2562,7 +2563,7 @@ inside another module.
  followed by a match to one of the @rhombus(pattern)s, or defines @rhombus(op)
  as a macro that matches an expression followed by a use of @rhombus(op)
  and a match to one of the @rhombus(pattern)s. In each
- case, the expansion of the macro is given by 
+ case, the expansion of the macro is given by
  @rhombus(template). A @rhombus(pattern) or @rhombus(template) can
  include uses of @rhombus($, ~datum) to bind and reference pattern
  variables, including @rhombus(left_id) as a pattern variable for
@@ -2641,7 +2642,7 @@ a few small exceptions:
 
 @verbatim(~indent: 2){
        # let rec f = fun x -> x
-             and h = fun y -> f 0 
+             and h = fun y -> f 0
              and g = fun z -> f "x";;
        This expression has type string but is here used with type int
 }

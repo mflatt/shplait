@@ -800,7 +800,7 @@ When writing @rhombus(animal_color), what if we forget the
 help us detect those problems. If we use @rhombus(match), however, the
 type checker can help more.
 
-The general form of a @rhombus(match) expresison is
+The general form of a @rhombus(match) expression is
 
 @rhombusblock(
   match #,(@rhombus(val_expr, ~var)):
@@ -868,7 +868,7 @@ version of @rhombus(animal_color) uses @rhombus(cond). The
       | []: #false
       | cons(item, rst_items):
           item == "milk" || got_milk(rst_items)
-  ~repl:                   
+  ~repl:
     got_milk([])
     got_milk(["cookies", "milk"])
 )
@@ -1076,7 +1076,7 @@ by using @rhombus(fun) without a name before the arguments:
 @interaction(
   map(fun (n):
         n + 6,
-      [1, 2, 3])  
+      [1, 2, 3])
 )
 
 The form @rhombus(fun (n): n + 6) means ``the function that
@@ -1245,7 +1245,7 @@ templates, as we see in the next section.
 @section(~tag: "pattern+template"){Syntax Templates and Patterns}
 
 In a @quotes expression for a syntax object, @rhombus($) acts as an
-escape back to an espression that is evaluated as a Shplait expression.
+escape back to an expression that is evaluated as a Shplait expression.
 That is, instead of quoting the escaped expression, the @emph{value} of
 the expression is substituted into the syntax object. The @rhombus($)
 escapes only the immediately following term, so a complicated expression
@@ -1308,7 +1308,7 @@ template.
 
 @interaction(
   ~defn:
-    fun commute(exp):      
+    fun commute(exp):
       match exp
       | '$left * $right':
           '$right * $left'
@@ -1346,7 +1346,7 @@ because the @rhombus(1), @rhombus(2), and @rhombus(3) are in different
 groups. To support more general sequence matching, patterns and
 templates recognize @litchar{...} to mean zero or more repetitions of
 the group or term before the @litchar{...}. So, the pattern
-@rhombus('f($arg, ...)') does match @rhombus('f(1, 2, 3)'). 
+@rhombus('f($arg, ...)') does match @rhombus('f(1, 2, 3)').
 
 @interaction(
   ~defn:
@@ -1445,7 +1445,7 @@ To extract the component values from a tuple, match the tuple with
 names using @rhombus(def values).
 
 @interaction(
-  def values(action, response) = consume("beets")  
+  def values(action, response) = consume("beets")
   action
   response
 )
@@ -1558,7 +1558,7 @@ modules. A nested module is called a @defterm{submodule}. More precisely, the
 The submodule name @rhombus(test) is special, because DrRacket
 automatically runs a @rhombus(test) submodule (if one is present) after
 running the enclosing module. In the above example, since the
-@rhombus(test) submodule is run after the encloding module that defines
+@rhombus(test) submodule is run after the enclosing module that defines
 @rhombus(num_is_odd) and @rhombus(num_is_even), the tests can use all of the
 functions. Another advantage of putting tests in a @rhombus(test)
 submodule is that you can turn off the tests. In DrRacket's
@@ -1615,7 +1615,7 @@ the enclosing module will not see the definitions.
 
 @nested(~style: #'inset){ @bold{Warning:} If you are using Shplait with
  a programming-languages course, then the instructor has almost certainly
- disallowed the constructs in this chaper for use in your homework
+ disallowed the constructs in this chapter for use in your homework
  solutions, except as specifically allowed. Don't use @rhombus(mutable),
  @rhombus(:=), @rhombus(block) with more than one body expression, boxes,
  or arrays unless the instructor says that you can. If you're tempted to
