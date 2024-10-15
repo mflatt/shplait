@@ -84,3 +84,10 @@ check:
 check:
   box(none()) == box(some(1))
   ~is #false
+
+type Exp
+| idE(s :: Symbol)
+
+check:
+  cons(idE(syntax_to_symbol('x')), [])
+  ~is cons(idE(#'x), [])

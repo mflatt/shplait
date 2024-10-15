@@ -7,7 +7,7 @@ import:
   "value.rhm".value_meta
   "wrap.rhm" open
   "lazy.rhm" open
-  "lazy.rhm".force_all as lazy_force_all    
+  "lazy.rhm".dynamic_force_all as lazy_force_all
   "value.rhm".all_value_types
 
 export:
