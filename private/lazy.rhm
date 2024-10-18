@@ -107,7 +107,7 @@ defn.macro 'delay($e)':
   | e
 
 meta:
-  fun lazy_select(eager, lazy):
+  fun lazy_select(eager, lazy) :~ Syntax:
     if is_lazy
     | lazy
     | eager
