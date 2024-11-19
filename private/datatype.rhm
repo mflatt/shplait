@@ -100,8 +100,11 @@ decl.macro
     '«namespace ~open:
         class $id():
           nonfinal
+          expression: ~none
+          reconstructor: ~none
         class $var_id($field.id, ...):
           extends $id
+          reconstructor: ~none
           implements Forceable
           override force_all():
             $var_id(dynamic_force_all($field.id), ...)
