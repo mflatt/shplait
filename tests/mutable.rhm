@@ -12,19 +12,19 @@ block:
 check_eval:
   def x = 1
   x := 2
-  ~raises "not a variable that is assignable"
+  ~throws "not a variable that is assignable"
 
 check_eval:
   1 := 2
-  ~raises "not a variable that is assignable"
+  ~throws "not a variable that is assignable"
 
 check_eval:
   type Shape
   | circle(r :: Int)
   circle.r := 2
-  ~raises "not a variable that is assignable"
+  ~throws "not a variable that is assignable"
 
 check_eval:
   def mutable x = 1
   x := "a"
-  ~raises "typecheck failed"
+  ~throws "typecheck failed"

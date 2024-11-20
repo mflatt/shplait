@@ -5,4 +5,4 @@ fun f():
 
 check:
   f()
-  ~raises "reached an incomplete expression"
+  ~throws "reached an incomplete expression"

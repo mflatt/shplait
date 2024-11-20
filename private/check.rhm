@@ -18,7 +18,7 @@ expr.macro
 | 'shcheck:
      $(g :: Group)':
     ~all_stx stx
-    let msg = "missing `~is` or `~raises` line in body after `:`"
+    let msg = "missing `~is`, `~throws`, or `~raises` line in body after `:`"
     match g
     | '$_ ... $(kw && ('~is' || '~raises')) $_ ...':
         syntax_meta.error(msg +& ";\n possible repair is to start keyword on a new line", stx, kw)
@@ -39,14 +39,14 @@ expr.macro
                   t.Vd(self))
 | 'shcheck:
      $(left :: expr_meta.Parsed)
-     ~raises $(right :: expr_meta.Parsed)':
+     $('~raises' || '~throws') $(right :: expr_meta.Parsed)':
     ~op_stx self
     ~all_stx stx
     let [right_ty, new_right] = t_s.lookup_type(right, right.group)
     t.unify_do(self, right_ty, t.Str(self))
     t_s.wrap_type('$('check'.relocate(self)):
                      force_all($left)
-                     ~raises $new_right',
+                     ~throws $new_right',
                   stx,
                   t.Vd(self))
 

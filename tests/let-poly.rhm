@@ -6,7 +6,7 @@ import:
 
 check_eval:
   fun (f): f(f)
-  ~raises "cycle in type constraints"
+  ~throws "cycle in type constraints"
 
 fun top_identity(x):
   x
@@ -100,7 +100,7 @@ check_eval:
   def box_of_identity = box(fun (x): x)
   values(unbox(box_of_identity)(1),
          unbox(box_of_identity)("a"))
-  ~raises "typecheck failed"
+  ~throws "typecheck failed"
 
 // constructor applications can be values
 type ImmutableBox(?a)

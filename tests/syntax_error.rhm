@@ -4,23 +4,23 @@ import:
 
 check_eval:
   1 + "a"
-  ~raises "typecheck failed"
+  ~throws "typecheck failed"
 
 check_eval:
   fun (x ::): 10
-  ~raises "expected a type after separator"
+  ~throws "expected a type after separator"
 
 check_eval:
   fun (x) :: : 10
-  ~raises "expected a type after separator"
+  ~throws "expected a type after separator"
 
 check_eval:
   nonesuch
-  ~raises "unbound identifier"
+  ~throws "unbound identifier"
 
 check_eval:
   1 :: String
-  ~raises "needs to be in a type position or in parentheses"
+  ~throws "needs to be in a type position or in parentheses"
 
 check:
   (1 :: Int)
@@ -30,182 +30,182 @@ check_eval:
   match [] | []: "ok" | cons(x, y):
                           "ok"
                           "oops"
-  ~raises "typecheck failed: Void vs. String"
+  ~throws "typecheck failed: Void vs. String"
 
 check_eval:
   match [] | cons(x, y): "oops"
-  ~raises "incomplete set of list clauses"
+  ~throws "incomplete set of list clauses"
 
 check_eval:
   match [] | []
-  ~raises "bad empty-list clause"
+  ~throws "bad empty-list clause"
 
 check_eval:
   match [] | cons
-  ~raises "bad cons clause"
+  ~throws "bad cons clause"
 
 check_eval:
   match [] | 1
-  ~raises "expected a pattern followed by a `:` block"
+  ~throws "expected a pattern followed by a `:` block"
 
 check_eval:
   match [] | x:
              | y
-  ~raises "expected a pattern followed by a `:` block"
+  ~throws "expected a pattern followed by a `:` block"
 
 check_eval:
   match [] | x:
              | y
-  ~raises "and not with `|` immediately in the block"
+  ~throws "and not with `|` immediately in the block"
 
 check_eval:
   match []
   | ~else x: y
-  ~raises "expected a `:` immediately after `~else`"
+  ~throws "expected a `:` immediately after `~else`"
 
 check_eval:
   match [] | ~else 10:
              | y
-  ~raises "and not with `|` immediately in the block"
+  ~throws "and not with `|` immediately in the block"
 
 check_eval:
   match none() | some(1) | ~else: "ok"
-  ~raises "expected an identifier"
+  ~throws "expected an identifier"
 
 check_eval:
   match none() | some(1): "ok" | none(): "ok"
-  ~raises "expected an identifier"
+  ~throws "expected an identifier"
 
 check_eval:
   match none() | some(x): "ok" | :none(): "ok"
-  ~raises "bad clause"
+  ~throws "bad clause"
 
 check_eval:
   match none() | some(x): "ok" | nonesuch(): "ok"
-  ~raises "expected a variant name"
+  ~throws "expected a variant name"
 
 check_eval:
   fun ([1]): apple
-  ~raises "expected identifier"
+  ~throws "expected identifier"
 
 check_eval:
   type Foo
   | bar(1)
-  ~raises "expected identifier"
+  ~throws "expected identifier"
 
 // FIXME
 #//
 check_eval:
   def mutable 1 = 1
-  ~raises "expected an identifier"
+  ~throws "expected an identifier"
 
 // FIXME
 #//
 check_eval:
   def values(1) = 1
-  ~raises "expected identifier"
+  ~throws "expected identifier"
 
 check_eval:
   def x :: 1 = 2
-  ~raises "literal value is being used as a type"
+  ~throws "literal value is being used as a type"
 
 check_eval:
   1 + String
-  ~raises "type form is being used as an expression"
+  ~throws "type form is being used as an expression"
 
 check_eval:
   fun f(x :: Int):
     1
     2
-  ~raises "typecheck failed: Void vs. Int"
+  ~throws "typecheck failed: Void vs. Int"
 
 check_eval:
   fun f(x :: Int) :: Int:
     1
     2
-  ~raises "typecheck failed: Void vs. Int"
+  ~throws "typecheck failed: Void vs. Int"
 
 check_eval:
   block:
     1+2
     3+3
-  ~raises "typecheck failed: Void vs. Int"
+  ~throws "typecheck failed: Void vs. Int"
 
 check_eval:
   type BadTriple
   | Triple(fst :: ?a * ?b, snd :: ?c)
-  ~raises "unguarded type variables"
+  ~throws "unguarded type variables"
 
 check_eval:
   if:
   | 1 == 1: #true
   | 1 != 1: #false
-  ~raises "if: missing test expr"
+  ~throws "if: missing test expr"
 
 check_eval:
   fun 1
-  ~raises "expected either an identifier or parenthesized arguments"
+  ~throws "expected either an identifier or parenthesized arguments"
 
 check_eval:
   (fun 1)
-  ~raises "expected parenthesized arguments"
+  ~throws "expected parenthesized arguments"
 
 check_eval:
   fun f
-  ~raises "expected parenthesized arguments after the function name"
+  ~throws "expected parenthesized arguments after the function name"
 
 check_eval:
   (fun f)
-  ~raises "expected parenthesized arguments"
+  ~throws "expected parenthesized arguments"
 
 check_eval:
   (fun f ())
-  ~raises "expected parenthesized arguments"
+  ~throws "expected parenthesized arguments"
 
 check_eval:
   fun f ()
-  ~raises "expected either `::` or `:` after function arguments"
+  ~throws "expected either `::` or `:` after function arguments"
 
 check_eval:
   fun ()
-  ~raises "expected either `::` or `:` after function arguments"
+  ~throws "expected either `::` or `:` after function arguments"
 
 check_eval:
   (fun ())
-  ~raises "expected either `::` or `:` after function arguments"
+  ~throws "expected either `::` or `:` after function arguments"
 
 check_eval:
   fun () 10
-  ~raises "expected either `::` or `:`"
+  ~throws "expected either `::` or `:`"
 
 check_eval:
   (fun () 10)
-  ~raises "expected either `::` or `:`"
+  ~throws "expected either `::` or `:`"
 
 check_eval:
   check: 1
   ~is 10
-  ~raises "missing `~is` or `~raises` line in body after `:`"
+  ~throws "missing `~is`, `~throws`, or `~raises` line in body after `:`"
 
 check_eval:
   check: 1 ~is 10
-  ~raises "possible repair is to start keyword on a new line"
+  ~throws "possible repair is to start keyword on a new line"
 
 check_eval:
   trace:
     length([1,2,3])
-  ~raises "trace: missing function expression"
+  ~throws "trace: missing function expression"
 
 check_eval:
   def x =
-  ~raises "expression missing after `=` for definition"
+  ~throws "expression missing after `=` for definition"
 
 check_eval:
   def x = y = 2
-  ~raises "cannot have second `=` for definition"
+  ~throws "cannot have second `=` for definition"
 
 check_eval:
   fun f(x):
     x + 1
     x + 2
-  ~raises "not at the end of a function or block body"
+  ~throws "not at the end of a function or block body"

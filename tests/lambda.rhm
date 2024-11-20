@@ -89,7 +89,7 @@ module test:
 
   check:
     parse('()')
-    ~raises "invalid input"
+    ~throws "invalid input"
       
 // interp ----------------------------------------
 fun interp(a :: Exp, env :: Env) :: Value:
@@ -117,7 +117,7 @@ module test:
     ~is intV(2)
   check:
     interp(parse('x'), mt_env)
-    ~raises "free variable"    
+    ~throws "free variable"
   check:
     interp(parse('x'),
            extend_env(bind(#'x, intV(9)), mt_env))
@@ -159,16 +159,16 @@ module test:
 
   check:
     interp(parse('1(2)'), mt_env)
-    ~raises "not a function"
+    ~throws "not a function"
   check:
     interp(parse('1 + (fun (x): x)'), mt_env)
-    ~raises "not a number"
+    ~throws "not a number"
   check:
     interp(parse('let bad = (fun (x): x + y):
                     let y = 5:
                       bad(2)'),
            mt_env)
-    ~raises "free variable"
+    ~throws "free variable"
 
   #//
   time:
@@ -214,7 +214,7 @@ fun lookup(n :: Symbol, env :: Env) :: Value:
 module test:
   check:
     lookup(#'x, mt_env)
-    ~raises "free variable"
+    ~throws "free variable"
   check:
     lookup(#'x, extend_env(bind(#'x, intV(8)), mt_env))
     ~is intV(8)

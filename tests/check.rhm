@@ -1,0 +1,9 @@
+#lang shplait
+
+check:
+  1 / 0
+  ~throws "division by zero"
+
+check:
+  1 / 0
+  ~raises "division by zero"

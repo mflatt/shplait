@@ -951,8 +951,9 @@ message (and then continues, anyway) if the test fails.
 )
 
 To test that an expression reports an expected error, use
-@rhombus(~raises) in place of @rhombus(~is), and then supply
-an expression that produces a string after @rhombus(~raises).
+@rhombus(~throws) or @rhombus(~raises) in place of @rhombus(~is), and then supply
+an expression that produces a string after @rhombus(~throws) or @rhombus(~raises).
+(The @rhombus(~throws) and @rhombus(~raises) keywords are treated the same.)
 The test checks that the exception's error message contains the
 string.
 
@@ -964,10 +965,10 @@ string.
   ~defn:
     check:
       always_fail(42)
-      ~raises "not actually"
+      ~throws "not actually"
     check:
       always_fail(42)
-      ~raises "should not get called"
+      ~throws "should not get called"
 )
 
 When you write a program (in the definitions area of DrRacket), the

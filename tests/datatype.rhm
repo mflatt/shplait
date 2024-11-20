@@ -6,7 +6,7 @@ check_eval:
   fun f(x):
     match x
     | square(w, h): w+h
-  ~raises "expected a variant name"
+  ~throws "expected a variant name"
 
 check_eval:
   type Shape
@@ -14,7 +14,7 @@ check_eval:
   | square(w :: Int, h :: Int)
   match circle(10)
   | square(w, h): w+h
-  ~raises "missing 'circle' case"
+  ~throws "missing 'circle' case"
 
 check_eval:
   type Shape
@@ -22,7 +22,7 @@ check_eval:
   | square(w :: Int, h :: Int)
   match circle(10)
   | circle(r): r
-  ~raises "missing 'square' case"
+  ~throws "missing 'square' case"
 
 check_eval:
   type Shape
@@ -32,7 +32,7 @@ check_eval:
   | circle(r): r
   | square(w, h): w+h
   | ~else: 0
-  ~raises "else case is unreachable"
+  ~throws "else case is unreachable"
 
 check_eval:
   type Shape
@@ -42,7 +42,7 @@ check_eval:
   | circle(r): r
   | square(w, h): w+h
   | circle(r): r
-  ~raises "duplicate case for variant"
+  ~throws "duplicate case for variant"
 
 check_eval:
   type Shape
@@ -51,7 +51,7 @@ check_eval:
   match circle(10)
   | circle(r): r
   | circle(r): r
-  ~raises "duplicate case for variant"
+  ~throws "duplicate case for variant"
 
 check_eval:
   type Shape
@@ -61,7 +61,7 @@ check_eval:
   | circle(r): r
   | circle(r): r
   | ~else: 0
-  ~raises "duplicate case for variant"
+  ~throws "duplicate case for variant"
 
 check_eval:
   type Point
@@ -73,4 +73,4 @@ check_eval:
     match x
     | circle(r): r
     | point(): 0
-  ~raises "variant not from the same type as earlier variants"
+  ~throws "variant not from the same type as earlier variants"

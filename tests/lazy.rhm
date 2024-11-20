@@ -14,7 +14,7 @@ check:
 
 check:
   first(rest([1, 1/0]))
-  ~raises "division by zero"
+  ~throws "division by zero"
 
 check:
   [circle(1)] == [circle(1)]

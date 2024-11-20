@@ -771,12 +771,16 @@ redefining or shadowing the names could easily create confusion:
                 ~is $expected_expr'
   expr.macro 'check:
                 $expr
+                ~throws $string_expr'
+  expr.macro 'check:
+                $expr
                 ~raises $string_expr'
 ){
 
  Checks that @rhombus(expr) produces the same result as
  @rhombus(expected_expr) or raises an exception with an error message
- that contains the string produced by @rhombus(string_expr). Expressions
+ that contains the string produced by @rhombus(string_expr). The @rhombus(~raises)
+ keyword is treated the same as @rhombus(~throws). Expressions
  @rhombus(expr) and @rhombus(expected_expr) must have the same type,
  while @rhombus(string_expr) must have the type
  @rhombus(String, ~at shplait/type). The type of the @rhombus(check) expression
@@ -792,7 +796,7 @@ redefining or shadowing the names could easily create confusion:
     ~is 3
   check:
     1/0
-    ~raises "division by zero"
+    ~throws "division by zero"
   check:
     1+2
     ~is 4
