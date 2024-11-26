@@ -87,6 +87,23 @@ check:
 
 
 check:
+  syntax_is_operator('+')
+  ~is #true
+
+check:
+  syntax_is_operator('x')
+  ~is #false
+
+check:
+  syntax_operator_to_symbol('+')
+  ~is #'#{+}
+
+check:
+  symbol_to_operator_syntax(#'#{+})
+  ~is '+'
+
+
+check:
   syntax_is_list('1 2 3')
   ~is #false
 
@@ -99,5 +116,154 @@ check:
   ~is ['1', '2 3', 'a']
 
 check:
-  list_to_syntax(['1', '2 3', 'a'])
-  ~is '[1, 2 3, a]'
+  list_to_syntax(['1', '2; 3', 'a'])
+  ~throws "list element is not a group"
+
+
+check:
+  syntax_is_parens('[1, 2, 3]')
+  ~is #false
+
+check:
+  syntax_is_parens('(1, 2 3, a)')
+  ~is #true
+
+check:
+  syntax_parens_to_list('(1, 2 3, a)')
+  ~is ['1', '2 3', 'a']
+
+check:
+  list_to_parens_syntax(['1', '2 3', 'a'])
+  ~is '(1, 2 3, a)'
+
+check:
+  list_to_parens_syntax(['1', '2; 3', 'a'])
+  ~throws "list element is not a group"
+
+
+check:
+  syntax_is_braces('[1, 2, 3]')
+  ~is #false
+
+check:
+  syntax_is_braces('{1, 2 3, a}')
+  ~is #true
+
+check:
+  syntax_braces_to_list('{1, 2 3, a}')
+  ~is ['1', '2 3', 'a']
+
+check:
+  list_to_braces_syntax(['1', '2 3', 'a'])
+  ~is '{1, 2 3, a}'
+
+check:
+  list_to_braces_syntax(['1', '2; 3', 'a'])
+  ~throws "list element is not a group"
+
+
+check:
+  syntax_is_quotes('[1, 2, 3]')
+  ~is #false
+
+check:
+  syntax_is_quotes('«'1; 2; 3'»')
+  ~is #true
+
+check:
+  syntax_quotes_to_list('«'1; 2 3; a'»')
+  ~is ['1', '2 3', 'a']
+
+check:
+  list_to_quotes_syntax(['1', '2 3', 'a'])
+  ~is '«'1; 2 3; a'»'
+
+check:
+  list_to_quotes_syntax(['1', '2; 3', 'a'])
+  ~throws "list element is not a group"
+
+
+check:
+  syntax_is_block('[1, 2, 3]')
+  ~is #false
+
+check:
+  syntax_is_block(':1
+                    2 3
+                    a')
+  ~is #true
+
+check:
+  syntax_block_to_list(': 1
+                          2 3
+                          a')
+  ~is ['1', '2 3', 'a']
+
+check:
+  list_to_block_syntax(['1', '2 3', 'a'])
+  ~is ': 1
+         2 3
+         a'
+
+check:
+  list_to_block_syntax(['1', '2; 3', 'a'])
+  ~throws "list element is not a group"
+
+
+check:
+  syntax_is_alts('[1, 2, 3]')
+  ~is #false
+
+check:
+  syntax_is_alts('| 1
+                    2 3
+                  | a')
+  ~is #true
+
+check:
+  syntax_alts_to_list('| 1
+                         2 3
+                       | a')
+  ~is [': 1; 2 3', ': a']
+
+check:
+  list_to_alts_syntax([': 1; 2 3', ': a'])
+  ~is '| 1
+         2 3
+       | a'
+
+check:
+  list_to_alts_syntax([': 1', '2', ': a'])
+  ~throws "list element is not a block"
+
+
+check:
+  syntax_groups_to_list('')
+  ~is []
+
+check:
+  syntax_groups_to_list('1
+                         2 3')
+  ~is ['1', '2 3']
+
+check:
+  list_to_groups_syntax(['1', '2 3'])
+  ~is '1
+       2 3'
+
+check:
+  list_to_groups_syntax(['1', '2; 3'])
+  ~throws "list element is not a group"
+
+
+check:
+  syntax_group_to_list('1 2')
+  ~is ['1', '2']
+
+check:
+  list_to_group_syntax(['1', '2'])
+  ~is '1 2'
+
+check:
+  list_to_group_syntax(['1', '2 3'])
+  ~throws "list element is not a term"

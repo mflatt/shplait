@@ -20,6 +20,10 @@ export:
     shquotes as #%quotes
   only_space expr:
     $
+  syntax_group_to_list
+  list_to_group_syntax
+  syntax_groups_to_list
+  list_to_groups_syntax
   syntax_split
   syntax_join
   syntax_read
@@ -89,9 +93,6 @@ meta:
            [[id, tmpl, depth], &ids]]
       | '$(op && '$') $_ ...':
           syntax_meta.error("misplaced escape", op)
-      | '| $alt | ...':
-          let ['$pat; ...', ids] = multi('$alt ; ...', depth)
-          ['| $pat | ...', ids]
       | '$tm $tail ...':
           let [tm_cvt, tm_ids] = term(tm, depth)
           let [pat_cvt, ids] = group('$tail ...', depth, is_before_dots)
@@ -130,12 +131,16 @@ meta:
       | ': $m':
           let [m_pat_cvt, m_ids] = multi(m, depth)
           [rebind(': $m_pat_cvt'), m_ids]
-      | '| $m
-         | ...':
-          let [[m_pat_cvt, m_ids], ...] = [multi(m, depth), ...]
-          ['| $m_pat_cvt
-            | ...',
-           List.append(m_ids, ...)]
+      | '| $m | ... | $('...') | $n | ...':
+          let [m_pat_cvt, m_ids] = multi(':« $m »; ...; $('...'); :« $n »; ...', depth)
+          match m_pat_cvt
+          | ':« $m »; ...; $('...'); :« $n »; ...':
+              [rebind('|« $m » | ... | $('...') |« $n » | ...'), m_ids]
+      | '| $m | ...':
+          let [m_pat_cvt, m_ids] = multi(':« $m »; ...', depth)
+          match m_pat_cvt
+          | ':« $m »; ...':
+              [rebind('|« $m » | ...'), m_ids]
       | ~else:
           [pat, []]
     match pat:
@@ -252,7 +257,7 @@ expr.macro 'reference_syntax_pattern_var($id, $depth)':
 
 fun oops(who, stx, what):
   error(~who: who,
-        "syntax object does not wrap a " +& what,
+        "syntax object does not wrap " +& what,
         error.val(~label: "syntax object", stx))
 
 defwrap wrap_syntax_split syntax_split(s):
@@ -303,19 +308,115 @@ decl.nestable_macro 'extractor $is_x ($unwrap_x, $post_unwrap) ($wrap_x, $pre_wr
        ~op_stx self
        t_s.wrap_type('stx_wrap_x'.relocate(self), t.Arrow(self, [t . $Ty(self)], t.Shrub(self)))
    »'
-extractor syntax_is_integer (syntax_to_integer, values) (integer_to_syntax, values) Num Int "integer"
-extractor syntax_is_boolean (syntax_to_boolean, values) (boolean_to_syntax, values) Bool Boolean "boolean"  
-extractor syntax_is_symbol (syntax_to_symbol, values) (symbol_to_syntax, values) Sym Symbol "symbol"
-extractor syntax_is_string (syntax_to_string, values) (string_to_syntax, values) Str String "symbol"
-extractor syntax_is_list (syntax_to_list, list_post) (list_to_syntax, add_brackets) ListOfShrub ListShaped "list"
+extractor syntax_is_integer (syntax_to_integer, values) (integer_to_syntax, values) Num Int "an integer"
+extractor syntax_is_boolean (syntax_to_boolean, values) (boolean_to_syntax, values) Bool Boolean "a boolean"
+extractor syntax_is_symbol (syntax_to_symbol, values) (symbol_to_syntax, values) Sym Symbol "a symbol"
+extractor syntax_is_operator (syntax_operator_to_symbol, op_post) (symbol_to_operator_syntax, add_op) Sym OpShaped "an operator"
+extractor syntax_is_string (syntax_to_string, values) (string_to_syntax, values) Str String "a string"
+extractor syntax_is_list (syntax_to_list, list_post) (list_to_syntax, add_brackets) ListOfShrub ListShaped "a list"
+extractor syntax_is_parens (syntax_parens_to_list, list_post) (list_to_parens_syntax, add_parens) ListOfShrub ParensShaped "parens"
+extractor syntax_is_braces (syntax_braces_to_list, list_post) (list_to_braces_syntax, add_braces) ListOfShrub BracesShaped "braces"
+extractor syntax_is_quotes (syntax_quotes_to_list, list_post) (list_to_quotes_syntax, add_quotes) ListOfShrub QuotesShaped "quotes"
+extractor syntax_is_block (syntax_block_to_list, list_post) (list_to_block_syntax, add_block) ListOfShrub BlockShaped "a block"
+extractor syntax_is_alts (syntax_alts_to_list, list_post) (list_to_alts_syntax, add_alts) ListOfShrub AltsShaped "alts"
+
+fun op_post(los):
+  Syntax.unwrap(List.get(los, 1))
+
+annot.macro 'OpShaped':
+  'matching(['op', _])'
+fun add_op(sym): [#'op, sym]
 
 fun list_post(los):
   to_slist(List.rest(los).map(SyntaxWrap))
 
 annot.macro 'ListShaped':
   'matching(['brackets', _, $'...'])'
-fun add_brackets(lst): [#'brackets, & from_slist(lst).map(fun (elem): SyntaxWrap.raw(elem))]
+fun add_brackets(lst): [#'brackets, & from_slist(lst).map(fun (elem):
+                                                            check_group(elem, #'list_to_syntax)
+                                                            SyntaxWrap.raw(elem))]
 
+annot.macro 'ParensShaped':
+  'matching(['parens', _, $'...'])'
+fun add_parens(lst): [#'parens, & from_slist(lst).map(fun (elem):
+                                                        check_group(elem, #'list_to_parens_syntax)
+                                                        SyntaxWrap.raw(elem))]
+
+annot.macro 'BracesShaped':
+  'matching(['braces', _, $'...'])'
+fun add_braces(lst): [#'braces, & from_slist(lst).map(fun (elem):
+                                                        check_group(elem, #'list_to_braces_syntax)
+                                                        SyntaxWrap.raw(elem))]
+
+annot.macro 'QuotesShaped':
+  'matching(['quotes', _, $'...'])'
+fun add_quotes(lst): [#'quotes, & from_slist(lst).map(fun (elem):
+                                                        check_group(elem, #'list_to_quotes_syntax)
+                                                        SyntaxWrap.raw(elem))]
+
+annot.macro 'BlockShaped':
+  'matching(['block', _, $'...'])'
+fun add_block(lst): [#'block, & from_slist(lst).map(fun (elem):
+                                                      check_group(elem, #'list_to_block_syntax)
+                                                      SyntaxWrap.raw(elem))]
+
+annot.macro 'AltsShaped':
+  'matching(['alts', _, $'...'])'
+fun add_alts(lst): [#'alts, & from_slist(lst).map(fun (elem):
+                                                    check_block(elem, #'list_to_alts_syntax)
+                                                    SyntaxWrap.raw(elem))]
+
+defwrap groups_to_list syntax_groups_to_list(stx_in):
+  let stx = SyntaxWrap.raw(dynamic_force(stx_in))
+  to_slist(Syntax.unwrap_sequence(stx).map(SyntaxWrap))
+
+defwrap list_to_groups list_to_groups_syntax(v_in):
+  let v = from_slist(dynamic_force_all(v_in))
+  SyntaxWrap(Syntax.make_sequence(v.map(fun (elem):
+                                          check_group(elem, #'list_to_groups_syntax)
+                                          SyntaxWrap.raw(elem))))
+
+expr.macro 'syntax_groups_to_list':
+  ~op_stx self
+  t_s.wrap_type('groups_to_list'.relocate(self), t.Arrow(self, [t.Shrub(self)], t . ListOfShrub(self)))
+expr.macro 'list_to_groups_syntax':
+  ~op_stx self
+  t_s.wrap_type('list_to_groups'.relocate(self), t.Arrow(self, [t . ListOfShrub(self)], t.Shrub(self)))
+
+defwrap group_to_list syntax_group_to_list(stx_in):
+  let stx = SyntaxWrap.raw(dynamic_force(stx_in))
+  to_slist(Syntax.unwrap_group(stx).map(SyntaxWrap))
+
+defwrap list_to_group list_to_group_syntax(v_in):
+  let v = from_slist(dynamic_force_all(v_in))
+  SyntaxWrap(Syntax.make_group(v.map(fun (elem):
+                                       check_term(elem, #'list_to_group_syntax)
+                                       SyntaxWrap.raw(elem))))
+
+expr.macro 'syntax_group_to_list':
+  ~op_stx self
+  t_s.wrap_type('group_to_list'.relocate(self), t.Arrow(self, [t.Shrub(self)], t . ListOfShrub(self)))
+expr.macro 'list_to_group_syntax':
+  ~op_stx self
+  t_s.wrap_type('list_to_group'.relocate(self), t.Arrow(self, [t . ListOfShrub(self)], t.Shrub(self)))
+
+fun check_term(elem :: SyntaxWrap, who):
+  unless elem.raw is_a Term
+  | error(~who: who,
+          "list element is not a term",
+          error.val(~label: "element", elem))
+
+fun check_group(elem :: SyntaxWrap, who):
+  unless elem.raw is_a Group
+  | error(~who: who,
+          "list element is not a group",
+          error.val(~label: "element", elem))
+
+fun check_block(elem :: SyntaxWrap, who):
+  unless elem.raw is_a Block
+  | error(~who: who,
+          "list element is not a block",
+          error.val(~label: "element", elem))
 
 defwrap syntax_read_wrap syntax_read():
   let stx = #{parse-all}(Port.Input.current())

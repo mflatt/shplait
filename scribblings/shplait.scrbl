@@ -2325,17 +2325,16 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
   fun syntax_is_boolean(stx :: Syntax) :: Boolean
   fun syntax_is_symbol(stx :: Syntax) :: Boolean
   fun syntax_is_string(stx :: Syntax) :: Boolean
-  fun syntax_is_list(stx :: Syntax) :: Boolean
+  fun syntax_is_operator(stx :: Syntax) :: Boolean
 ){
 
  The @rhombus(syntax_is_integer) function checks whether a @tech{syntax
   object} has a single term representing a number, returning
- @rhombus(#true) if so and @rhombus(#false) otherwise. Other functions
- check for different kinds of primitive values as representations.
-
- The @rhombus(syntax_is_list) function checks whether a syntax object
- would match the pattern @rhombus('[$elem ..., ...]'), returning
- @rhombus(#true) if so and @rhombus(#false) otherwise.
+ @rhombus(#true) if so and @rhombus(#false) otherwise. The
+ @rhombus(syntax_is_boolean), @rhombus(syntax_is_symbol),
+ @rhombus(syntax_is_string), and @rhombus(syntax_is_operator) functions
+ similarly check for different kinds of primitive values as
+ representations.
 
 @examples(
   ~eval: eval
@@ -2344,12 +2343,6 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
     ~is #true
   ~check:
     syntax_is_integer('apple')
-    ~is #false
-  ~check:
-    syntax_is_list('[w, x y, z]')
-    ~is #true
-  ~check:
-    syntax_is_list('a b c')
     ~is #false
 )
 
@@ -2360,18 +2353,20 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
   fun syntax_to_boolean(stx :: Syntax) :: Boolean
   fun syntax_to_symbol(stx :: Syntax) :: Symbol
   fun syntax_to_string(stx :: Syntax) :: String
-  fun syntax_to_list(stx :: Syntax) :: Listof(Syntax)
+  fun syntax_operator_to_symbol(stx :: Syntax) :: Symbol
 ){
 
  The @rhombus(syntax_to_integer) function extracts the number that a
  syntax object represents, but only if @rhombus(syntax_is_integer) would
- return @rhombus(#false); otherwise an exception is raised. Other
- functions similarly extract values from syntax representations.
+ return @rhombus(#true); otherwise an exception is raised. The functions
+ @rhombus(syntax_to_boolean), @rhombus(syntax_to_symbol), and
+ @rhombus(syntax_to_string) similarly extract values from syntax
+ representations. The @rhombus(syntax_operator_to_symbol) function
+ encodes an operator as a symbol.
 
 @examples(
   ~eval: eval
   syntax_to_integer('9')
-  syntax_to_list('[w, x y, z]')
 )
 
 }
@@ -2382,7 +2377,7 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
   fun boolean_to_syntax(bool :: Boolean) :: Syntax
   fun symbol_to_syntax(sym :: Symbol) :: Syntax
   fun string_to_syntax(str :: String) :: Syntax
-  fun list_to_syntax(lst :: Listof(Syntax)) :: Syntax
+  fun symbol_to_operator_syntax(sym :: Symbol) :: Syntax
 ){
 
  The inverse of @rhombus(syntax_to_integer), etc., converting a value
@@ -2393,9 +2388,111 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
   ~check:
     integer_to_syntax(9)
     ~is '9'
+)
+
+}
+
+
+@doc(
+  fun syntax_is_list(stx :: Syntax) :: Boolean
+  fun syntax_is_parens(stx :: Syntax) :: Boolean
+  fun syntax_is_braces(stx :: Syntax) :: Boolean
+  fun syntax_is_quotes(stx :: Syntax) :: Boolean
+  fun syntax_is_block(stx :: Syntax) :: Boolean
+  fun syntax_is_alts(stx :: Syntax) :: Boolean
+){
+
+ The @rhombus(syntax_is_list) function checks whether a syntax object
+ would match the pattern @rhombus('[$elem, ...]'), returning
+ @rhombus(#true) if so and @rhombus(#false) otherwise. Similarly,
+ the @rhombus(syntax_is_parens) function checks whether a syntax object
+ would match the pattern @rhombus('($elem, ...)'),
+ the @rhombus(syntax_is_braces) function checks whether a syntax object
+ would match the pattern @rhombus('{$elem, ...}'),
+ the @rhombus(syntax_is_quotes) function checks whether a syntax object
+ would match the pattern @rhombus('«'$elem; ...'»'),
+ the @rhombus(syntax_is_block) function checks whether a syntax object
+ would match the pattern @rhombus(': $elem; ...'), and
+ the @rhombus(syntax_is_alts) function checks whether a syntax object
+ would match the pattern @rhombus('| $elem; ... | ...').
+
+@examples(
+  ~eval: eval
+  ~check:
+    syntax_is_list('[w, x y, z]')
+    ~is #true
+  ~check:
+    syntax_is_list('a b c')
+    ~is #false
+  ~check:
+    syntax_is_parens('(w, x y, z)')
+    ~is #true
+  ~check:
+    syntax_is_block(':
+                       w
+                       x y')
+    ~is #true
+)
+
+}
+
+@doc(
+  fun syntax_to_list(stx :: Syntax) :: Listof(Syntax)
+  fun syntax_parens_to_list(stx :: Syntax) :: Listof(Syntax)
+  fun syntax_braces_to_list(stx :: Syntax) :: Listof(Syntax)
+  fun syntax_quotes_to_list(stx :: Syntax) :: Listof(Syntax)
+  fun syntax_block_to_list(stx :: Syntax) :: Listof(Syntax)
+  fun syntax_alts_to_list(stx :: Syntax) :: Listof(Syntax)
+  fun syntax_group_to_list(stx :: Syntax) :: Listof(Syntax)
+  fun syntax_groups_to_list(stx :: Syntax) :: Listof(Syntax)
+){
+
+ The @rhombus(syntax_to_list) function works on a syntax object that
+ would match @rhombus('[$elem, ...]'), and it returns the list of
+ @rhombus(elem, ~datum) matches. The @rhombus(syntax_parens_to_list),
+ @rhombus(syntax_braces_to_list), @rhombus(syntax_quotes_to_list),
+ @rhombus(syntax_block_to_list), and @rhombus(syntax_alts_to_list)
+ functions are similar. The result of @rhombus(syntax_alts_to_list) is a
+ list of block syntax.
+
+ The @rhombus(syntax_group_to_list) function works on a single-group
+ syntax object, and it returns a list of single-term syntax objects. The
+ @rhombus(syntax_groups_to_list) function works on any syntax object, and
+ it returns a list of single-group syntax objects.
+
+@examples(
+  ~eval: eval
+  syntax_to_list('[w, x y, z]')
+  syntax_parens_to_list('(w, x y, z)')
+  syntax_alts_to_list('| w | x; y | z')
+  syntax_groups_to_list('w; x y; z')
+)
+
+}
+
+
+@doc(
+  fun list_to_syntax(lst :: Listof(Syntax)) :: Syntax
+  fun list_to_parens_syntax(lst :: Listof(Syntax)) :: Syntax
+  fun list_to_braces_syntax(lst :: Listof(Syntax)) :: Syntax
+  fun list_to_quotes_syntax(lst :: Listof(Syntax)) :: Syntax
+  fun list_to_block_syntax(lst :: Listof(Syntax)) :: Syntax
+  fun list_to_alts_syntax(lst :: Listof(Syntax)) :: Syntax
+  fun list_to_group_syntax(stx :: Syntax) :: Listof(Syntax)
+  fun list_to_groups_syntax(stx :: Syntax) :: Listof(Syntax)
+){
+
+ The inverse of @rhombus(syntax_to_list), etc., converting a list of
+ syntax objects to a syntax object.
+
+@examples(
+  ~eval: eval
   ~check:
     list_to_syntax(['w', 'x y', 'z'])
     ~is '[w, x y, z]'
+  ~check:
+    list_to_parens_syntax(['w', 'x y', 'z'])
+    ~is '(w, x y, z)'
 )
 
 }
@@ -2408,8 +2505,8 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 
  Functions for simple splitting and joining tasks. For more general and
  precise tasks, use @rhombus(match) and template construction with
- @rhombus(#%quotes), potentially converting to and from form that
- @rhombus(list_to_syntax) and @rhombus(syntax_to_list) can handle.
+ @rhombus(#%quotes), or use functions like @rhombus(syntax_group_to_list)
+ and @rhombus(syntax_groups_to_list).
 
  The @rhombus(syntax_split) function takes a single-group syntax object
  and splits it into a list of term syntax objects, or it takes a
