@@ -95,12 +95,29 @@ check:
   ~is #false
 
 check:
-  syntax_operator_to_symbol('+')
-  ~is #'#{+}
+  syntax_operator_to_string('+')
+  ~is "+"
 
 check:
-  symbol_to_operator_syntax(#'#{+})
+  string_to_operator_syntax("+")
   ~is '+'
+
+
+check:
+  syntax_is_keyword('~else')
+  ~is #true
+
+check:
+  syntax_is_keyword('x')
+  ~is #false
+
+check:
+  syntax_keyword_to_string('~else')
+  ~is "else"
+
+check:
+  string_to_keyword_syntax("else")
+  ~is '~else'
 
 
 check:

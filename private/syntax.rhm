@@ -311,8 +311,9 @@ decl.nestable_macro 'extractor $is_x ($unwrap_x, $post_unwrap) ($wrap_x, $pre_wr
 extractor syntax_is_integer (syntax_to_integer, values) (integer_to_syntax, values) Num Int "an integer"
 extractor syntax_is_boolean (syntax_to_boolean, values) (boolean_to_syntax, values) Bool Boolean "a boolean"
 extractor syntax_is_symbol (syntax_to_symbol, values) (symbol_to_syntax, values) Sym Symbol "a symbol"
-extractor syntax_is_operator (syntax_operator_to_symbol, op_post) (symbol_to_operator_syntax, add_op) Sym OpShaped "an operator"
 extractor syntax_is_string (syntax_to_string, values) (string_to_syntax, values) Str String "a string"
+extractor syntax_is_operator (syntax_operator_to_string, op_post) (string_to_operator_syntax, add_op) Str OpShaped "an operator"
+extractor syntax_is_keyword (syntax_keyword_to_string, to_string) (string_to_keyword_syntax, to_keyword) Str Keyword "a keyword"
 extractor syntax_is_list (syntax_to_list, list_post) (list_to_syntax, add_brackets) ListOfShrub ListShaped "a list"
 extractor syntax_is_parens (syntax_parens_to_list, list_post) (list_to_parens_syntax, add_parens) ListOfShrub ParensShaped "parens"
 extractor syntax_is_braces (syntax_braces_to_list, list_post) (list_to_braces_syntax, add_braces) ListOfShrub BracesShaped "braces"
@@ -321,11 +322,13 @@ extractor syntax_is_block (syntax_block_to_list, list_post) (list_to_block_synta
 extractor syntax_is_alts (syntax_alts_to_list, list_post) (list_to_alts_syntax, add_alts) ListOfShrub AltsShaped "alts"
 
 fun op_post(los):
-  Syntax.unwrap(List.get(los, 1))
+  to_string(Syntax.unwrap(List.get(los, 1)))
 
 annot.macro 'OpShaped':
   'matching(['op', _])'
-fun add_op(sym): [#'op, sym]
+fun add_op(str): [#'op, Symbol.from_string(str)]
+
+fun to_keyword(str): Keyword.from_string(str)
 
 fun list_post(los):
   to_slist(List.rest(los).map(SyntaxWrap))

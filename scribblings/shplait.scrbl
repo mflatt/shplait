@@ -2326,6 +2326,7 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
   fun syntax_is_symbol(stx :: Syntax) :: Boolean
   fun syntax_is_string(stx :: Syntax) :: Boolean
   fun syntax_is_operator(stx :: Syntax) :: Boolean
+  fun syntax_is_keyword(stx :: Syntax) :: Boolean
 ){
 
  The @rhombus(syntax_is_integer) function checks whether a @tech{syntax
@@ -2344,6 +2345,9 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
   ~check:
     syntax_is_integer('apple')
     ~is #false
+  ~check:
+    syntax_is_keyword('~apple')
+    ~is #true
 )
 
 }
@@ -2353,7 +2357,8 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
   fun syntax_to_boolean(stx :: Syntax) :: Boolean
   fun syntax_to_symbol(stx :: Syntax) :: Symbol
   fun syntax_to_string(stx :: Syntax) :: String
-  fun syntax_operator_to_symbol(stx :: Syntax) :: Symbol
+  fun syntax_operator_to_string(stx :: Syntax) :: String
+  fun syntax_keyword_to_string(stx :: Syntax) :: String
 ){
 
  The @rhombus(syntax_to_integer) function extracts the number that a
@@ -2361,12 +2366,18 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
  return @rhombus(#true); otherwise an exception is raised. The functions
  @rhombus(syntax_to_boolean), @rhombus(syntax_to_symbol), and
  @rhombus(syntax_to_string) similarly extract values from syntax
- representations. The @rhombus(syntax_operator_to_symbol) function
- encodes an operator as a symbol.
+ representations. The @rhombus(syntax_operator_to_string) and
+ @rhombus(syntax_keyword_to_string) functions encodes an operator or
+ keyword as a string, respectively.
 
 @examples(
   ~eval: eval
-  syntax_to_integer('9')
+  ~check:
+    syntax_to_integer('9')
+    ~is 9
+  ~check:
+    syntax_operator_to_string('+')
+    ~is "+"
 )
 
 }
@@ -2377,7 +2388,8 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
   fun boolean_to_syntax(bool :: Boolean) :: Syntax
   fun symbol_to_syntax(sym :: Symbol) :: Syntax
   fun string_to_syntax(str :: String) :: Syntax
-  fun symbol_to_operator_syntax(sym :: Symbol) :: Syntax
+  fun string_to_operator_syntax(str :: String) :: Syntax
+  fun string_to_keyword_syntax(str :: String) :: Syntax
 ){
 
  The inverse of @rhombus(syntax_to_integer), etc., converting a value
