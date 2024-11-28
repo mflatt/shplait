@@ -2563,6 +2563,14 @@ Rules for @rhombus($, ~datum) and @litchar{...} in templates:
 
 }
 
+@doc(
+  fun syntax_generate_temporary() :: Syntax
+){
+
+ Creates an identifier that is not equal to any other identifier.
+
+}
+
 @// ------------------------------------------------------------
 
 @section(~tag: "sec:module"){Modules and Imports}

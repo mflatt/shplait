@@ -284,3 +284,12 @@ check:
 check:
   list_to_group_syntax(['1', '2 3'])
   ~throws "list element is not a term"
+
+
+check:
+  syntax_generate_temporary() == 'x'
+  ~is #false
+
+check:
+  syntax_generate_temporary() == syntax_generate_temporary()
+  ~is #false

@@ -9,6 +9,7 @@ import:
   "list.rhm"!rep.to_slist
   "list.rhm"!rep.from_slist
   lib("shrubbery/parse.rkt").#{parse-all}
+  lib("racket/base.rkt").gensym
 
 // Wrap Rhombus's syntax patterns and templates to check
 // types, which means our own layer of repetition binding.
@@ -27,6 +28,7 @@ export:
   syntax_split
   syntax_join
   syntax_read
+  syntax_generate_temporary
   // more exports macro-generated for `syntax_is_integer`, etc.
 
 class SyntaxWrap(raw :: Syntax):
@@ -429,3 +431,10 @@ defwrap syntax_read_wrap syntax_read():
 expr.macro 'syntax_read':
   ~op_stx self
   t_s.wrap_type('syntax_read_wrap', t.Arrow(self, [], t.Shrub(self)))
+
+defwrap syntax_gensym syntax_generate_temporary():
+  SyntaxWrap(Syntax.make(gensym()))
+
+expr.macro 'syntax_generate_temporary':
+  ~op_stx self
+  t_s.wrap_type('syntax_gensym', t.Arrow(self, [], t.Shrub(self)))
