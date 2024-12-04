@@ -118,7 +118,7 @@ meta:
       field mutable_tag = ''
 
 defn.macro
-| 'define $(lhs :: LHS) $(eql && '=') $rhs':
+| 'define $(lhs :: LHS) $(eql && '=') $(rhs :: Sequence)':
     ~op_stx self
     ~all_stx stx
     match rhs

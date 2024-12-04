@@ -118,13 +118,13 @@ meta:
         let [orig_tag, orig_c, ...] = Syntax.unwrap(pat)
         Syntax.make([orig_tag, c, ...])
       match pat
-      | '($m)':
+      | '($(m :: Multi))':
           let [m_pat_cvt, m_ids] = multi(m, depth)
           [rebind('($m_pat_cvt)'), m_ids]
-      | '[$m]':
+      | '[$(m :: Multi)]':
           let [m_pat_cvt, m_ids] = multi(m, depth)
           [rebind('[$m_pat_cvt]'), m_ids]
-      | '{$m}':
+      | '{$(m :: Multi)}':
           let [m_pat_cvt, m_ids] = multi(m, depth)
           [rebind('{$m_pat_cvt}'), m_ids]
       | '«'$m'»':

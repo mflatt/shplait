@@ -71,8 +71,8 @@ class Type(mutable src):
   nonfinal
   abstract clone()
 
-defn.macro 'class_c $name($fields): $body; ...':
-  'class $name($fields):
+defn.macro 'class_c $name($field, ...): $body; ...':
+  'class $name($field, ...):
      $body
      ...
      override clone() :~ $name:

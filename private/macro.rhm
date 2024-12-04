@@ -24,7 +24,7 @@ export:
     #%parens
 
 defn.macro
-| '«shmacro '$(id :: Identifier) $pat':
+| '«shmacro '$(id :: Identifier) $(pat :: Sequence)':
       def $(local_id :: Identifier) = $local_expr
       ...      
       '$tmpl'»':
@@ -35,7 +35,7 @@ defn.macro
         ...
         '$c_tmpl'
       value.non_macro $id»'
-| '«shmacro '$('$') $(left :: Identifier) $(op :: Operator) $pat':
+| '«shmacro '$('$') $(left :: Identifier) $(op :: Operator) $(pat :: Sequence)':
       def $(local_id :: Identifier) = $local_expr
       ...
       '$tmpl'»':
@@ -49,7 +49,7 @@ defn.macro
         '$c_tmpl'
       value.non_macro $op»'
 | '«shmacro
-    | '$(id :: Identifier) $pat':
+    | '$(id :: Identifier) $(pat :: Sequence)':
         def $(local_id :: Identifier) = $local_expr
         ...      
         '$tmpl'
@@ -69,7 +69,7 @@ defn.macro
       | ...
       value.non_macro $id0»'
 | '«shmacro
-    | '$('$') $(left :: Identifier) $(op :: Operator) $pat':
+    | '$('$') $(left :: Identifier) $(op :: Operator) $(pat :: Sequence)':
         def $(local_id :: Identifier) = $local_expr
         ...
         '$tmpl'
