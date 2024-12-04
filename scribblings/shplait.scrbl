@@ -2208,6 +2208,7 @@ Rules for @rhombus($, ~datum) and @litchar{...} in patterns:
  input.
 
  @examples(
+  ~eval: eval
   ~repl:
     match 'a b c d'
     | '$(x :: Identifier) $y': [x, y]
