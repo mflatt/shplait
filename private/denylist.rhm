@@ -18,7 +18,7 @@ meta:
   }
 
   fun validate(id :: Identifier, what):
-    when denylist[id.unwrap()]
+    when id.unwrap() in denylist
     | syntax_meta.error("disallowed name for " +& what +& ";\n"
                           +& " to prevent confusion, some predefined names"
                           +& " must not be shadowed or redefined\n",

@@ -68,7 +68,7 @@ defwrap wrap_map_set map_set(map, key, val):
 defwrap wrap_map_remove map_remove(map, key):
   (dynamic_force(map) :~ Map).remove(dynamic_force(key))
 defwrap wrap_map_delete map_delete(map, key):
-  (dynamic_force(map) :~ MutableMap).delete(dynamic_force(key))
+  (dynamic_force(map) :~ MutableMap).remove(dynamic_force(key))
 defwrap wrap_map_keys map_keys(map):
   (dynamic_force(map) :~ ReadableMap).keys()
 

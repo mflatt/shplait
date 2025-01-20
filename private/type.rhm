@@ -631,7 +631,7 @@ fun add_srcs_do(r :: Type, a_in):
   match r.src
   | #false: r.src := a
   | srcs :: List:
-      unless srcs.has_element(a)
+      unless a in srcs
       | r.src := [a, & srcs]
   | ~else:
       unless a == r.src
@@ -821,7 +821,7 @@ fun extract_tvars(t, poly_context :: List = [], base_tvars :: Set = Set.by(===){
             if (c1 < c2) && (poly_context == non_poly.drop(c2-c1))
             | Set.by(===){t}
             | Set.by(===){}
-        | base_tvars[t]:
+        | t in base_tvars:
             Set.by(===){}
         | ~else:
             Set.by(===){t}
