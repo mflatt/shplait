@@ -547,7 +547,7 @@ fun extract_srcs_do(r, ht :: MutableMap):
 fun trim(s :: String):
   cond
   | s == "": ""
-  | Char.is_whitespace(s[0]): trim(s.substring(1))
+  | Char.is_whitespace(s[0]): trim(s.substring(1, s.length()))
   | Char.is_whitespace(s[s.length()-1]): trim(s.substring(0, s.length()-1))
   | ~else: s
 
