@@ -82,3 +82,8 @@ check:
     v
   ~is "ok"
 
+check:
+  block:
+    def f = values(fun (x): x)
+    f(1)
+  ~is 1
