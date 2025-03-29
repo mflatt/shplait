@@ -30,7 +30,7 @@ expr.macro
          f.relet_frame: f.Frame(~parent:
                                   f.get_current_frame(),
                                 ~tvars:
-                                  IdMap{ '$id': $(t_s.syntax_to_type(ty_stx)), ... })
+                                  IdMap{ '$id': t_s.syntax_to_type('$ty_stx'), ... })
          $defn
          ...
          unify_phase_2 $mode $type:
