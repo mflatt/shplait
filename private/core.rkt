@@ -9,6 +9,8 @@
          (for-syntax
           (prefix-in rhombus: rhombus/parse))
          (prefix-in rhombus: rhombus/parse)
+         (only-in (submod rhombus/private/amalgam parse)
+                  rhombus-local-expand) ; provided by `rhombus/parse` in v0.35 and later
          rhombus/private/bounce
          "frame.rhm"
          "configure.rhm")
@@ -107,21 +109,21 @@
             ...
             (step-top-interaction final? e0))]
        [_
-        (define b (local-expand pre-b 'top-level null))        
         (cond
           [(syntax-e #'final?)
-           (syntax-parse b
+           (syntax-parse pre-b
              #:literals (#%expression)
              [(#%expression e)
+              (define exp-e (rhombus-local-expand #'e))
               (finish_current_frame)     
-              (displayln (string-append "- " (interaction_type_string #'e)))
-              b]
+              (displayln (string-append "- " (interaction_type_string exp-e)))
+              exp-e]
              [else      
               #`(begin
-                  #,b
+                  #,pre-b
                   (finish-top-interaction))])]
           [else
-           b])])]))
+           pre-b])])]))
 
 (define-syntax (finish-top-interaction stx)
   (finish_current_frame)
