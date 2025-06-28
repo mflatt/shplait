@@ -26,9 +26,9 @@ meta:
     kind: ~group
     root_swap: parsed group
   | '$(x :: value_meta._Parsed)':
-      field parsed = x
+      field parsed :: Syntax = x
   | '$(id :: Identifier)':
-      field parsed = t_s.type_to_syntax(t.gen_tvar(id))
+      field parsed :: Syntax = t_s.type_to_syntax(t.gen_tvar(id))
 
 meta:
   def current_value_tvar_box = Parameter.make(#false)
