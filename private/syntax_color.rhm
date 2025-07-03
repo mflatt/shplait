@@ -1,0 +1,22 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/runtime_path
+
+export:
+  classify
+
+runtime_path.def keywords_txt: "../keywords.txt"
+runtime_path.def builtins_txt: "../builtins.txt"
+
+fun build_table(path) :~ Map:
+  for Map (str in filesystem.read_lines(path)):
+    values(str, #true)
+
+def keywords: build_table(keywords_txt)
+def builtins: build_table(builtins_txt)
+
+fun classify(s :: String):
+  cond
+  | s in keywords: #'keyword
+  | s in builtins: #'builtin
+  | ~else: #false

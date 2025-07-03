@@ -4,7 +4,7 @@
 
 (define deps '("base"
                "shrubbery-lib"
-               ["rhombus-lib" #:version "0.36"]))
+               ["rhombus-lib" #:version "0.37"]))
 
 (define build-deps '("racket-doc"
                      "sandbox-lib"

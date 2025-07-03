@@ -43,24 +43,40 @@ language, but the type system is close to that of
 @// ------------------------------------------------------------
 @section{Notation}
 
-Shplait syntax is based on @deftech{shrubbery} syntax, which is
-described at
+Shplait syntax is @deftech{bicameral}, meaning that it is defined in two
+layers that each enforce a set of rules. The first layer is
+@deftech{shrubbery} syntax, which is described at
 @secref(~doc: ModulePath 'lib("shrubbery/scribblings/shrubbery.scrbl")', "top").
-Superficially, Shplait resembles
-@secref(~doc: rhombus_scrbl, "top"),
-which also uses shrubbery notation, but Shplait is statically typed,
-much smaller, and has a different set of constructs overall.
-
 Shrubbery notation defines the syntax of identifiers and numbers, and it
 defines how token sequences are grouped by parentheses, brackets,
-braces, quotes, and indentation. We define Shplait using patterns over
-Shrubbery forms.
+braces, quotes, and indentation. It also defines the technical words
+@italic{term}, @italic{group}, and @italic{alternative}. A second layer
+of syntax specification (in this manual) determines which identifiers
+refer to syntactic forms, such as @rhombus(def) and @rhombus(match), and
+it determines the allowed shapes of those forms. Superficially, Shplait
+resembles @secref(~doc: rhombus_scrbl, "top"), which also uses shrubbery
+notation, but Shplait is statically typed, much smaller, and has a
+different set of constructs overall.
 
-In the pattern form a syntactic form, @litchar{...} indicates zero or
+Shplait uses shrubbery notation with some small, additional constraints:
+@//
+@itemlist(
+
+  @item{An operator cannot start with @litchar{|}, except that
+ @litchar{||} is allowed. This constraint avoids trouble when @litchar{|}
+ as a pattern or conditional separator is not followed by whitespace.}
+
+  @item{The @rhombus($) operator cannot continue a group on a new line
+ by being more indented. This constraint avoids confusion when a
+ multi-line pattern or template is intended (see @secref("sec:stxobj")),
+ but extra space appears before a @rhombus($) that starts a line.}
+
+)
+
+The rest of Shplait's syntax specification uses patterns over Shrubbery forms.
+In the pattern for a syntactic form, @litchar{...} indicates zero or
 more repetitions of the preceding form. The preceding form can be an
-individual term, a group, or an alternative. (Words like @italic{term},
-@italic{group}, and @italic{alternative} are defined as part of the
-specification of shrubbery notation.)
+individual term, a group, or an alternative.
 
 @doc(
   ~nonterminal_key: block
