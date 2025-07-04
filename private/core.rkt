@@ -6,6 +6,9 @@
                      rhombus/syntax
                      rhombus/private/treelist)
          (prefix-in rhombus: rhombus)
+         (only-in rhombus
+                  #%module_block
+                  #%interaction)
          (for-syntax
           (prefix-in rhombus: rhombus/parse))
          (prefix-in rhombus: rhombus/parse)
