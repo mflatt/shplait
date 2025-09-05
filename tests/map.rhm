@@ -1,0 +1,82 @@
+#lang shplait
+
+check:
+  { 1: "a" }
+  ~is { 1: "a" }
+
+check:
+  ({ 1: "a" } :: Mapof(Int, String))
+  ~is { 1: "a" }
+
+check:
+  block:
+    def m = { 1: "a" }
+    map_get(m, 1)
+  ~is some("a")
+
+check:
+  map_get({ 1: "a" }, 2)
+  ~is none()
+
+check:
+  [map_get_k({ 1: "a" }, 1, fun (x): x, fun (): ""),
+   map_get_k({ 1: "a" }, 2, fun (x): x, fun (): "")]
+  ~is ["a", ""]
+  
+check:
+  block:
+    def m = MutableMap{ 1: "a" }
+    map_get(m, 1)
+  ~is some("a")
+
+check:
+  map_update({ 1: "a" }, 2, "b")
+  ~is { 1: "a", 2: "b" }
+
+check:
+  map_update(MutableMap{ 1: "a" }, 2, "b")
+  ~throws "map is mutable"
+
+check:
+  map_update({ 1: "a" }, 1, "b")
+  ~is { 1: "b" }
+
+check:
+  map_update(MutableMap{ 1: "a" }, 1, "b")
+  ~throws "MutableMap"
+
+check:
+  map_remove({ 1: "a" }, 1)
+  ~is { }
+
+check:
+  map_remove({ 1: "a", 2: "b" }, 1)
+  ~is { 2: "b" }
+
+check:
+  map_remove(MutableMap{ 1: "a", 2: "b" }, 1)
+  ~throws "map is mutable"
+
+check:
+  block:
+    def m = MutableMap{ 1: "a" }
+    map_set(m, 1, "b")
+    m
+  ~is MutableMap{ 1: "b" }
+
+check:
+  block:
+    def m = MutableMap{ 1: "a" }
+    map_set(m, 2, "b")
+    map_set(m, 3, "c")
+    map_delete(m, 1)    
+    m
+  ~is MutableMap{ 2: "b", 3: "c" }
+
+check:
+  map_keys({ 1: "a", 2: "b" })
+  ~is [1, 2]
+
+check:
+  map_keys(MutableMap{ 1: "a", 2: "b" })
+  ~is [1, 2]
