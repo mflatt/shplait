@@ -1037,7 +1037,7 @@ redefining or shadowing the names could easily create confusion:
 }
 
 @// ------------------------------------------------------------
-@section(~tag: "sec:builtin"){Predefined Types and Functions}
+@section(~tag: "sec:builtin"){Predefined Types and Associated Functions and Forms}
 
 @local_table_of_contents()
 
