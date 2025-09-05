@@ -407,7 +407,7 @@ redefining or shadowing the names could easily create confusion:
  provides the type and result value of the sequence.
 
  Any expression in the sequence before the last one must
- have type @rhombus(Void), and such an expression is useful only when it
+ have type @rhombus(Void, ~at shplait/type), and such an expression is useful only when it
  has a side effect (such as printing), since the result is ignored.
 
  Names defined by definitions in @rhombus(body) are visible only within
