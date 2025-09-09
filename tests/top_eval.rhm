@@ -1,0 +1,15 @@
+#lang rhombus/static/and_meta
+import:
+  open: "eval.rhm"
+
+export:
+  check_top_eval
+
+expr.macro 'check_top_eval:
+              $body
+              ~prints: $(str :: String)
+                       ...':
+  'check:
+     parameterize { Evaluator.current: make_shplait_evaluator()}:
+       println(eval('$body', ~as_interaction: #true))
+     ~prints String.append(& [$str, "\n"], ...)'

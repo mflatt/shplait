@@ -1,0 +1,23 @@
+#lang shplait
+import:
+  open: "top_eval.rhm"
+
+check_top_eval:
+  1
+  ~prints: "- Int"
+           "1"
+
+check_top_eval:
+  [1]
+  ~prints: "- Listof(Int)"
+           "[1]"
+
+check_top_eval:
+  fun (x): x + 1
+  ~prints: "- Int -> Int"
+           "#<function:fun>"
+
+check_top_eval:
+  fun (x): x
+  ~prints: "- ?_a -> ?_a"
+           "#<function:fun>"

@@ -1,6 +1,7 @@
 #lang rhombus/static/and_meta
 
 export:
+  make_shplait_evaluator
   check_eval
 
 fun make_shplait_evaluator():

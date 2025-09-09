@@ -12,8 +12,6 @@
          (for-syntax
           (prefix-in rhombus: rhombus/parse))
          (prefix-in rhombus: rhombus/parse)
-         (only-in (submod rhombus/private/amalgam parse)
-                  rhombus-local-expand) ; provided by `rhombus/parse` in v0.35 and later
          rhombus/private/bounce
          "frame.rhm"
          "configure.rhm")
@@ -117,8 +115,9 @@
            (syntax-parse pre-b
              #:literals (#%expression)
              [(#%expression e)
-              (define exp-e (rhombus-local-expand #'e))
-              (finish_current_frame)     
+              (define exp-e (rhombus:rhombus-local-expand #'e))
+              (define-values (res-stx-e/none res-e) (syntax-local-expand-expression exp-e #t))
+              (finish_current_frame)
               (displayln (string-append "- " (interaction_type_string exp-e)))
               exp-e]
              [else      
