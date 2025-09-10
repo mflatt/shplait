@@ -43,6 +43,13 @@ type_defn.macro
                         | ty
                         | t.TypeConstructor(#false, t.poly_ize(ty, arg_tys), arg_tys))
     type_defn_meta.pack(id, t.LazyParseType(#false, arg_tys, type_thunk), tvar_box.value)
+| 'type $(id :: Identifier) $(args :: MaybeArgs) ~opaque':
+    ~op_stx self
+    denylist.validate(id, "type")
+    let tvar_box = Box(IdMap{})
+    let arg_tys :~ List = parse_arg_types([args.arg, ...], self, args, tvar_box)
+    let dty = t.OpaqueDatatype(#false, id, arg_tys, '(fun (x): #true)')
+    type_defn_meta.pack(id, dty, tvar_box.value)
 | 'type $(id :: Identifier) $(args :: MaybeArgs)
    | $_
    | ...':
@@ -71,6 +78,21 @@ decl.macro
         f.record_frame_defn_type(ty_sym, ty)    
         '«type_expr.macro '$id':
             type_expr_meta.pack(t_s.syntax_to_type('$ty_sym'))»'
+| 'type $(id :: Identifier) $(args :: MaybeArgs) ~opaque':
+    let (ty :~ t.OpaqueDatatype, tvars) = f.lookup_found_type_definition(id)
+    match ty.args    
+    | []:
+        let ty_sym = t_s.type_to_syntax(ty)
+        f.record_frame_defn_type(ty_sym, ty)    
+        '«type_expr.macro '$id':
+            type_expr_meta.pack(t_s.syntax_to_type('$ty_sym'))»'
+    | [arg_tvar, ...]:
+        let ty_sym = t_s.type_to_syntax(ty)
+        let [arg_g_id, ...] = [Syntax.make_temp_id(arg_tvar), ...]
+        f.record_frame_defn_type(ty_sym, ty)
+        '«type_expr.macro '$id($('$')$arg_g_id, ...)':
+            ~op_stx self
+            type_expr_meta.pack(t.at_source(instantiate_datatype('$ty_sym', [$arg_g_id, ...]), self))»'
 | 'type $(id :: Identifier) $(args :: MaybeArgs)
    | $(var_id :: Identifier) ($(field :: TypedArgument), ...)
    | ...':

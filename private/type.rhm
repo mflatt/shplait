@@ -15,7 +15,7 @@ export:
   LazyParseType TypeConstructor
   gen_tvar
   to_expression
-  create_defn poly_ize poly_ize_upto as_non_poly
+  create_defn poly_ize poly_ize_wrt poly_ize_upto as_non_poly
   Poly poly_instance at_source instantiate_constructor_at instantiate_at
   unify_do unify_defn_do
   let_based_poly_do
@@ -320,6 +320,7 @@ fun type_to_string(tmap :: MutableMap):
           [#'ParameterOf, loop(type.element)]
       | type :: Poly:
           type_to_string(tmap)(instance(type.tvar, gen_tvar(#'poly))(type.type))
+      #//
       | type :: OpaqueDatatype:
           'OpaqueDatatype(#false, '$(type.id)', [], '$(type.pred)')'
       | type :: Datatype:

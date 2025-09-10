@@ -1,0 +1,29 @@
+#lang shplait
+
+block:
+  import:
+    typed lib("racket/base.rkt"): vector :: (Int, Int, Int, Int) -> Arrayof(Int)
+  check: vector(1, 2, 3, 4)[2]
+         ~is 3
+
+type Vector ~opaque
+block:
+  import:
+    typed lib("racket/base.rkt"):
+      vector :: (Int, Int) -> Vector
+      #{vector-ref} :: (Vector, Int) -> Int
+
+  check: #{vector-ref}(vector(1, 2), 0)
+         ~is 1
+
+type Vectorof(?a) ~opaque
+block:
+  import:
+    typed lib("racket/base.rkt"):
+      vector :: (?a, ?a) -> Vectorof(?a)
+      #{vector-ref} :: (Vectorof(?a), Int) -> ?a
+
+  check: #{vector-ref}(vector(1, 2), 0)
+         ~is 1
+  check: #{vector-ref}(vector("a", "b"), 0)
+         ~is "a"

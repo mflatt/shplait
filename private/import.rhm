@@ -1,7 +1,40 @@
 #lang rhombus/static/and_meta
+import:
+  meta:
+    "id_map.rhm" open
+    "type.rhm" as t
+  "frame.rhm" as f
+  "type_statinfo.rhm" as t_s
 
 export:
   import
   only_space impo:
     lib file names: / ! #%literal
     open
+  typed
+
+impo.macro 'typed $mod ...:
+              $(id :: Identifier) :: $(ty_exp :: Group)
+              ...':
+  let poly_context = f.get_current_frame().poly_context
+  let base_tvars = f.get_current_frame().all_tvars()
+  fun parse_type(ty_exp, id):
+    let ty = f.parse_type(ty_exp, '', id, Box(IdMap{}))
+    t.poly_ize_wrt(ty, poly_context, base_tvars)
+  let [ty, ...] = [parse_type(ty_exp, id), ...]
+  let [ty_sym, ...] = [t_s.type_to_syntax(ty), ...]
+  '(namespace ns:
+      import:
+        ($mod ...:
+           expose:
+             $id
+             ...):
+          except_space statinfo
+      statinfo.macro '$id': '(($t_s.type_key, $ty_sym))'
+      ...
+      export:
+        $id
+        ...) as ~none:
+     expose:
+       $id
+       ...'
