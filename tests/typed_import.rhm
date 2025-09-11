@@ -27,3 +27,19 @@ block:
          ~is 1
   check: #{vector-ref}(vector("a", "b"), 0)
          ~is "a"
+
+type Srclocof(?a) ~opaque
+block:
+  import:
+    typed rhombus:
+      Srcloc :: (?a, Int, Int, Int, Int) -> Srclocof(?a)         
+      Srcloc.source :: Srclocof(?a) -> ?a
+  check: source(Srcloc("file", 1, 2, 3, 4))
+         ~is "file"
+block:
+  import:
+    typed rhombus:
+      Srcloc ~as srcloc :: (?a, Int, Int, Int, Int) -> Srclocof(?a)         
+      Srcloc.source ~as srcloc_source :: Srclocof(?a) -> ?a
+  check: srcloc_source(srcloc("file", 1, 2, 3, 4))
+         ~is "file"

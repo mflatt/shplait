@@ -25,6 +25,8 @@
 @(def eval = make_eval())
 @(def check_eval = make_eval(~attach: #false))
 
+@(def type_defn = @rhombus(type, ~decl))
+
 @title{Shplait Language}
 
 The Shplait language syntactically resembles the
@@ -185,6 +187,7 @@ and new types can be defined with @rhombus(type).
   decl.macro 'type $id $maybe_type_args
               | $variant_id($field_id :: $field_type, ...)
               | ...'
+  decl.macro 'type $id $maybe_type_args ~opaque'
   grammar maybe_type_args:
     ϵ
     (? $of_id, ? $of_id, ...)
@@ -279,6 +282,24 @@ and new types can be defined with @rhombus(type).
     node(leaf(1), leaf(2))
     node(leaf("apple"), leaf("banana"))
 )
+
+ Using @rhombus(type) with @rhombus(~opaque) defines @rhombus(id) as
+ fresh type that is unrelated to any oter type. An opaque type defined
+ this way is intended for use with @rhombus(typed, ~impo) to assign types
+ to names imported from non-Shplait modules.
+
+@examples(
+  ~eval: eval
+  ~defn:
+    type Srclocof(?a) ~opaque
+    import:
+      typed rhombus:
+        Srcloc ~as srcloc :: (?a, Int, Int, Int, Int) -> Srclocof(?a)
+        Srcloc.source ~as srcloc_source :: (Srclocof(?a)) -> ?a
+  ~repl:
+    srcloc_source(srcloc("file", 1, 2, 3, 4))
+)
+
 
 }
 
@@ -2609,6 +2630,9 @@ inside another module.
     #,(@rhombus(open, ~impo)):
       $module_path
       ...
+    #,(@rhombus(typed, ~impo)) $module_path:
+      $in_name :: $type
+      ...  
 
   grammar module_path:
     $id
@@ -2617,7 +2641,13 @@ inside another module.
     $relative_path_string
     file($path_string)
 
+  grammar in_name:
+    $id
+    $id ~as $id
+    $id . $in_name
+
   impo.macro 'open: $module_path; ...'
+  impo.macro 'typed $module_path: $in_name :: $type; ...'
 ){
 
  The @rhombus(import) form acts like a definition for all of the exports
@@ -2632,6 +2662,17 @@ inside another module.
  a name exported from the module to use that name. If
  @rhombus(open, ~impo) is used for the module, then its exported names
  can be used directly, without a prefix.
+
+ The @rhombus(typed, ~impo) form is for importing functions from modules
+ that are written in a language other than Shplait. The specific bindings
+ named by the @rhombus(in_name)s are imported from the
+ @rhombus(module_path), and each imported binding is assumed (without
+ specific compile-time or run-time checking) to have the specified
+ @rhombus(type). An @rhombus(in_name) can use @rhombus(.) to access
+ nested exports from @rhombus(module_path), in which case the last
+ @rhombus(id) is used as the name of the import. If @rhombus(in_name)
+ includes @rhombus(~as), then the @rhombus(id) after @rhombus(~as) is the
+ local name. See @type_defn for an example.
 
  The @rhombus(relative_path_string) form allows only characters in a
  file name that are especially portable: @litchar{a}-@litchar{z},

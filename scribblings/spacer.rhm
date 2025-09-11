@@ -11,6 +11,7 @@ export:
     let
     letrec
     $
+    typed
 
 spacer.bridge fun(self, tail, context, esc):  
   ~in: ~expr ~defn
@@ -56,6 +57,23 @@ spacer.bridge type(self, tail, context, esc):
       let new_ctrs:
         Syntax.make([#'alts, adjust_clause(ctr), ...]).relocate(alts)
       '$self $name ... $new_ctrs'
+  | '$other ...':
+      '$self $other ...'
+
+spacer.bridge typed(self, tail, context, esc):  
+  ~in: ~impo
+  match tail
+  | '$mod_path ...: $(b :: Block)':
+      let new_b:
+        match b
+        | ': $(g && '$name_seq ... $(op && '::') $type_seq ...')
+             ...':
+            let new_b = ': $('$name_seq ... $op $(spacer.adjust_sequence('$type_seq ...', #'#{shplait/type}, esc))'
+                               .relocate_group(g))
+                           ...'
+            new_b.relocate(b)
+        | ~else: b
+      '$self $(spacer.adjust_sequence('$mod_path ...', #'~impo, esc)) $new_b'
   | '$other ...':
       '$self $other ...'
 

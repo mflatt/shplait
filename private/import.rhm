@@ -13,9 +13,19 @@ export:
     open
   typed
 
+meta:
+  syntax_class NameMaybeRename:
+    fields: name
+            id
+  | '$(name :: IdentifierName) ~as $(id :: Identifier)'
+  | '$(name :: IdentifierName)':
+      field id: match name
+                | '$_ ... $id': id
+
 impo.macro 'typed $mod ...:
-              $(id :: Identifier) :: $(ty_exp :: Group)
+              $(name :: NameMaybeRename) :: $(ty_exp :: Group)
               ...':
+  let [id, ...] = [name.id, ...]
   let poly_context = f.get_current_frame().poly_context
   let base_tvars = f.get_current_frame().all_tvars()
   fun parse_type(ty_exp, id):
@@ -24,12 +34,10 @@ impo.macro 'typed $mod ...:
   let [ty, ...] = [parse_type(ty_exp, id), ...]
   let [ty_sym, ...] = [t_s.type_to_syntax(ty), ...]
   '(namespace ns:
-      import:
-        ($mod ...:
-           expose:
-             $id
-             ...):
-          except_space statinfo
+      import $mod ...:
+        as mod
+      def $id = dynamic(mod . $name.name)
+      ...
       statinfo.macro '$id': '(($t_s.type_key, $ty_sym))'
       ...
       export:
