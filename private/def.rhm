@@ -14,6 +14,7 @@ import:
   "trace.rhm"!traceable.maybe_wrap_traceable
   "block.rhm".implicit_block
   "denylist.rhm"
+  "export.rhm" as ex
 
 export:
   rename:
@@ -79,6 +80,7 @@ meta:
                                 ~body:
                                   $rhs
                             maybe_wrap_traceable($infer_id, #'$infer_id)))'
+    Function.pass(ex.add_export(id), ...)
     match mutable_tag
     | '':
         '«statinfo.macro '$id': '(($t_s.type_key, $ty_sym))'

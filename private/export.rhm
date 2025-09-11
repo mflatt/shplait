@@ -1,0 +1,24 @@
+#lang rhombus/static/and_meta
+
+export:
+  all_defined_to_export
+  meta:
+    add_export
+    get_exports
+
+meta:
+  def mutable exports :~ List = []
+
+  fun add_export(id):
+    exports := exports.add(syntax_meta.flip_introduce(id))
+
+  fun get_exports(stx):
+    exports.filter(~keep:
+                     fun (id :~ Syntax):
+                       syntax_meta.equal_binding(id, id.replace_scopes(stx)))
+
+expo.macro 'all_defined_to_export ~scope_like $ctx':
+  let [id, ...] = get_exports(ctx)
+  'names:
+     $id
+     ...'

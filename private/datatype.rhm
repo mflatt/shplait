@@ -18,6 +18,7 @@ import:
   "value.rhm".all_value_types
   "lazy.rhm" open
   "denylist.rhm"
+  "export.rhm" as ex
 
 export:
   type
@@ -65,6 +66,7 @@ type_defn.macro
 decl.macro
 | 'type $(id :: Identifier) $(args :: MaybeArgs) = $ty_e ...':
     let (ty, tvars) = f.lookup_found_type_definition(id)
+    ex.add_export(id)
     match ty
     | ty :: t.TypeConstructor:
         let [arg_tvar, ...] = ty.arg_tvars
@@ -80,6 +82,7 @@ decl.macro
             type_expr_meta.pack(t_s.syntax_to_type('$ty_sym'))»'
 | 'type $(id :: Identifier) $(args :: MaybeArgs) ~opaque':
     let (ty :~ t.OpaqueDatatype, tvars) = f.lookup_found_type_definition(id)
+    ex.add_export(id)
     match ty.args    
     | []:
         let ty_sym = t_s.type_to_syntax(ty)
@@ -119,6 +122,8 @@ decl.macro
              [dup(var_id, [field.id, ...]), ...])
     let [[field_id_accessor, ...], ...] = [[Syntax.make_id(var_id_x +& "." +& field.id), ...], ...]
     let dt_arg_len = arg_tys.length()
+    ex.add_export(id)
+    Function.pass(ex.add_export(var_id), ...)
     '«namespace ~open:
         class $id():
           nonfinal

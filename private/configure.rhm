@@ -3,6 +3,7 @@ import:
   meta:
     "type.rhm" as t
   "frame.rhm" as f
+  "export.rhm" as ex
 
 export:
   meta:
@@ -70,8 +71,8 @@ meta:
   fun add_export_all(forms):
     match forms
     | []: []
-    | ['$ctx $_ ...', & rest_forms]:        
-        [&forms, 'export: all_defined ~scope_like $(Syntax.make(#'ctx, ctx))']
+    | ['$ctx $_ ...', & rest_forms]:
+        [&forms, 'export: ex.all_defined_to_export ~scope_like $(Syntax.make(#'ctx, ctx))']
 
   fun add_save_config(config, forms):
     let [g, ...] = forms

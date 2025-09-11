@@ -5,6 +5,7 @@ import:
   "syntax.rhm"!convert.convert_tmpl
   "syntax.rhm"!compile_time.compile_time
   "value.rhm".value
+  "export.rhm" as ex
   meta:
     "syntax.rhm"!convert.convert_tmpl
     "syntax.rhm"!compile_time.compile_time
@@ -30,6 +31,7 @@ defn.macro
       '$tmpl'»':
     def [c_pat, _] = convert_pat('$pat', #false)
     def [c_tmpl, _] = convert_tmpl(tmpl, #false)
+    ex.add_export(id)
     '«expr.macro '$id $c_pat':
         def $local_id = $(compile_time(local_expr))
         ...
@@ -42,6 +44,7 @@ defn.macro
     ~all_stx stx
     def [c_pat, _] = convert_pat('$pat', #false)
     def [c_tmpl, _] = convert_tmpl(tmpl, #false)
+    ex.add_export(op)
     '«expr.macro '$('$') $left $op $c_pat':
         ~stronger_than: ~other
         def $local_id = $(compile_time(local_expr))
@@ -61,6 +64,7 @@ defn.macro
       | syntax_meta.error("identifier does not match the first case's identifier", stx, id)
     def [[c_pat, _], ...] = [convert_pat('$pat', #false), ...]
     def [[c_tmpl, _], ...] = [convert_tmpl(tmpl, #false), ...]
+    ex.add_export(id0)
     '«expr.macro
       | '$id $c_pat':
           def $local_id = $(compile_time(local_expr))
@@ -81,6 +85,7 @@ defn.macro
       | syntax_meta.error("operator does not match the first case's operator", stx, op)
     def [[c_pat, _], ...] = [convert_pat('$pat', #false), ...]
     def [[c_tmpl, _], ...] = [convert_tmpl(tmpl, #false), ...]
+    ex.add_export(op0)
     '«expr.macro $op0:
         ~stronger_than: ~other
       | '$('$') $left $op $c_pat':
