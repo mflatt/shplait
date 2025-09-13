@@ -63,7 +63,7 @@ expr.macro '«shquotes $(quoted_tmpl && '«'$tmpl'»')»':
                     block:
                       def $(nest_rep(tmp_id, depth)) = reference_syntax_pattern_var($id, $depth)
                       ...
-                      #%quotes '$tmpl_cvt'
+                      #%quotes $('«'$tmpl_cvt'»'.relocate_span([quoted_tmpl]))
                     )»',
                 quoted_tmpl,
                 t.Shrub(quoted_tmpl))
