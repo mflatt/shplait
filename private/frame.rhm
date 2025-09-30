@@ -85,7 +85,7 @@ meta:
     let [type, tvars] = get_current_frame().type_defns[id]
     values(tyex.force_type(type), tvars)
 
-  fun parse_type(stx, op, src, tvars_box):
+  fun parse_type(stx, op, src, tvars_box) :~ t.Type:
     tyex.parse(stx, op, src, tvars_box,
                fun (id):
                  match get_current_frame().type_defns[id]

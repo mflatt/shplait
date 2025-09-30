@@ -157,7 +157,8 @@ decl.macro
           $field.id
           ...
         fun $field_id_accessor(v):
-          $(var_tmp_id_x) . $(field.id) (force(v))
+          $('($(var_tmp_id_x) . $(field.id) (force(v)))'
+              .track_origin(field_ty.origin))
         ...
         expr.macro '$field.id':
           ~op_stx self

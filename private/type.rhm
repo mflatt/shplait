@@ -67,9 +67,15 @@ fun configure_typing(off, fuel):
 fun configured_as_checked():
   as_checked
 
-class Type(mutable src):
+class Type(mutable src, private mutable _is_tracked = #false):
   nonfinal
   abstract clone()
+  property origin :~ Syntax:
+    if src is_a Term
+    | src
+    | Syntax.make(#'unknown)
+  property | is_tracked: _is_tracked
+           | is_tracked := v: _is_tracked := v
 
 defn.macro 'class_c $name($field, ...): $body; ...':
   'class $name($field, ...):

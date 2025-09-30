@@ -42,31 +42,35 @@ class Lazy(mutable v, mutable is_forced):
 interface Forceable:
   method force_all()
 
-expr.macro 'maybe_delay($e_orig, $e)':
-  if is_lazy
-  | match e_orig
-    | '$(v :: value_meta.Parsed)' when v.unwrap():
-        // a practical and realistic shortcut for a lazy language,
-        // and helps avoid an excessive coverage requirement for tests
-        e
-    | ~else:
-        'Lazy(fun (): $e, #false)'
-  | e
+expr.macro 'maybe_delay($e_orig, $e) $tail ...':
+  values(if is_lazy
+         | match e_orig
+           | '$(v :: value_meta.Parsed)' when v.unwrap():
+               // a practical and realistic shortcut for a lazy language,
+               // and helps avoid an excessive coverage requirement for tests
+               e
+           | ~else:
+               '(Lazy(fun (): $e, #false))'.relocate_span([e])
+         | e,
+         '$tail ...')
 
-expr.macro 'delay($e)':
-  if is_lazy
-  | 'Lazy(fun (): $e, #false)'
-  | e
+expr.macro 'delay($e) $tail ...':
+  values(if is_lazy
+         | '(Lazy(fun (): $e, #false))'.relocate_span([e])
+         | e,
+         '$tail ...')
 
-expr.macro 'force($e)':  
-  if is_accomodating
-  | '(dynamic_force($e))'.relocate_span([e])
-  | e
+expr.macro 'force($e) $tail ...':
+  values(if is_accomodating
+         | '(dynamic_force($e))'.relocate_span([e])
+         | e,
+         '$tail ...')
 
-expr.macro 'force_all($e)':
-  if is_accomodating
-  | '(dynamic_force_all($e))'.relocate_span([e])
-  | e
+expr.macro 'force_all($e) $tail ...':
+  values(if is_accomodating
+         | '(dynamic_force_all($e))'.relocate_span([e])
+         | e,
+         '$tail ...')
 
 // for direct use in primitives that need to work in both
 // eager and lazy modes:

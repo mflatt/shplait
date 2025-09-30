@@ -43,9 +43,9 @@ meta:
      expr]
 
   fun
-  | wrap_type(expr :: Syntax, ty):
+  | wrap_type(expr :: Syntax, ty) :~ Syntax:
       statinfo_meta.wrap(expr, '(($type_key, $(type_to_syntax(ty))))')
-  | wrap_type(expr :: Syntax, orig_stx :: Syntax, ty):
+  | wrap_type(expr :: Syntax, orig_stx :: Syntax, ty) :~ Syntax:
       wrap_type('($expr)'.relocate_span([orig_stx]), ty)
 
   fun register_type(sym, ty):
