@@ -115,12 +115,7 @@ decl.macro
     let [[var_field_ty, ...], ...] = [[t.poly_ize_upto(t.Arrow(field.id, [dty], field_ty), arg_tys, field.type_seq), ...], ...]
     let [[var_field_ty_sym, ...], ...] = [[t_s.type_to_syntax(var_field_ty), ...], ...]
     Function.pass(f.record_frame_defn_type(var_field_ty_sym, var_field_ty), ..., ...)
-    let ([[var_tmp_id_x, ...], ...], // workaround nested `...` mismatch
-         [[var_id_x, ...], ...]):
-      fun dup(v, ls :~ List): ls.map(fun (_): v)
-      values([dup(var_tmp_id, [field.id, ...]), ...],
-             [dup(var_id, [field.id, ...]), ...])
-    let [[field_id_accessor, ...], ...] = [[Syntax.make_id(var_id_x +& "." +& field.id), ...], ...]
+    let [[field_id_accessor, ...], ...] = [[Syntax.make_id((deepen var_id ~like_inner field.id) +& "." +& field.id), ...], ...]
     let dt_arg_len = arg_tys.length()
     ex.add_export(id)
     Function.pass(ex.add_export(var_id), ...)
@@ -157,7 +152,7 @@ decl.macro
           $field.id
           ...
         fun $field_id_accessor(v):
-          $('($(var_tmp_id_x) . $(field.id) (force(v)))'
+          $('($(deepen var_tmp_id ~like_inner field.id) . $(field.id) (force(v)))'
               .track_origin(field_ty.origin))
         ...
         expr.macro '$field.id':

@@ -257,7 +257,7 @@ meta:
       match expr_in
       | '': syntax_meta.error("missing target expr", self)
       | ~else: expr_in
-    let [[dt_id, dt_arg_n, pat_id, pat_ctr_ty,], ...]:
+    let [[dt_id, dt_arg_n, pat_id :~ Syntax, pat_ctr_ty,], ...]:
       for List:
         each ctr: [ctr, ...]
         fun fail():
@@ -297,6 +297,7 @@ meta:
               ~body:
                 $(implicit_block(else_body))']
       | []
+    let [pat_id, ...] = [pat_id.property(#'origin, syntax_meta.flip_introduce(ctr)), ...]
     let r:
       '«match force($new_expr)
         | $pat_id($arg_id, ...):
