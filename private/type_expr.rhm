@@ -181,10 +181,10 @@ meta:
         syntax_meta.error("parenthesized types without `->` afterward", tp)
     | ty :~ t.Type:
         when !ty.is_tracked && (ty.src is_a Syntax)
-        | ty.src := Syntax.track_origin(if ty.src is_a Term
-                                        | ty.src
-                                        | '($ty.src)'.relocate_span([ty.src]),
-                                        tp)
+        | ty.src := syntax_meta.track_origin(if ty.src is_a Term
+                                             | ty.src
+                                             | '($ty.src)'.relocate_span([ty.src]),
+                                             tp)
           ty.is_tracked := #true
         ty
 
@@ -269,13 +269,13 @@ type_expr.macro '$args -> $(result :: type_expr_meta.XAfterInfixParsed('->')) $(
   values(match type_expr_meta.unpack(args)
          | ps :: t.ParenOf:
              let [ps_arg :~ t.Type, ...] = ps.args
-             let src: self.track_origin([r_ty.origin, ps_arg.origin, ...])
+             let src: syntax_meta.track_origin(self, [r_ty.origin, ps_arg.origin, ...])
              type_expr_meta.pack(t.Arrow(src, ps.args, r_ty))
          | t.TupleOf(_, []):
-             let src: self.track_origin(r_ty.origin)
+             let src: syntax_meta.track_origin(self, r_ty.origin)
              type_expr_meta.pack(t.Arrow(src, [], r_ty))
          | arg :~ t.Type:
-             let src: self.track_origin([arg.origin, r_ty.origin])
+             let src: syntax_meta.track_origin(self, [arg.origin, r_ty.origin])
              type_expr_meta.pack(t.Arrow(src, [arg], r_ty)),
          '$result.tail ...')
 

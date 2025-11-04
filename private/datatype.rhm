@@ -152,8 +152,10 @@ decl.macro
           $field.id
           ...
         fun $field_id_accessor(v):
-          $('($(deepen var_tmp_id ~like_inner field.id) . $(field.id) (force(v)))'
-              .track_origin(field_ty.origin))
+          $(syntax_meta.track_origin(
+              '($(deepen var_tmp_id ~like_inner field.id) . $(field.id) (force(v)))',
+              field_ty.origin
+            ))
         ...
         expr.macro '$field.id':
           ~op_stx self

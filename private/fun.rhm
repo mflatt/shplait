@@ -87,7 +87,7 @@ expr.macro
              ~body:
                $(implicit_block(body))
        »'
-    let expr: '($expr)'.track_origin([arg_type.origin, ..., res_ty.origin])
+    let expr: syntax_meta.track_origin('($expr)', [arg_type.origin, ..., res_ty.origin])
     t_s.wrap_type(expr, stx, arrow_type)
 | 'function ($arg, ...) $something $_ ...':
     ~all_stx stx
