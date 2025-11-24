@@ -1467,7 +1467,7 @@ for that case, but Shplait predefines a helpful datatype called
 @rhombusblock(
   type Optionof(?a)
   | none()
-  | some(v :: ?a)
+  | some(val :: ?a)
 )
 
 The @rhombus(?a, ~at shplait/type) in this definition of
