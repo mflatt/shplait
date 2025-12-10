@@ -25,12 +25,13 @@
                                                        (equal? str "||")]
                                                       [else #t]))
                                 #:indented-operator-continue? (lambda (str)
-                                                                ;; disallowing line continuation for `$`
-                                                                ;; prevents confusion in syntax patterns
-                                                                ;; and templates, where it looks like `$`
+                                                                ;; disallowing line continuation for `$` or `...`
+                                                                ;; prevents confusion in syntax patterns and
+                                                                ;; templates, where it looks like `$` or `...`
                                                                 ;; is at the start of a new group, but it
                                                                 ;; actually continues the previous group
-                                                                (not (equal? str "$")))))
+                                                                (not (or (equal? str "$")
+                                                                         (equal? str "..."))))))
   (define semantic-type-guess
     (let ([classify (delay (dynamic-require '(lib "shplait/private/syntax_color.rhm") 'classify))])
       (lambda (str default)

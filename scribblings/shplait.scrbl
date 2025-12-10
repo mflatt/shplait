@@ -68,10 +68,10 @@ Shplait uses shrubbery notation with some small, additional constraints:
  @litchar{||} is allowed. This constraint avoids trouble when @litchar{|}
  as a pattern or conditional separator is not followed by whitespace.}
 
-  @item{The @rhombus($) operator cannot continue a group on a new line
+  @item{The @rhombus($) and @rhombus(...) operators cannot continue a group on a new line
  by being more indented. This constraint avoids confusion when a
  multi-line pattern or template is intended (see @secref("sec:stxobj")),
- but extra space appears before a @rhombus($) that starts a line.}
+ but extra space appears before a @rhombus($) or @rhombus(...) that starts a line.}
 
 )
 
