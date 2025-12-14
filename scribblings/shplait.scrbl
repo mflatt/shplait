@@ -89,9 +89,9 @@ individual term, a group, or an alternative.
   grammar body
   grammar type
 
-  grammar typed_id:
-    id
-    id :: type
+  grammar typed_id
+  | id
+  | id :: type
 ){
 
  These names are used in syntax descriptions, sometimes with a prefix to
@@ -188,9 +188,9 @@ and new types can be defined with @rhombus(type).
               | $variant_id($field_id :: $field_type, ...)
               | ...'
   decl.macro 'type $id $maybe_type_args ~opaque'
-  grammar maybe_type_args:
-    ϵ
-    (? $of_id, ? $of_id, ...)
+  grammar maybe_type_args
+  | ϵ
+  | (? $of_id, ? $of_id, ...)
 ){
 
  Defines a new type, either @rhombus(id) or @rhombus(id(arg_type, ...)).
@@ -462,9 +462,9 @@ redefining or shadowing the names could easily create confusion:
   expr.macro 'fun ($typed_id, ...) $maybe_type:
                 $body'
 
-  grammar maybe_type:
-    ϵ
-    :: $type
+  grammar maybe_type
+  | ϵ
+  | :: $type
 ){
 
  The @rhombus(fun, ~defn) form is a definition when @rhombus(id) appears
@@ -707,9 +707,9 @@ redefining or shadowing the names could easily create confusion:
                | $integer_case: $result_body
                | ...
                | ~else: $else_body»'
-  grammar integer_case:
-    $integer
-    $integer #,(@rhombus(||, ~datum)) $integer_case
+  grammar integer_case
+  | $integer
+  | $integer #,(@rhombus(||, ~datum)) $integer_case
 ){
 
  Pattern-matching case dispatch on the result of @rhombus(target_expr),
@@ -2625,26 +2625,26 @@ inside another module.
                 $import_spec
                 ...'
 
-  grammar import_spec:
-    $module_path
-    #,(@rhombus(open, ~impo)):
+  grammar import_spec
+  | $module_path
+  | #,(@rhombus(open, ~impo)):
       $module_path
       ...
-    #,(@rhombus(typed, ~impo)) $module_path:
+  | #,(@rhombus(typed, ~impo)) $module_path:
       $in_name :: $type
       ...  
 
-  grammar module_path:
-    $id
-    $id / $module_path
-    lib($module_string)
-    $relative_path_string
-    file($path_string)
+  grammar module_path
+  | $id
+  | $id / $module_path
+  | lib($module_string)
+  | $relative_path_string
+  | file($path_string)
 
-  grammar in_name:
-    $id
-    $id ~as $id
-    $id . $in_name
+  grammar in_name
+  | $id
+  | $id ~as $id
+  | $id . $in_name
 
   impo.macro 'open: $module_path; ...'
   impo.macro 'typed $module_path: $in_name :: $type; ...'
@@ -2692,9 +2692,9 @@ inside another module.
   decl.macro 'module $id:
                 $defn_or_expr
                 ...'
-  grammar defn_or_expr:
-    $defn
-    $expr
+  grammar defn_or_expr
+  | $defn
+  | $expr
 ){
 
  Adds to the submodule name @rhombus(id) within the enclosing module.
@@ -2855,14 +2855,14 @@ a few small exceptions:
   ~nonterminal_key: block
   ~nonterminal:
     maybe_type: fun maybe_type ~defn
-  grammar value:
-    ($value)
-    fun ($typed_id, ...) $maybe_type: $expr
-    values($value, ...)
-    [$value, ...]
-    $variant_id($value, ...)
-    $literal
-    $id
+  grammar value
+  | ($value)
+  | fun ($typed_id, ...) $maybe_type: $expr
+  | values($value, ...)
+  | [$value, ...]
+  | $variant_id($value, ...)
+  | $literal
+  | $id
 ){}
 
    where @rhombus(variand_id, ~var) refers to any
