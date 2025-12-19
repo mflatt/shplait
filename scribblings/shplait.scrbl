@@ -18,7 +18,7 @@
     body: block
     value: block)
 
-@(def rhombus_scrbl = ModulePath 'lib("rhombus/scribblings/rhombus.scrbl")')
+@(def rhombus_scrbl = ModulePath 'lib("rhombus/scribblings/guide/rhombus-guide.scrbl")')
 
 @(macro 'nodef($id)': '@rhombus($id, ~datum)')
 
@@ -27,7 +27,7 @@
 
 @(def type_defn = @rhombus(type, ~decl))
 
-@title{Shplait Language}
+@title(~category: #'language){Shplait Language}
 
 The Shplait language syntactically resembles the
 @seclink(~doc: rhombus_scrbl, "top"){Rhombus}
