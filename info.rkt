@@ -15,4 +15,7 @@
 
 (define version "0.14")
 
-(define scribblings '(("scribblings/shplait.scrbl" (multi-page) (language))))
+(define scribblings '(("scribblings/shplait.scrbl" (multi-page) (language 0 ("Shplait")))))
+
+(define language-family (list (hash 'fam "Shplait"
+                                    'doc '(lib "shplait/scribblings/shplait.scrbl"))))

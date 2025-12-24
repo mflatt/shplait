@@ -32,7 +32,8 @@
 The Shplait language syntactically resembles the
 @seclink(~doc: rhombus_scrbl, "top"){Rhombus}
 language, but the type system is close to that of
-@hyperlink("http://smlnj.org/"){ML}. For a quick introduction, see the
+@hyperlink("http://smlnj.org/"){ML}.
+For a quick introduction, see the
 @seclink("Tutorial"){tutorial section} or the
 @hyperlink(tutorial_video_url){tutorial videos}.
 

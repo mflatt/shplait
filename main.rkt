@@ -8,8 +8,13 @@
   #:language 'shplait
   #:read (lambda (in) (list (syntax->datum (parse-all in #:variant variant))))
   #:read-syntax (lambda (src in) (list (parse-all in #:source src #:variant variant)))
-  #:info (lambda (a b c)
-           (get-info-proc a b c #:variant variant #:semantic-type-guess semantic-type-guess))
+  #:info (lambda (key default make-default)
+           (case key
+             [(documentation-language-family) "Shplait"]
+             [else
+              (get-info-proc key default make-default
+                             #:variant variant
+                             #:semantic-type-guess semantic-type-guess)]))
   #:whole-body-readers? #t
   (require shrubbery/parse
            (only-in (submod rhombus reader) get-info-proc)
