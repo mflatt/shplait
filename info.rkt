@@ -17,5 +17,5 @@
 
 (define scribblings '(("scribblings/shplait.scrbl" (multi-page) (language 0 ("Shplait")))))
 
-(define language-family (list (hash 'fam "Shplait"
+(define language-family (list (hash 'family "Shplait"
                                     'doc '(lib "shplait/scribblings/shplait.scrbl"))))
