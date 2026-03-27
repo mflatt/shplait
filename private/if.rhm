@@ -31,8 +31,8 @@ expr.macro 'shif $tst ...
   let [thn_ty, new_thn] = t_s.lookup_type(thn, thn.group)
   let [els_ty, new_els] = t_s.lookup_type(els, els.group)
   t.unify_do(tst, t.Bool(self), tst_ty)
-  t.unify_do(tst, thn_ty, tv)
-  t.unify_do(tst, els_ty, tv)
+  t.unify_do(thn, thn_ty, tv)
+  t.unify_do(els, els_ty, tv)
   t_s.wrap_type('if force($new_tst) | $new_thn | $new_els', stx, tv)
 
 expr.macro

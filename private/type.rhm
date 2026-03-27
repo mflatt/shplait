@@ -543,7 +543,8 @@ fun extract_srcs_do(r, ht :: MutableMap):
   | #false: #void
   | r :: Syntax when #true: // syntax_meta.flip_introduce(r).is_original():
       let key = [trim(r.to_source_string()), r.srcloc()]
-      ht[key] := ht.get(key, #false) || r
+      unless key in ht
+      | ht[key] := r
   | r :: Type:
       extract_srcs_do(r.src, ht)
   | r :: List:
@@ -597,7 +598,8 @@ fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
                                                 & ["\n    " +& expr.to_source_string(),
                                                    ...])),
                         Continuation.Marks.current(),
-                        for PairList (e: all_exprs): e)
+                        for PairList (e: all_exprs):
+                          Syntax.relocate_ephemeral_span(e, [e]))
 
 fun mismatch_explanation(a, b, is_function_call):
   cond

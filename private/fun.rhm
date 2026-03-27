@@ -32,7 +32,7 @@ meta:
       field type_seq = '$te ...'
 
 meta:
-  fun parse_function_type(stx, self, tvar_box):
+  fun parse_function_type(stx, src_stx, tvar_box):
     let '$_ ($arg, ...) $(res_type :: MaybeType):
            $body':
       stx
@@ -44,19 +44,20 @@ meta:
     let [arg_id, ...] = [arg_form.id, ...]
     Function.pass(denylist.validate(arg_id, "argument"), ...)
     let [arg_type, ...] = [f.parse_type(arg_form.type_seq, arg_form.op, arg_id, tvar_box), ...]
-    let res_ty = f.parse_type(res_type.type_seq, res_type.op, self, tvar_box)
-    values (t.Arrow(self, [arg_type, ...], res_ty),
+    let res_ty = f.parse_type(res_type.type_seq, res_type.op, src_stx, tvar_box)
+    values (t.Arrow(src_stx, [arg_type, ...], res_ty),
             [arg_id, ...])
 
 value.macro
 | 'function ($arg, ...) $(res_type :: MaybeType):
      $body':
+    ~all_stx: orig_stx
     ~op_stx self
     let stx = '$self ($arg, ...) $res_type:
                  $body'
     let tvar_box = Box(IdMap{})
     let (arrow_type :: t.Arrow, [arg_id, ...]):
-      parse_function_type(stx, self, current_value_tvar_box())
+      parse_function_type(stx, orig_stx, current_value_tvar_box())
     t_s.type_to_syntax(arrow_type)
 | 'function $_':
     '#false'
@@ -68,7 +69,7 @@ expr.macro
     ~all_stx stx
     let tvar_box = Box(IdMap{})
     let (arrow_type :: t.Arrow, [arg_id, ...]):
-      parse_function_type(stx, self, tvar_box)
+      parse_function_type(stx, stx, tvar_box)
     let [arg_type, ...] = arrow_type.args
     let res_ty = arrow_type.result
     let { tv_id: tv_ty, ... } = IdMap.flatten(tvar_box.value)
