@@ -16,7 +16,7 @@ export:
   gen_tvar
   to_expression
   create_defn poly_ize poly_ize_wrt poly_ize_upto as_non_poly
-  Poly poly_instance at_source instantiate_constructor_at instantiate_at
+  Poly poly_instance at_source maybe_at_source instantiate_constructor_at instantiate_at
   unify_do unify_defn_do
   let_based_poly_do
   lookup
@@ -56,6 +56,8 @@ export:
  polymorphism of `f` to propagate to uses of `g` without losing the connection
  between `x` and `y` in the earlier example.
 */
+
+def only_immediate_src_in_exn = #false
 
 def mutable as_checked = #true
 def mutable type_checking_fuel = 100
@@ -439,7 +441,7 @@ fun instance(old_tvar :: TVar, new_tvar):
     | ~else t
   loop
 
-fun poly_instance(t :: Type):
+fun poly_instance(t :: Type) :~ Type:
   match t
   | t :: Defn:
       cond 
@@ -538,19 +540,34 @@ fun at_source(t, expr):
         #void
     t
 
-fun extract_srcs_do(r, ht :: MutableMap):
+fun maybe_at_source(t, expr):
+  match t
+  | t :: Poly:
+      // can't clone now, and instantiation will
+      // attach use-site source, instead
+      t
+  | ~else:
+      at_source(t, expr)
+
+fun extract_srcs_do(r, ht :: MutableMap, ~seen: seen :~ MutableSet):
+  guard !only_immediate_src_in_exn || ht.length() == 0 | #void
+  guard r !in seen | #void
+  seen.add(r)
   match r
   | #false: #void
   | r :: Syntax when #true: // syntax_meta.flip_introduce(r).is_original():
       let key = [trim(r.to_source_string()), r.srcloc()]
       unless key in ht
       | ht[key] := r
+  | r :: TVar when r.rep:
+      extract_srcs_do(r.src, ht, ~seen: seen)
+      extract_srcs_do(r.rep, ht, ~seen: seen)
   | r :: Type:
-      extract_srcs_do(r.src, ht)
+      extract_srcs_do(r.src, ht, ~seen: seen)
   | r :: List:
-      r.for_each(fun (i): extract_srcs_do(i, ht))
+      for (i in r): extract_srcs_do(i, ht, ~seen: seen)
   | r :: Hide:
-      extract_srcs_do(r.v, ht)
+      extract_srcs_do(r.v, ht, ~seen: seen)
 
 fun trim(s :: String):
   cond
@@ -561,12 +578,15 @@ fun trim(s :: String):
 
 fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
                           reason = #false,
+                          ~srcs: srcs :~ List = [],
                           ~is_function_call: is_function_call = #false):
   let exprs :: List:
     let ht = MutableMap{}
-    extract_srcs_do(main_expr, ht)
-    extract_srcs_do(a, ht)
-    extract_srcs_do(b, ht)
+    let seen = MutableSet.by(===){}
+    extract_srcs_do(main_expr, ht, ~seen: seen)
+    extract_srcs_do(srcs, ht, ~seen: seen)
+    extract_srcs_do(a, ht, ~seen: seen)
+    extract_srcs_do(b, ht, ~seen: seen)
     ht.values()
   let all_exprs :: List:
     if main_expr
@@ -635,8 +655,8 @@ fun lookup(id :: Identifier, env, ~default: default = #'fail):
             | loop(env, #true) || (!is_symbolic && val)
         | ~else loop(env, is_symbolic)
           
-fun add_srcs_do(r :: Type, a_in):
-  def a = (if a_in is_a Type | Hide(a_in) | a_in)
+fun add_srcs_do(r :: Type, a):
+  let a = (if a is_a Type | Hide(a) | a)
   match r.src
   | #false: r.src := a
   | srcs :: List:
@@ -658,7 +678,7 @@ fun simplify_do(a :: Type):
       let r:
         if (r is_a TVar)
         | r
-        | // clone it so we can set the location
+        | // clone it so we can set the sources
           Type.clone(r)
       recur loop (a = a):
         match a
@@ -862,22 +882,30 @@ fun unify_defn_do(expr, a, b):
       | a.proto_rhs := b
   | ~else unify_do(expr, a, b)
 
-fun unify_do(expr, a, b, ~is_function_call: is_function_call = #false):
+
+// Gather `a` and `b` as source locations (implying any source
+// attached to `a` and `b`) while recurring into type components.
+// While unifying, attach source information to type variables to
+// record which pieces of a program contribute to an inference.
+// When a type variable `b` becomes the representative
+// of another type variable `a`, then attach `a` as a source for
+// `b` to be used in later error reporting.
+fun unify_do(expr, a, b,
+             ~is_function_call: is_function_call = #false,
+             ~srcs: srcs :~ List = [expr]):
   when as_checked
   |  fun sub_unify_do(a, b, expr, aa, ba):
-       add_srcs_do(aa, a)
-       add_srcs_do(ba, b)
-       unify_do(expr, aa, ba)
+       unify_do(expr, aa, ba, ~srcs: srcs ++ [aa, ba])
      let a = simplify_do(a)
      let b = simplify_do(b)
      match a
      | _ when (b is_a TVar) && !(a is_a TVar):
-         unify_do(expr, b, a)
+         unify_do(expr, b, a, ~srcs: srcs)
      | _ when a === b:
          #void
      | a :: TVar:
          when occurs(a, b)
-         | raise_typecheck_error(expr, a, b, "cycle in type constraints")
+         | raise_typecheck_error(expr, a, b, "cycle in type constraints", ~srcs: srcs)
          match b
          | b :: TVar:
              match b
@@ -885,12 +913,12 @@ fun unify_do(expr, a, b, ~is_function_call: is_function_call = #false):
                  when a.non_poly
                  | non_poly_do(b, a.non_poly)
                  a.rep := b
-                 add_srcs_do(b, a)
+                 add_srcs_do(b, srcs.add(a))
              | ~else:
                  when b.non_poly
                  | non_poly_do(a, b.non_poly)
                  b.rep := a
-                 add_srcs_do(a, b)
+                 add_srcs_do(a, srcs.add(b))
          | ~else:
              when (a is_a ArrowTVar) && !(b is_a Arrow)
              | raise_typecheck_error(expr, a, b, "tracing requires a procedure")
@@ -898,11 +926,11 @@ fun unify_do(expr, a, b, ~is_function_call: is_function_call = #false):
              when a.non_poly
              | non_poly_do(b, a.non_poly)
              a.rep := b
-             add_srcs_do(b, a)
+             add_srcs_do(b, srcs.add(a))
      | _ when (is_function_call
                   && is_poly_arrow(b)
                   && !is_poly_arrow(a)):
-         unify_do(expr, b, a, ~is_function_call: #true)
+         unify_do(expr, b, a, ~is_function_call: #true, ~srcs: srcs)
      | _ :: Bool:
          unless b is_a Bool
          | raise_typecheck_error(expr, a, b)
@@ -927,10 +955,8 @@ fun unify_do(expr, a, b, ~is_function_call: is_function_call = #false):
      | a :: Arrow:
          match b
          | b :: Arrow when a.args.length() == b.args.length():
-             for:
-               each:
-                 aa: a.args
-                 ba: b.args
+             for (aa in a.args,
+                  ba in b.args):
                sub_unify_do(a, b, expr, aa, ba)
              sub_unify_do(a, b, expr, a.result, b.result)
          | ~else raise_typecheck_error(expr, a, b, ~is_function_call: is_function_call)
@@ -958,10 +984,8 @@ fun unify_do(expr, a, b, ~is_function_call: is_function_call = #false):
      | a :: TupleOf:
          match b
          | b :: TupleOf when a.args.length() == b.args.length():
-             for:
-               each:
-                 aa: a.args
-                 ba: b.args
+             for (aa in a.args,
+                  ba in b.args):
                sub_unify_do(a, b, expr, aa, ba)
          | ~else raise_typecheck_error(expr, a, b)
      | a :: ParameterOf:
@@ -972,10 +996,8 @@ fun unify_do(expr, a, b, ~is_function_call: is_function_call = #false):
      | a :: Datatype:
          match b
          | b :: Datatype when syntax_meta.equal_binding(a.id, b.id):
-             for:
-               each:
-                 aa: a.args
-                 ba: b.args
+             for (aa in a.args,
+                  ba in b.args):
                sub_unify_do(a, b, expr, aa, ba)
          | ~else raise_typecheck_error(expr, a, b)
      | a :: Poly:

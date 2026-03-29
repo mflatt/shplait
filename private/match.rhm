@@ -174,10 +174,8 @@ meta:
                 ~body:
                   $(implicit_block(empty_body))
         | SPair(first, rest):
-            def $f_id = first
-            def $r_id = dynamic(rest)
-            statinfo.macro '$f_id': '(($t_s.type_key, $(t_s.type_to_syntax(elem_tv))))'
-            statinfo.macro '$r_id': '(($t_s.type_key, $(t_s.type_to_syntax(t.ListOf(self, elem_tv)))))'
+            t_s.typed_def $f_id :: $(t_s.type_to_syntax(elem_tv)) = first
+            t_s.typed_def $r_id :: $(t_s.type_to_syntax(t.ListOf(self, elem_tv))) = dynamic(rest)
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:
                 $(implicit_block(cons_body))»'
@@ -301,9 +299,7 @@ meta:
     let r:
       '«match force($new_expr)
         | $pat_id($arg_id, ...):
-            def $field = $arg_id
-            ...
-            statinfo.macro '$field': '(($t_s.type_key, $(t_s.type_to_syntax(field_tv))))'
+            t_s.typed_def $field :: $(t_s.type_to_syntax(field_tv)) = $arg_id
             ...
             unify ~expr $(t_s.type_to_syntax(tv)):
               ~body:

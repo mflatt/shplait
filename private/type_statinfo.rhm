@@ -12,6 +12,7 @@ export:
     lookup_poly_type
     wrap_type
     register_type
+  typed_def
 
 meta:
   def ty_to_sym = MutableMap()
@@ -40,7 +41,7 @@ meta:
 
   fun lookup_type(expr :: Syntax, orig :: maybe(Syntax)):
     let ty = t.poly_instance(lookup_poly_type(expr, orig))
-    // let ty = t.at_source(ty, expr),
+    // let ty = t.at_source(ty, expr)
     [ty, expr]
 
   fun
@@ -52,3 +53,12 @@ meta:
   fun register_type(sym, ty):
     sym_to_ty[sym] := ty
     ty_to_sym[ty] := sym
+
+defn.macro 'typed_def $id :: $t_stx = $rhs ...':
+  let tmp_id = Syntax.make_temp_id(id)
+  '«
+     def $tmp_id = dynamic($rhs ...)
+     expr.macro '$id':
+       ~op_stx self
+       wrap_type('$tmp_id'.relocate(self), t.maybe_at_source(syntax_to_type('$t_stx'), self))
+    »'

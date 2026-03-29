@@ -36,9 +36,7 @@ impo.macro 'typed $mod ...:
   '(namespace ns:
       import $mod ...:
         as mod
-      def $id = dynamic(mod . $name.name)
-      ...
-      statinfo.macro '$id': '(($t_s.type_key, $ty_sym))'
+      t_s.typed_def $id :: $ty_sym = mod . $name.name
       ...
       export:
         $id

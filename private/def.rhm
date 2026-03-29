@@ -83,17 +83,18 @@ meta:
     Function.pass(ex.add_export(id), ...)
     match mutable_tag
     | '':
+        // not using `t_s.typed_def` because `Defn` types take care of source propagation
         '«statinfo.macro '$id': '(($t_s.type_key, $ty_sym))'
           ...
           def $tuple_lhs: $def_rhs»'
     | ~else:
-        let [tmp, ...] = [syntax_meta.flip_introduce(id), ...]
+        let [tmp_id, ...] = [syntax_meta.flip_introduce(id), ...]
         '«expr.macro '$id':
             ~op_stx self
-            statinfo_meta.wrap(t_s.wrap_type('$tmp'.relocate(self), t_s.syntax_to_type('$ty_sym')),
+            statinfo_meta.wrap(t_s.wrap_type('$tmp_id'.relocate(self), t_s.syntax_to_type('$ty_sym')),
                                '((#%assignable, #true))')
           ...
-          def $mutable_tag $tmp: $def_rhs
+          def $mutable_tag $tmp_id: $def_rhs
           ...»'
 
 meta:

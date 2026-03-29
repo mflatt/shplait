@@ -77,10 +77,7 @@ expr.macro
     let expr:
       '«
          $('fun'.relocate(self)) ($arg_tmp, ...):
-           def $arg_id = $arg_tmp
-           ...
-           statinfo.macro '$arg_id': '(($t_s.type_key,
-                                        $(t_s.type_to_syntax(arg_type))))'
+           t_s.typed_def $arg_id :: $(t_s.type_to_syntax(arg_type)) = $arg_tmp
            ...
            unify ~expr $(t_s.type_to_syntax(res_ty)):
              ~init_tvars: [($tv_id, $(t_s.type_to_syntax(tv_ty))), ...]
@@ -105,13 +102,14 @@ expr.macro
 
 defn.macro
 | 'function $(id :: Identifier) ($arg, ...) $(res_type :: MaybeType):
-     $body':
+     $(body :: Block)':
     ~op_stx self
-    'shdef $id: $(self.relocate(id)) ($arg, ...) $res_type: $body'
+    'shdef $id: $(self.relocate(id)) ($arg, ...) $res_type $body'
 | 'function ($arg, ...) $(res_type :: MaybeType):
      $body':
     ~op_stx self
-    '($self ($arg, ...) $res_type: $body)'
+    ~all_stx: stx
+    '($self ($arg, ...) $res_type: $body)'.relocate_span([stx])
 | 'function $(id :: Identifier) ($_, ...) $something $_ ...':
     ~all_stx stx
     syntax_meta.error("expected either `::` or `:`", stx, something)

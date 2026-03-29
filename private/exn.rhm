@@ -43,9 +43,7 @@ expr.macro 'let_cc $(id :: Identifier):
   let k_ty = t.Poly(#false, any_tv, t.Arrow(id, [tv], any_tv))
   let tmp = Syntax.make_temp_id(id)
   t_s.wrap_type('«capture_noncomposable $tmp:
-                    def $id = dynamic($tmp)
-                    statinfo.macro '$id':
-                      '(($t_s.type_key, $(t_s.type_to_syntax(k_ty))))'                      
+                    t_s.typed_def $id :: $(t_s.type_to_syntax(k_ty)) = $tmp
                     unify ~expr $(t_s.type_to_syntax(tv)):
                       ~body:
                         $(implicit_block(body))»',
