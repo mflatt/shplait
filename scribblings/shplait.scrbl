@@ -2906,10 +2906,23 @@ language that is implemented by
 after'' means that no definitions or expressions can appear before a
 keyword but whitespace and comments can precede a keyword.
 
-The @rhombus(~untyped), @rhombus(~lazy) or @rhombus(~accomodating), and
-@rhombus(~fuel) modifiers can be combined within a module, each on its
-own line, and the combination can be declared in any order. Only one of
-@rhombus(~lazy) and @rhombus(~accomodating) can be used.
+@doc(
+  ~nonterminal_key: module ~decl
+  grammar language_option
+  | ~untyped
+  | ~lazy
+  | ~accomodating
+  | ~fuel #,(@rhombus(nonnegative_integer, ~var))
+  | ~type_source_mode source_mode
+  grammar source_mode
+  | #,(@rhombus(none, ~datum))
+  | #,(@rhombus(proximate, ~datum))
+  | #,(@rhombus(all, ~datum))
+){}
+
+Multiple modifiers can be combined within a module, each on its own
+line, and in any order. Only one of @rhombus(~lazy) and
+@rhombus(~accomodating) can be used.
 
 @subsection(~tag: "sec:untyped"){Untyped Mode}
 
@@ -2966,6 +2979,18 @@ Use @rhombus(~fuel #,(@rhombus(amount, ~var))) as a @tech{language option} to
 specify how much effort should be spent resolving potentially cyclic
 dependencies due to inference of polymorphic recursion. The default fuel
 amount is @rhombus(100).
+
+@subsection(~tag: "sec:ttpe-source"){Type-Error Source Mode}
+
+Use @rhombus(~type_source_mode #,(@rhombus(source_mode, ~var))) to
+configure the way that source locations are reported in type-error
+messages. The @rhombus(all, ~datum) mode, which is the default, shows a
+set of source locations that inference discovers to be consistent. The
+@rhombus(proximate, ~datum) mode prunes that set to a single source
+location that reflects an immediate point where inference and type
+checking failed (after potentially gathering information from other
+locations). The @rhombus(none, ~datum) mode disables source-location
+reporting in type-error messages.
 
 @// ------------------------------------------------------------
 

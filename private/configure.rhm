@@ -20,12 +20,13 @@ meta:
                ~lazy: lazy = #false,
                ~accomodating: accomodating = #false,
                ~untyped: untyped = #false,
-               ~fuel: fuel = #false):
+               ~fuel: fuel = #false,
+               ~type_source_mode: type_source_mode = #false):
       fun done():
         let fuel = fuel || 100
         f.configure_language(lazy, accomodating)
-        t.configure_typing(untyped, fuel)
-        add_save_config('[$lazy, $accomodating, $untyped, $fuel]',
+        t.configure_typing(untyped, fuel, type_source_mode)
+        add_save_config('[$lazy, $accomodating, $untyped, $fuel, $(type_source_mode && '#' $type_source_mode')]',
                         add_export_all(forms))
       fun no_tail(tail):
         match tail
@@ -38,9 +39,9 @@ meta:
       | [form, & forms]:
           match form
           | '$(bound_as expr_meta.space: 'declare_configure') $config': // generated for submodules
-              let '[$lazy,  $accomodating, $untyped, $fuel]' = config
+              let '[$lazy,  $accomodating, $untyped, $fuel, $type_source_mode]' = config
               f.configure_language(lazy.unwrap(), accomodating.unwrap())
-              t.configure_typing(untyped.unwrap(), fuel.unwrap())
+              t.configure_typing(untyped.unwrap(), fuel.unwrap(), type_source_mode.unwrap())
               add_save_config(config, add_export_all(forms))
           | '$(kw && '~lazy') $tail ...':
               when eager || lazy || accomodating
@@ -65,7 +66,18 @@ meta:
               | syntax_meta.error("fuel must be a non-negative integer", amount)
               no_tail('$tail ...')
               loop(forms, ~fuel: n)
-
+          | '$(kw && '~fuel')':
+              syntax_meta.error("missing amount for fuel option", kw)
+          | '$(kw && '~type_source_mode') $mode $tail ...':
+              when type_source_mode
+              | syntax_meta.error("duplicate fuel option", kw)
+              let m = mode.unwrap()
+              unless m in { #'all, #'proximate, #'none }
+              | syntax_meta.error("type-error source mode must be `all`, `proximate`, or `none`", mode)
+              no_tail('$tail ...')
+              loop(forms, ~type_source_mode: m)
+          | '$(kw && '~fuel')':
+              syntax_meta.error("missing type-error source mode", kw)
           | ~else: done()
 
   fun add_export_all(forms):
@@ -84,18 +96,20 @@ meta:
   def mutable saved_accomodating = #false
   def mutable saved_untyped = #false
   def mutable saved_fuel = 100
+  def mutable saved_type_source_mode = #'all
 
   // This approach to recording a configuration for interactions is not
   // ideal, because it means the most recently run module wins.
-  fun save_configuration([lazy, accomodating, untyped, fuel]):
+  fun save_configuration([lazy, accomodating, untyped, fuel, type_source_mode]):
     saved_lazy := lazy
     saved_accomodating := accomodating
     saved_untyped := untyped
     saved_fuel := fuel
+    saved_type_source_mode := type_source_mode
 
   fun configure_from_saved():
     f.configure_language(saved_lazy, saved_accomodating)
-    t.configure_typing(saved_untyped, saved_fuel)
+    t.configure_typing(saved_untyped, saved_fuel, saved_type_source_mode)
 
   fun get_configured_submodules(config):
     let mods :~ List = f.get_submodules()

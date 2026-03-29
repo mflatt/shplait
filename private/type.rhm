@@ -57,14 +57,14 @@ export:
  between `x` and `y` in the earlier example.
 */
 
-def only_immediate_src_in_exn = #false
-
 def mutable as_checked = #true
 def mutable type_checking_fuel = 100
+def mutable type_source_mode = #'all
 
-fun configure_typing(off, fuel):
+fun configure_typing(off, fuel, err_mode):
   as_checked := !off
   type_checking_fuel := fuel
+  type_source_mode := err_mode
 
 fun configured_as_checked():
   as_checked
@@ -550,7 +550,8 @@ fun maybe_at_source(t, expr):
       at_source(t, expr)
 
 fun extract_srcs_do(r, ht :: MutableMap, ~seen: seen :~ MutableSet):
-  guard !only_immediate_src_in_exn || ht.length() == 0 | #void
+  guard type_source_mode != #'none | #void
+  guard (type_source_mode != #'proximate) || ht.length() == 0 | #void
   guard r !in seen | #void
   seen.add(r)
   match r
@@ -589,7 +590,7 @@ fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
     extract_srcs_do(b, ht, ~seen: seen)
     ht.values()
   let all_exprs :: List:
-    if main_expr
+    if main_expr && type_source_mode != #'none
     | [main_expr, & exprs.remove(main_expr)]
     | exprs
   let context = MutableMap.by(===){}
