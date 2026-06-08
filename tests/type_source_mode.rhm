@@ -1,0 +1,55 @@
+#lang shplait
+import:
+  open: "eval.rhm"
+
+check_module_eval:
+  1 + "a"
+  ~throws "type_source_mode.rhm:"
+
+check_module_eval:
+  ~type_source_mode none
+  1 + "a"
+  ~throws bof "typecheck failed"
+
+check_module_eval:
+  ~type_source_mode minimal
+  1 + "a"
+  ~throws "type_source_mode.rhm:"
+
+check_module_eval:
+  ~type_source_mode proximate
+  1 + "a"
+  ~throws "type_source_mode.rhm:"
+
+check_module_eval:
+  ~type_source_mode all
+  1 + "a"
+  ~throws "type_source_mode.rhm:"
+
+check_module_eval:
+  ~type_source_mode none
+  fun f(g, x):
+    g(x)
+  f(fun (x): x+1, "a")
+  ~throws bof "typecheck failed"
+
+check_module_eval:
+  ~type_source_mode minimal
+  fun f(g, x):
+    g(x)
+  f(fun (x): x+1, "a")
+  ~throws bof "typecheck failed"
+
+check_module_eval:
+  ~type_source_mode proximate
+  fun f(g, x):
+    g(x)
+  f(fun (x): x+1, "a")
+  ~throws "sources:" space* "f" space* (eof || "location...")
+
+check_module_eval:
+  ~type_source_mode all
+  fun f(g, x):
+    g(x)
+  f(fun (x): x+1, "a")
+  ~throws "fun (x): x+1"

@@ -4,7 +4,7 @@
 
 (define deps '("base"
                "shrubbery-lib"
-               ["rhombus-lib" #:version "0.45"]))
+               ["rhombus-lib" #:version "0.46"]))
 
 (define build-deps '("racket-doc"
                      "sandbox-lib"
@@ -13,7 +13,7 @@
                      "rhombus"
                      "shrubbery"))
 
-(define version "0.15")
+(define version "0.16")
 
 (define scribblings '(("scribblings/shplait.scrbl" (multi-page) (language 0 ("Shplait")))))
 

@@ -551,6 +551,7 @@ fun maybe_at_source(t, expr):
 
 fun extract_srcs_do(r, ht :: MutableMap, ~seen: seen :~ MutableSet):
   guard type_source_mode != #'none | #void
+  guard type_source_mode != #'minimal | #void
   guard (type_source_mode != #'proximate) || ht.length() == 0 | #void
   guard r !in seen | #void
   seen.add(r)
@@ -589,12 +590,14 @@ fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
     extract_srcs_do(a, ht, ~seen: seen)
     extract_srcs_do(b, ht, ~seen: seen)
     ht.values()
-  let all_exprs :: List:
-    if main_expr && type_source_mode != #'none
+  let exprs :: List:
+    // make sure `main_expr` is first, if present
+    if main_expr in exprs
     | [main_expr, & exprs.remove(main_expr)]
     | exprs
+  let show_source = base.#{error-print-source-location}() && (type_source_mode != #'none)
   let context = MutableMap.by(===){}
-  throw Exn.Fail.Syntax((if base.#{error-print-source-location}() && main_expr
+  throw Exn.Fail.Syntax((if show_source && main_expr
                          | let loc = Syntax.srcloc(main_expr)
                            let s :~ String = if loc | Srcloc.to_report_string(loc) | ""
                            if s == "" | "" | s ++ ": "
@@ -612,14 +615,14 @@ fun raise_typecheck_error(main_expr :: maybe(Syntax), a, b,
                                   ++ "\n   expression that's intended as a result is"
                                   ++ "\n   not at the end of a function or block body"
                               | "")
-                          +& (match base.#{error-print-source-location}() && all_exprs
+                          +& (match show_source && exprs
                               | [] || #false: ""
                               | [expr :~ Syntax, ...]:
                                   String.append("\n  sources:",
                                                 & ["\n    " +& expr.to_source_string(),
                                                    ...])),
                         Continuation.Marks.current(),
-                        for PairList (e: all_exprs):
+                        for PairList (e: exprs):
                           Syntax.relocate_ephemeral_span(e, [e]))
 
 fun mismatch_explanation(a, b, is_function_call):

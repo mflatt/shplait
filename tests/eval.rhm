@@ -1,8 +1,11 @@
 #lang rhombus/static/and_meta
+import:
+  rhombus/rx open
 
 export:
   make_shplait_evaluator
   check_eval
+  check_module_eval
 
 fun make_shplait_evaluator():
   def e = Evaluator.make_rhombus_empty()
@@ -14,3 +17,22 @@ expr.macro 'check_eval: $body':
   'check:
      ~eval: make_shplait_evaluator()
      $body'
+
+fun enable_source(e):
+  parameterize { Evaluator.current: e }:
+    eval('import: lib("racket/base.rkt") as rkt')
+    eval('rkt.#{error-print-source-location}(#true)')
+
+expr.macro 'check_module_eval:
+              $body
+              ...
+              ~throws $msg ...':
+  'block:
+     let e = Evaluator.make_rhombus()
+     enable_source(e)
+     check:
+       ~eval: e
+       module m ~lang shplait:
+         $body
+         ...
+       ~throws (rx_in'$(msg.replace_scopes('x')) ...')'

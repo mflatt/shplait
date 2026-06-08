@@ -183,8 +183,9 @@ check_eval:
   ~throws "expected either `::` or `:`"
 
 check_eval:
-  check: 1
-  ~is 10
+  block:
+    check: 1
+    ~is 10
   ~throws "missing `~is`, `~throws`, or `~raises` line in body after `:`"
 
 check_eval:

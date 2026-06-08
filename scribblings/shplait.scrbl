@@ -2916,6 +2916,7 @@ keyword but whitespace and comments can precede a keyword.
   | ~type_source_mode source_mode
   grammar source_mode
   | #,(@rhombus(none, ~datum))
+  | #,(@rhombus(minimal, ~datum))
   | #,(@rhombus(proximate, ~datum))
   | #,(@rhombus(all, ~datum))
 ){}
@@ -2989,7 +2990,12 @@ set of source locations that inference discovers to be consistent. The
 @rhombus(proximate, ~datum) mode prunes that set to a single source
 location that reflects an immediate point where inference and type
 checking failed (after potentially gathering information from other
-locations). The @rhombus(none, ~datum) mode disables source-location
+locations). The @rhombus(minimal, ~datum) shows a source location
+as part of the error message only when the mismatch is immediately
+detected for an expression, and only at the start of an error message when
+source-location message prefixes are enabled (which is
+not the case within DrRacket, for example).
+The @rhombus(none, ~datum) mode disables source-location
 reporting in type-error messages.
 
 @// ------------------------------------------------------------
