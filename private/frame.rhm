@@ -23,6 +23,7 @@ export:
     interaction_type_string
     register_submodule
     get_submodules
+    finish_frame_hook
   relet_frame
 
 meta:
@@ -95,7 +96,7 @@ meta:
                  recur loop (fr :: Frame = get_current_frame()):
                    fr.tvars[id] || (fr.parent && loop(fr.parent)))
 
-  fun finish_current_frame():
+  fun finish_current_frame(context = #'local):
     let fr = get_current_frame()
     let defn_types = fr.defn_types
     fr.defn_types := []
@@ -104,6 +105,7 @@ meta:
         parent.defn_types := defn_types ++ parent.defn_types
     | ~else:
         fr.final_defn_types := fr.final_defn_types ++ t.let_based_poly_do(defn_types)
+    finish_frame_hook()(context)
 
   fun record_frame_defn_type(sym, ty):
     let fr = get_current_frame()
@@ -129,3 +131,5 @@ meta:
   fun get_submodules():
     let fr = get_current_frame()
     fr.submods
+
+  Parameter.def finish_frame_hook :: Function.of_arity(1) = Function.pass

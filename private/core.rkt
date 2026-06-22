@@ -70,7 +70,7 @@
                               form ...))
                           'module-begin
                           null)
-            (finish_current_frame)))))
+            (finish_current_frame 'module)))))
      (syntax-parse b
        [(#%mb e ...)
         #`(#%mb e ...
@@ -117,7 +117,7 @@
              [(#%expression e)
               (define exp-e (rhombus:rhombus-local-expand #'e))
               (define-values (res-stx-e/none res-e) (syntax-local-expand-expression exp-e #t))
-              (finish_current_frame)
+              (finish_current_frame 'interaction)
               (displayln (string-append "- " (interaction_type_string exp-e)))
               exp-e]
              [else      
@@ -128,5 +128,5 @@
            pre-b])])]))
 
 (define-syntax (finish-top-interaction stx)
-  (finish_current_frame)
+  (finish_current_frame 'interaction)
   #'(void))
