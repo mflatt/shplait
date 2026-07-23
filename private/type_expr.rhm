@@ -133,7 +133,6 @@ meta:
 export:
   Int
   String
-  Char
   Boolean
   Syntax
   Symbol
@@ -149,6 +148,7 @@ export:
     #%literal
     *
     ....
+    Char
 
 module define:
   export:

@@ -1402,9 +1402,17 @@ These operators have lower precedence than arithmetic operators.
 
 @doc(
   type 'Char'
+  expr.macro 'Char $string'
 ){
 
- The type of a character within a string.
+ The type of a character within a string, or an expression that produces
+ a literal character. In the latter case, @rhombus(string) must be a
+ single-character string.
+
+@examples(
+  Char"x"
+  Char"λ"
+)
 
 }
 

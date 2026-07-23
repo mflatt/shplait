@@ -1,0 +1,5 @@
+#lang shplait
+
+check:
+  string_get("apple", 3)
+  ~is Char"l"

@@ -13,6 +13,7 @@ export:
     shsubstring as substring
   string_length
   string_get
+  Char
 
 defwrap wrap_string_append string_append(a, b): (dynamic_force(a) :~ String) ++ dynamic_force(b)
 defwrap wrap_string_get string_get(a, i): (dynamic_force(a) :~ String)[dynamic_force(i)]
@@ -59,3 +60,10 @@ expr.macro 'shsubstring':
   t_s.wrap_type('wrap_substring'.relocate(self),
                 t.Arrow(self, [t.Str(self), t.Num(self), t.Num(self)], t.Str(self)))
 
+expr.macro 'Char $(s :: String)':
+  ~op_stx self
+  ~all_stx stx
+  let str :~ String = s.unwrap()
+  unless str.length() == 1
+  | syntax_meta.error("expected a single-character string", s, stx)
+  t_s.wrap_type('(#%literal $(Syntax.inject(str[0])))'.relocate(s), t.Chr(stx))

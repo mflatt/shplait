@@ -13,7 +13,7 @@
                      "rhombus"
                      "shrubbery"))
 
-(define version "0.16")
+(define version "0.17")
 
 (define scribblings '(("scribblings/shplait.scrbl" (multi-page) (language 0 ("Shplait")))))
 
