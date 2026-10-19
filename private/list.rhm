@@ -88,7 +88,17 @@ defwrap wrap_list_get list_get(l, n):
   // `n` must be forced here to be used immediately in the non-lazy
   // branch.  This can occur when `l` is a value while `n` isn't in
   // lazy mode.
-  from_slist(l)[dynamic_force(n)]
+  recur loop (l = l, n = dynamic_force(n)):
+    cond
+    | (l is_a SPair):
+        if n == 0
+        | dynamic_force(SPair.first(l))
+        | loop(SPair.rest(l), n - 1)
+    | (l === PairList[]):
+        error(#'list_get, "index out of range")
+    | ~else:
+        // must be lazy
+        loop(dynamic_force(l), n)
 
 expr.macro 'first':
   ~op_stx self

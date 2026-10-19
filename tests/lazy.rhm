@@ -91,3 +91,9 @@ type Exp
 check:
   cons(idE(syntax_to_symbol('x')), [])
   ~is cons(idE(#'x), [])
+
+block:
+  fun all_ints_from(start :: Int):
+    cons(start, all_ints_from(start+100))
+  check: list_get(all_ints_from(0), 2)
+         ~is 200
