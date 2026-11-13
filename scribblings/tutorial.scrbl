@@ -336,7 +336,7 @@ General rules also apply to newlines @emph{after} @litchar{:}. The
 content after a @litchar{:} can start on its own line, as long as it's
 more indented that the content before @litchar{:}. The indentation
 doesn't need to be more than the @litchar{:} itself---only more than the
-content before the @litchar{:}. If that content is in a @rhombus{|},
+content before the @litchar{:}. If that content is in a @litchar{|},
 then the start of the content is after the @litchar{|}.
 
 @interaction(
